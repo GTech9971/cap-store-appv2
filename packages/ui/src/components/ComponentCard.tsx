@@ -17,7 +17,8 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, i
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                width: '100%',
+                maxWidth: '80%',
+                width: 'auto',
                 cursor: 'pointer'
             }}
         >
