@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { IonButton, IonApp } from '@ionic/react';
+import { IonButton, IonApp, IonPage } from '@ionic/react';
 
 import { InventoryModal } from './InventoryModal';
 
@@ -10,12 +10,14 @@ const InventoryModalWrapper = (args: any) => {
 
   return (
     <IonApp>
-      <IonButton onClick={() => setIsOpen(true)}>在庫管理モーダルを開く</IonButton>
-      <InventoryModal
-        {...args}
-        isOpen={isOpen}
-        onDidDismiss={() => setIsOpen(false)}
-      />
+      <IonPage>
+        <IonButton onClick={() => setIsOpen(true)}>在庫管理モーダルを開く</IonButton>
+        <InventoryModal
+          {...args}
+          isOpen={isOpen}
+          onDidDismiss={() => setIsOpen(false)}
+        />
+      </IonPage>
     </IonApp>
   );
 };
@@ -28,7 +30,7 @@ const meta: Meta<typeof InventoryModal> = {
   },
   tags: ['autodocs'],
   argTypes: {
-    componentId: { 
+    componentId: {
       control: 'text',
       description: 'コンポーネントID'
     },
@@ -48,5 +50,36 @@ export const Default: Story = {
 export const WithDifferentComponent: Story = {
   args: {
     componentId: 'C-000002',
+  },
+};
+
+export const WithManyInventoryItems: Story = {
+  args: {
+    componentId: 'C-000003',
+    currentStock: 1250,
+    historyData: Array.from({ length: 50 }, (_, i) => ({
+      id: i + 1,
+      changeType: Math.random() > 0.5 ? 'add' : 'remove',
+      quantity: Math.floor(Math.random() * 100) + 1,
+      remarks: [
+        '初期在庫',
+        '追加発注',
+        '製品A使用',
+        '製品B使用',
+        '在庫調整',
+        '返品処理',
+        '不良品廃棄',
+        '棚卸し調整',
+        'プロジェクトX使用',
+        'メンテナンス用',
+        '試作品製造',
+        '品質検査用',
+        '緊急発注',
+        'バックアップ在庫'
+      ][Math.floor(Math.random() * 14)],
+      executeAt: new Date(2024, 0, 1 + Math.floor(Math.random() * 365))
+    })).sort((a, b) => b.executeAt.getTime() - a.executeAt.getTime()),
+    onAddSubmit: (data) => console.log('Add submitted:', data),
+    onRemoveSubmit: (data) => console.log('Remove submitted:', data),
   },
 };
