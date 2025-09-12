@@ -133,3 +133,5 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
         </div>
     );
 };
+
+export default ImageCarousel;
