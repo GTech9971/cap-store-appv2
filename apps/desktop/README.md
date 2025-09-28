@@ -1,7 +1,10 @@
-# Tauri + React + Typescript
+# CapStoreApp v2
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+電子部品管理アプリをtauri, react/ts, ionicで構築
 
-## Recommended IDE Setup
+## .env
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+```text
+VITE_APP_API_URL=http://localhost:5000
+VITE_APP_ENABLE_API_MOCKING=false
+```
