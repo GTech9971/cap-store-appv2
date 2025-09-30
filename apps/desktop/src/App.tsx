@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { IonCol, IonContent, IonGrid, IonHeader, IonItem, IonLabel, IonList, IonMenu, IonRow, IonSearchbar, IonSplitPane, IonText, IonTitle, IonToolbar } from "@ionic/react";
+import { IonButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonRow, IonSearchbar, IonSplitPane, IonText, IonTitle, IonToolbar } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "./api/useApiClient";
 import { Category, PartsComponent } from "cap-store-api-def";
 import { parseApiError } from "./utils/parseApiError";
+import { menuOutline } from "ionicons/icons"
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+  const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
@@ -88,8 +90,8 @@ function App() {
 
   return (
 
-    <IonSplitPane contentId="main">
-      <IonMenu contentId="main" >
+    <IonSplitPane contentId="main" disabled={hiddenMenu}>
+      <IonMenu contentId="main">
         <IonHeader>
           <IonToolbar>
             <IonTitle>カテゴリ一覧</IonTitle>
@@ -110,6 +112,11 @@ function App() {
       <div className="ion-page" id="main">
         <IonHeader>
           <IonToolbar>
+            <IonButtons slot="start" onClick={() => setHiddenMenu(!hiddenMenu)}>
+              <IonButton slot="icon">
+                <IonIcon icon={menuOutline} />
+              </IonButton>
+            </IonButtons>
             <IonTitle>CapStoreApp v2</IonTitle>
           </IonToolbar>
           <IonToolbar>
@@ -118,7 +125,7 @@ function App() {
         </IonHeader>
         <IonContent fullscreen>
           <IonText>
-            {`「${selectedCategoryId}」の部品一覧`}
+            {selectedCategoryId ? `「${selectedCategoryId}」の部品一覧` : `カテゴリーの取得失敗`}
           </IonText>
           <br />
           <IonText>{categories.length}件の部品が見つかりました</IonText>
