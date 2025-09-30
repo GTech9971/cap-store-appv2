@@ -62,7 +62,7 @@ interface Props {
     onAlertDismiss?: () => void;
 }
 
-const ComponentRegisterModal: React.FC<Props> = ({
+export const ComponentRegisterModal: React.FC<Props> = ({
     isOpen,
     onClose,
     form = { name: '', modelName: '', categoryId: '', makerId: '', description: '', images: [] },
@@ -250,5 +250,3 @@ const ComponentRegisterModal: React.FC<Props> = ({
         </>
     );
 };
-
-export default ComponentRegisterModal;

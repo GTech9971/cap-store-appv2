@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { IonButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonRow, IonSearchbar, IonSplitPane, IonText, IonTitle, IonToolbar } from "@ionic/react";
+import { IonButton, IonButtons, IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonRow, IonSearchbar, IonSplitPane, IonText, IonTitle, IonToolbar, useIonModal } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "./api/useApiClient";
-import { Category, PartsComponent } from "cap-store-api-def";
+import { ComponentRegisterModal } from "ui/components/ComponentRegisterModal";
+import { Category, Maker, PartsComponent } from "cap-store-api-def";
 import { parseApiError } from "./utils/parseApiError";
-import { menuOutline } from "ionicons/icons"
+import { menuOutline, addOutline } from "ionicons/icons"
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -21,7 +22,14 @@ function App() {
   const [categoryApiError, setCategoryApiError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
 
+  const [makerApiError, setMakerApiError] = useState<string | null>(null);
+  const [makers, setMakers] = useState<Maker[]>([]);
+
   const { categoryApi, makerApi } = useApiClint();
+
+  // 登録モーダル
+  const [presentRegistryModal, dissmissRegistryModal] = useIonModal(ComponentRegisterModal);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
 
   // 検索フィルタリングされたコンポーネント
@@ -51,6 +59,19 @@ function App() {
     }
   }, [categoryApi]);
 
+  const fetchMakersList = useCallback(async (): Promise<Maker[]> => {
+    try {
+      const makersRes = await makerApi.fetchMakers();
+      const fetchedMakers = makersRes?.data ?? [];
+      setMakers(fetchedMakers);
+      return fetchedMakers;
+    } catch (err) {
+      const { message, status } = await parseApiError(err);
+      setMakerApiError(`メーカー一覧の取得に失敗しました。${message}:${status}`);
+      return [];
+    }
+  }, []);
+
   const handleCategorySelect = async (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     try {
@@ -77,6 +98,8 @@ function App() {
           const { message, status } = await parseApiError(err);
           setComponentApiError(`初期カテゴリの部品取得に失敗しました。${message}:${status}`);
         }
+
+        await fetchMakersList();
       }
     };
     fetchInitialData();
@@ -148,6 +171,19 @@ function App() {
           <ComponentCard id="" name="PIC16F1855" model="PIC16F1827-IP" img="https://akizukidenshi.com/img/goods/L/104430.jpg" currentStock={5} />
         </IonContent>
       </div>
+      <IonFab vertical="bottom" horizontal="end">
+        <IonFabButton onClick={() => setIsOpen(!isOpen)}>
+          <IonIcon icon={addOutline} />
+        </IonFabButton>
+      </IonFab>
+
+      <ComponentRegisterModal
+        isOpen={isOpen}
+        onClose={() => { setIsOpen(false) }}
+
+        categories={categories}
+
+      />
 
     </IonSplitPane>
 
