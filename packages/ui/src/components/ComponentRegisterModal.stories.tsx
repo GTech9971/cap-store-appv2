@@ -8,11 +8,6 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-  argTypes: {
-    isOpen: {
-      control: 'boolean',
-    },
-  },
 } satisfies Meta<typeof ComponentRegisterModal>;
 
 export default meta;
@@ -27,8 +22,7 @@ const InteractiveModal = () => {
     description: '',
     images: []
   });
-  const [imageUrls, setImageUrls] = useState(["https://akizukidenshi.com//img/goods/L/113065.jpg"]);
-  
+
   const categories = [
     { id: "ic", name: "半導体" },
     { id: "casecrew", name: "ケース・ネジ・固定具" },
@@ -40,7 +34,7 @@ const InteractiveModal = () => {
     { id: "developm", name: "開発ツール・ボード" },
     { id: "boards", name: "基板・ブレッドボード・ラグ板" }
   ];
-  
+
   const makers = [
     { id: "M-JP-000001", name: "株式会社秋月電子通商" },
     { id: "M-JP-000002", name: "日清紡マイクロデバイス株式会社(JRC/NewJRC/NJR)" },
@@ -73,10 +67,8 @@ const InteractiveModal = () => {
     <ComponentRegisterModal
       isOpen={true}
       form={form}
-      imageUrls={imageUrls}
       categories={categories}
       makers={makers}
-      onImageUrlChange={setImageUrls}
       onFormChange={(field, value) => setForm(prev => ({ ...prev, [field]: value }))}
       onClose={() => console.log('Modal closed')}
     />
@@ -85,11 +77,4 @@ const InteractiveModal = () => {
 
 export const Default: Story = {
   render: () => <InteractiveModal />
-};
-
-export const Closed: Story = {
-  args: {
-    isOpen: false,
-    onClose: () => console.log('Modal closed'),
-  },
 };

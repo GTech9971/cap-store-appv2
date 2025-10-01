@@ -1,12 +1,32 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { IonButton, IonButtons, IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonRow, IonSearchbar, IonSplitPane, IonText, IonTitle, IonToolbar, useIonModal } from "@ionic/react";
+import {
+  IonButton,
+  IonButtons,
+  IonCol,
+  IonContent,
+  IonFab,
+  IonFabButton,
+  IonGrid,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonMenu,
+  IonRow,
+  IonSearchbar,
+  IonSplitPane,
+  IonText,
+  IonTitle,
+  IonToolbar
+} from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "./api/useApiClient";
-import { ComponentRegisterModal } from "ui/components/ComponentRegisterModal";
 import { Category, Maker, PartsComponent } from "cap-store-api-def";
 import { parseApiError } from "./utils/parseApiError";
 import { menuOutline, addOutline } from "ionicons/icons"
+import { useComponentRegistryModal } from "./hooks/useComponentRegistryModal";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -26,10 +46,6 @@ function App() {
   const [makers, setMakers] = useState<Maker[]>([]);
 
   const { categoryApi, makerApi } = useApiClint();
-
-  // 登録モーダル
-  const [presentRegistryModal, dissmissRegistryModal] = useIonModal(ComponentRegisterModal);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
 
 
   // 検索フィルタリングされたコンポーネント
@@ -82,6 +98,10 @@ function App() {
       setComponentApiError(`部品一覧の取得に失敗しました。${message}:${status}`);
     }
   }
+
+
+  // 登録モーダル周り
+  const { setIsOpen, Modal } = useComponentRegistryModal();
 
   useEffect(() => {
     // 初期データ取得
@@ -170,19 +190,15 @@ function App() {
 
         </IonContent>
       </div>
+
+
       <IonFab vertical="bottom" horizontal="end">
-        <IonFabButton onClick={() => setIsOpen(!isOpen)}>
+        <IonFabButton onClick={() => setIsOpen(true)}>
           <IonIcon icon={addOutline} />
         </IonFabButton>
       </IonFab>
 
-      <ComponentRegisterModal
-        isOpen={isOpen}
-        onClose={() => { setIsOpen(false) }}
-
-        categories={categories}
-
-      />
+      <Modal />
 
     </IonSplitPane>
 
