@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ionic/core": "^8.7.5",
@@ -30,7 +31,13 @@
     "@vitejs/plugin-react": "^4.6.0",
     "msw": "^2.11.3",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "@eslint/js": "^9.21.0",
+    "typescript-eslint": "^8.24.1"
   },
   "msw": {
     "workerDirectory": [
