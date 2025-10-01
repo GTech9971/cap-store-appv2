@@ -4,13 +4,17 @@ import App from "./App";
 import { setupIonicReact } from "@ionic/react";
 
 import '@ionic/react/css/core.css';
+import { enableMocking } from "./mocks";
 
 setupIonicReact({
   mode: 'ios'
 });
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+enableMocking().then(() => {
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+})
+

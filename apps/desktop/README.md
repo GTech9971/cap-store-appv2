@@ -8,3 +8,13 @@
 VITE_APP_API_URL=http://localhost:5000
 VITE_APP_ENABLE_API_MOCKING=false
 ```
+
+## MSW
+
+```bash
+npm i msw --save-dev
+```
+
+```bash
+npx msw init .\public\
+```

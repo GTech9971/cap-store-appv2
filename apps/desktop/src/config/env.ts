@@ -42,4 +42,4 @@ ${Object.entries(parsedEnv.error.flatten().fieldErrors)
 
 export const env = createEnv();
 
-// console.debug(env);
+console.debug(env);
