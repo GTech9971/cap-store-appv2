@@ -113,7 +113,7 @@ function App() {
 
   return (
 
-    <IonSplitPane contentId="main" disabled={hiddenMenu}>
+    <IonSplitPane when="xs" contentId="main" disabled={hiddenMenu}>
       <IonMenu contentId="main">
         <IonHeader>
           <IonToolbar>
@@ -168,7 +168,6 @@ function App() {
             }
           </IonGrid>
 
-          <ComponentCard id="" name="PIC16F1855" model="PIC16F1827-IP" img="https://akizukidenshi.com/img/goods/L/104430.jpg" currentStock={5} />
         </IonContent>
       </div>
       <IonFab vertical="bottom" horizontal="end">
