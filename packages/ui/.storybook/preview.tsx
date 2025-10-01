@@ -1,7 +1,7 @@
 import type { Preview } from '@storybook/react-vite'
 
 import '@ionic/react/css/core.css';
-import { setupIonicReact } from '@ionic/react';
+import { setupIonicReact, IonApp } from '@ionic/react';
 import { MemoryRouter } from 'react-router-dom';
 
 setupIonicReact({
@@ -11,9 +11,11 @@ setupIonicReact({
 const preview: Preview = {
   decorators: [
     (Story) => (
-      <MemoryRouter>
-        <Story />
-      </MemoryRouter>
+      <IonApp>
+        <MemoryRouter>
+          <Story />
+        </MemoryRouter>
+      </IonApp>
     )
   ],
   parameters: {

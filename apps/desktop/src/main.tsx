@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { setupIonicReact } from "@ionic/react";
+import { IonApp, setupIonicReact } from "@ionic/react";
 
 import '@ionic/react/css/core.css';
 import { enableMocking } from "./mocks";
@@ -13,7 +13,9 @@ setupIonicReact({
 enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-      <App />
+      <IonApp>
+        <App />
+      </IonApp>
     </React.StrictMode>,
   );
 })

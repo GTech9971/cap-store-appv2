@@ -250,3 +250,5 @@ export const ComponentRegisterModal: React.FC<Props> = ({
         </>
     );
 };
+
+export default ComponentRegisterModal;
