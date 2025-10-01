@@ -2,7 +2,7 @@ import { useApiClint } from "@/api/useApiClient";
 import { parseApiError } from "@/utils/parseApiError";
 import { useIonAlert } from "@ionic/react";
 import { Category, FetchComponentByAkizukiCatalogIdResponse, Maker, RegistryComponentRequest } from "cap-store-api-def";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ComponentRegisterModal, { Data } from "ui/components/ComponentRegisterModal";
 import z from "zod";
 
@@ -13,15 +13,18 @@ import z from "zod";
  */
 export const useComponentRegistryModal = () => {
 
-    const initialFormState: RegistryComponentRequest = {
-        name: '',
-        modelName: '',
-        categoryId: '',
-        makerId: '',
-        description: '',
-        images: [],
-        currentStock: 0
-    };
+    const initialFormState: RegistryComponentRequest = useMemo(() => {
+        return {
+            name: '',
+            modelName: '',
+            categoryId: '',
+            makerId: '',
+            description: '',
+            images: [],
+            currentStock: 0
+        }
+    }, []);
+
 
     const componentSchema = z.object({
         name: z.string().min(1, '名称は必須です'),
@@ -44,9 +47,9 @@ export const useComponentRegistryModal = () => {
     const [apiError, setApiError] = useState<string | null>(null);
 
     const [confirm, _] = useIonAlert();
-    const presentConfirm = (category: Category | undefined, makerName: string | undefined): Promise<boolean> => {
-        return new Promise(async (resolve) => {
-            await confirm(`以下のカテゴリまたはメーカーが未登録です。` +
+    const presentConfirm = useCallback((category: Category | undefined, makerName: string | undefined): Promise<boolean> => {
+        return new Promise((resolve) => {
+            confirm(`以下のカテゴリまたはメーカーが未登録です。` +
                 `${category ? `カテゴリ: ${category.name}\n` : ''}` +
                 `${makerName ? `メーカー: ${makerName}\n` : ''}` +
                 `\nこれらを登録しますか？`,
@@ -62,7 +65,7 @@ export const useComponentRegistryModal = () => {
                     }
                 ])
         })
-    }
+    }, [confirm])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -80,12 +83,17 @@ export const useComponentRegistryModal = () => {
     }, [categoryApi, makerApi]);
 
     // モーダルを閉じる前に入力をリセット
-    const resetForm = () => {
+    const resetForm = useCallback(() => {
         setForm(initialFormState);
         // setAkizukiCode('');
         setErrors({});
         setApiError(null);
-    };
+    }, [initialFormState]);
+
+    const handleClose = useCallback(() => {
+        resetForm();
+        setIsOpen(false);
+    }, [resetForm, setIsOpen]);
 
 
     const handleFormChange = (field: keyof Data, value: unknown) => {
@@ -93,7 +101,7 @@ export const useComponentRegistryModal = () => {
     }
 
 
-    const fetchFromAkizukiCatalog = async (code: string | undefined) => {
+    const fetchFromAkizukiCatalog = useCallback(async (code: string | undefined) => {
         if (!code) { return; }
 
         setApiError(null);
@@ -138,6 +146,7 @@ export const useComponentRegistryModal = () => {
                 }
             }
 
+            // TODO 以下があるため必ずモーダルがさいレンダリングされる
             setForm(prev => ({
                 ...prev,
                 name: data.name || '',
@@ -151,12 +160,12 @@ export const useComponentRegistryModal = () => {
             const { message, status } = await parseApiError(err);
             setApiError(`秋月電子の情報取得に失敗しました。通販コードをご確認ください。${message}:${status}`);
         }
-    };
+    }, [akizukiCatalogApi, categoryApi, makerApi, makers, presentConfirm]);
 
 
     const [present] = useIonAlert();
 
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         setApiError(null); // 実行前にクリア
         const result = componentSchema.safeParse(form);
         if (!result.success) {
@@ -176,13 +185,12 @@ export const useComponentRegistryModal = () => {
 
             await present('登録しました。');
 
-            resetForm();
-            setIsOpen(false);
+            handleClose();
         } catch (err: unknown) {
             const { message, status } = await parseApiError(err);
             setApiError(`登録中にエラーが発生しました。もう一度お試しください。 ${message}:${status}`);
         }
-    }
+    }, [componentApi, componentSchema, form, present, handleClose]);
 
     /**
      * 電子部品登録モーダル
@@ -193,20 +201,17 @@ export const useComponentRegistryModal = () => {
         return (
             <ComponentRegisterModal
                 isOpen={isOpen}
-                onClose={() => {
-                    setIsOpen(false);
-                    resetForm();
-                }}
+                onClose={handleClose}
                 categories={categories}
                 makers={makers}
                 form={form}
                 errors={errors}
-                onFetchFromAkizuki={(code) => fetchFromAkizukiCatalog(code)}
+                onFetchFromAkizuki={fetchFromAkizukiCatalog}
                 onFormChange={handleFormChange}
                 onSubmit={handleSubmit}
             />
         );
-    }, [isOpen, categories, makers, form, errors]);
+    }, [isOpen, categories, makers, form, errors, handleSubmit, handleClose, fetchFromAkizukiCatalog]);
 
     return { isOpen, setIsOpen, Modal };
 }
