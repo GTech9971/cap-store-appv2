@@ -1,10 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
 import { IonApp, setupIonicReact } from "@ionic/react";
 
 import '@ionic/react/css/core.css';
 import { enableMocking } from "./mocks";
+import { BrowserRouter } from "react-router-dom";
+import { App } from "./App";
 
 setupIonicReact({
   mode: 'ios'
@@ -13,9 +14,11 @@ setupIonicReact({
 enableMocking().then(() => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-      <IonApp>
-        <App />
-      </IonApp>
+      <BrowserRouter>
+        <IonApp>
+          <App />
+        </IonApp>
+      </BrowserRouter>
     </React.StrictMode>,
   );
 })

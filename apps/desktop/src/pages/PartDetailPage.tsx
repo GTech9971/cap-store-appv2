@@ -1,0 +1,397 @@
+import { useApiClint } from "@/api/useApiClient"
+import { parseApiError } from "@/utils/parseApiError"
+import {
+    IonBackButton,
+    IonButton,
+    IonButtons,
+    IonCol,
+    IonContent,
+    IonFab,
+    IonFabButton,
+    IonFooter,
+    IonGrid,
+    IonHeader,
+    IonIcon,
+    IonInput,
+    IonItem,
+    IonLabel,
+    IonNote,
+    IonPage,
+    IonRow,
+    IonSelect,
+    IonSelectOption,
+    IonText,
+    IonTextarea,
+    IonTitle,
+    IonToolbar
+} from "@ionic/react"
+import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
+import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import ReactMarkdown from "react-markdown"
+import { useNavigate, useParams } from "react-router-dom"
+import ImageCarousel from "ui/components/ImageCarousel"
+
+export const PartDetailPage = () => {
+    // URL
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+
+    // 電子部品
+    const [part, setPart] = useState<PartsComponent | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // マスター系
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [makers, setMakers] = useState<Maker[]>([]);
+
+    // 入力フォーム
+    const [description, setDescription] = useState<string | undefined>(undefined);
+    const [name, setName] = useState<string>();
+    const [modelName, setModelName] = useState<string>();
+    const [selectedCategoryId, setSelectedCategoryId] = useState<unknown>();
+    const [selectedMakerId, setSelectedMakerId] = useState<unknown>();
+    const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+    // API
+    const { componentApi, categoryApi, makerApi, updateComponentApi } = useApiClint();
+
+    // Markdown
+    const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
+
+    // データシート系
+    const pdfLinks = useMemo(() => {
+        if (!part?.description) return [];
+        const matches = [...part.description.matchAll(/https?:\/\/[^\s)]+\.pdf/g)];
+        return matches.map((m) => m[0]);
+    }, [part?.description]);
+
+    useEffect(() => {
+        const fetchPart = async () => {
+            try {
+                const response = await componentApi.fetchComponent({ componentId: id! });
+                setPart(response.data ?? null);
+                setName(response.data?.name ?? "");
+                setModelName(response.data?.modelName ?? "");
+                setDescription(response.data?.description ?? undefined);
+                setSelectedCategoryId(response.data?.category.id ?? "");
+                setSelectedMakerId(response.data?.maker.id ?? "");
+                setImageUrls(response.data?.images ?? []);
+
+                const [catRes, makRes] = await Promise.all([
+                    categoryApi.fetchCategories(),
+                    makerApi.fetchMakers()
+                ]);
+                setCategories(catRes?.data ?? []);
+                setMakers(makRes?.data ?? []);
+            } catch (err) {
+                const { message, status } = await parseApiError(err);
+                setError(`部品情報の取得に失敗しました。${message}:${status}`);
+            }
+        };
+        if (id) fetchPart();
+    }, [id, componentApi, categoryApi, makerApi]);
+
+
+    const handleSave = useCallback(async () => {
+        if (!part || !id) return;
+        // 更新フィールドをリスト化し、確認ダイアログを表示
+
+        const updateReq: UpdateComponentRequest = {
+            images: imageUrls
+        };
+        const maskFields: string[] = [];
+
+        if (name !== part.name) {
+            updateReq.name = name;
+            maskFields.push("name");
+        }
+        if (modelName !== part.modelName) {
+            updateReq.modelName = modelName;
+            maskFields.push("modelName");
+        }
+        if (description !== part.description) {
+            updateReq.description = description;
+            maskFields.push("description");
+        }
+        if (selectedCategoryId !== part.category.id) {
+            updateReq.categoryId = selectedCategoryId as string;
+            maskFields.push("categoryId");
+        }
+        if (selectedMakerId !== part.maker.id) {
+            updateReq.makerId = selectedMakerId as string;
+            maskFields.push("makerId");
+        }
+        if (imageUrls !== part.images) {
+            updateReq.images = imageUrls;
+            maskFields.push("images");
+        }
+
+        if (maskFields.length === 0) return;
+        // 確認ダイアログ：更新する項目を全て表示
+        const confirmMessage = '以下の項目を更新します：\n' +
+            maskFields.map(f => `- ${f}`).join('\n') +
+            '\nよろしいですか？';
+        if (!window.confirm(confirmMessage)) return;
+
+        try {
+            // 複数の fieldMask を繰り返しパラメータとして渡す
+            const res = await updateComponentApi(updateReq, maskFields, id);
+            const updated: PartsComponent | undefined = res.data;
+            if (updated) {
+                setPart(updated);
+                // ローカル state に同期
+                setName(updated.name);
+                setModelName(updated.modelName);
+                setDescription(updated.description);
+                setSelectedCategoryId(updated.category.id);
+                setSelectedMakerId(updated.maker.id);
+                setImageUrls(updated.images ?? []);
+                // 成功メッセージ
+                window.alert('更新が完了しました。');
+            }
+        } catch (err) {
+            const { message, status } = await parseApiError(err);
+            setError(`部品情報の更新に失敗しました。${message}:${status}`);
+        }
+    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, updateComponentApi]);
+
+
+
+    return (
+        <IonPage>
+            <IonHeader>
+                <IonToolbar>
+                    <IonButtons slot="start">
+                        <IonBackButton defaultHref="/"></IonBackButton>
+                    </IonButtons>
+                    <IonTitle></IonTitle>
+                    <IonButtons slot="end">
+                        <IonButton>更新</IonButton>
+                    </IonButtons>
+                </IonToolbar>
+            </IonHeader>
+            <IonContent fullscreen>
+                <IonGrid>
+                    <IonRow>
+                        <IonCol size="6">
+                            <IonItem>
+                                <IonInput
+                                    labelPlacement="stacked"
+                                    required
+                                    value={name}
+                                    onIonInput={(e) => setName(e.detail.value ?? undefined)}
+                                >
+                                    <div slot="label">名称 <IonText color="danger">*</IonText></div>
+
+                                    {/* {errors.name && (
+                                        <IonNote className='error-text' color="danger">
+                                            {errors.name}
+                                        </IonNote>
+                                    )} */}
+                                </IonInput>
+
+                            </IonItem>
+
+                            <ImageCarousel
+                                images={imageUrls}
+                                onDelete={(index) => {
+                                    const updated = (imageUrls || []).filter((_, i) => i !== index);
+                                    setImageUrls(updated);
+                                }}
+                            />
+                            <IonItem>
+                                <IonInput
+                                    placeholder='画像URL（カンマ区切りで複数可）'
+                                    value={imageUrls?.join(', ') || ''}
+                                    onIonInput={(e) => {
+                                        const urls = (e.detail.value as string).split(',').map(url => url.trim()).filter(url => url);
+                                        setImageUrls(urls);
+                                    }}
+                                >
+                                </IonInput>
+                            </IonItem>
+                        </IonCol>
+
+
+                        <IonCol>
+                            <IonItem>
+                                <IonInput
+                                    labelPlacement="stacked"
+                                    required
+                                    value={modelName}
+                                    onIonInput={(e) => setModelName(e.detail.value ?? undefined)}
+                                >
+                                    <div slot="label">型番 <IonText color="danger">*</IonText></div>
+
+                                    {/* {errors.modelName && (
+                                        <IonNote className='error-text' color="danger">
+                                            {errors.modelName}
+                                        </IonNote>
+                                    )} */}
+                                </IonInput>
+
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel position="stacked">カテゴリ <span style={{ color: 'red' }}>*</span></IonLabel>
+                                <IonSelect
+                                    required
+                                    labelPlacement='stacked'
+                                    value={selectedCategoryId}
+                                    onIonChange={(e) => setSelectedCategoryId(e.detail.value)}
+                                    placeholder="選択してください"
+                                >
+                                    {categories.map(cat => (
+                                        <IonSelectOption key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </IonSelectOption>
+                                    ))}
+                                </IonSelect>
+                                {/* {errors.categoryId && (
+                                    <IonNote className='error-text' color="danger">
+                                        {errors.categoryId}
+                                    </IonNote>
+                                )} */}
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel position="stacked">メーカー <span style={{ color: 'red' }}>*</span></IonLabel>
+                                <IonSelect
+                                    value={selectedMakerId}
+                                    onIonChange={(e) => setSelectedMakerId(e.detail.value)}
+                                    placeholder="選択してください"
+                                >
+                                    {makers.map((maker, index) => (
+                                        <IonSelectOption key={index} value={maker.id}>
+                                            {maker.name}
+                                        </IonSelectOption>
+                                    ))}
+                                </IonSelect>
+                                {/* {errors.makerId && (
+                                    <IonNote className='error-text' color="danger">
+                                        {errors.makerId}
+                                    </IonNote>
+                                )} */}
+                            </IonItem>
+                        </IonCol>
+                    </IonRow>
+
+
+
+                    {/* MD */}
+                    <IonRow>
+                        <IonCol size="11"></IonCol>
+                        <IonCol>
+                            <IonButton size="small" fill="clear" onClick={() => setIsPreviewMd(!isPreviewMD)}>
+                                <IonIcon icon={createOutline} />
+                                {isPreviewMD ? '編集' : 'プレビュー'}
+
+                            </IonButton>
+                        </IonCol>
+                    </IonRow>
+
+                    <IonRow>
+                        <IonCol>
+                            <IonItem lines="none">
+                                {
+                                    isPreviewMD ?
+                                        (
+                                            <IonRow>
+                                                <IonCol>
+                                                    <ReactMarkdown
+                                                        components={{
+                                                            a: ({ ...props }) => {
+                                                                const isExternal = props.href?.startsWith('http');
+                                                                return (
+                                                                    <a
+                                                                        {...props}
+                                                                        className={`underline ${isExternal ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}
+                                                                        target={isExternal ? '_blank' : undefined}
+                                                                        rel={isExternal ? 'noopener noreferrer' : undefined}
+                                                                    />
+                                                                );
+                                                            },
+                                                        }}
+                                                    >
+                                                        {description}
+                                                    </ReactMarkdown>
+                                                </IonCol>
+                                            </IonRow>
+                                        )
+                                        :
+                                        <IonGrid>
+                                            <IonRow>
+                                                <IonCol size="6">
+                                                    <IonTextarea
+                                                        label='説明・仕様'
+                                                        labelPlacement='stacked'
+                                                        placeholder='出力電圧min,max など'
+                                                        value={description}
+                                                        onIonInput={(e) => setDescription(e.detail.value ?? undefined)}
+                                                        rows={30}
+                                                    />
+                                                </IonCol>
+                                                <IonCol>
+                                                    <ReactMarkdown
+                                                        components={{
+                                                            a: ({ ...props }) => {
+                                                                const isExternal = props.href?.startsWith('http');
+                                                                return (
+                                                                    <a
+                                                                        {...props}
+                                                                        className={`underline ${isExternal ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}
+                                                                        target={isExternal ? '_blank' : undefined}
+                                                                        rel={isExternal ? 'noopener noreferrer' : undefined}
+                                                                    />
+                                                                );
+                                                            },
+                                                        }}
+                                                    >
+                                                        {description}
+                                                    </ReactMarkdown>
+                                                </IonCol>
+                                            </IonRow>
+                                        </IonGrid>
+                                }
+                            </IonItem>
+                        </IonCol>
+                    </IonRow>
+
+                    <hr />
+                    {/* データシート */}
+                    <IonRow>
+
+                        <IonGrid>
+                            <IonRow>
+                                <IonText>データシート</IonText>
+                            </IonRow>
+                            <IonRow>
+
+                                {pdfLinks.map((link, idx) => {
+                                    const fileName = link.split('/').pop()?.split('?')[0] ?? `ファイル${idx + 1}`;
+                                    return (
+
+                                        <IonButton key={idx} fill="outline" target="_blank" rel="noopener noreferrer" href={link}>
+                                            <IonIcon icon={documentOutline} />
+                                            {fileName}
+                                        </IonButton>
+                                    )
+                                })}
+
+                            </IonRow>
+                        </IonGrid>
+                    </IonRow>
+
+
+                </IonGrid>
+            </IonContent>
+
+            <IonFab horizontal="end" vertical="bottom">
+                <IonFabButton>
+                    <IonIcon icon={cubeOutline} />
+                </IonFabButton>
+            </IonFab>
+        </IonPage>
+    )
+}
