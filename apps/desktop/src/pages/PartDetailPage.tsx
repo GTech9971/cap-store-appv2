@@ -8,14 +8,12 @@ import {
     IonContent,
     IonFab,
     IonFabButton,
-    IonFooter,
     IonGrid,
     IonHeader,
     IonIcon,
     IonInput,
     IonItem,
     IonLabel,
-    IonNote,
     IonPage,
     IonRow,
     IonSelect,
@@ -23,19 +21,19 @@ import {
     IonText,
     IonTextarea,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    useIonAlert
 } from "@ionic/react"
 import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
 import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
-import { useNavigate, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import ImageCarousel from "ui/components/ImageCarousel"
 
 export const PartDetailPage = () => {
     // URL
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
 
     // 電子部品
     const [part, setPart] = useState<PartsComponent | null>(null);
@@ -58,6 +56,18 @@ export const PartDetailPage = () => {
 
     // Markdown
     const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
+    const markdownComponent = {
+        a: ({ ...props }) => {
+            const isExternal = props.href?.startsWith('http');
+            return (
+                <IonText color={`${isExternal ? 'primary' : 'light'}`}>
+                    <a {...props}
+                        target={isExternal ? '_blank' : undefined}
+                        rel={isExternal ? 'noopener noreferrer' : undefined} />
+                </IonText>
+            );
+        },
+    }
 
     // データシート系
     const pdfLinks = useMemo(() => {
@@ -66,6 +76,7 @@ export const PartDetailPage = () => {
         return matches.map((m) => m[0]);
     }, [part?.description]);
 
+    // 初期データ取得
     useEffect(() => {
         const fetchPart = async () => {
             try {
@@ -92,6 +103,23 @@ export const PartDetailPage = () => {
         if (id) fetchPart();
     }, [id, componentApi, categoryApi, makerApi]);
 
+    // ダイアログ系
+    const [confirm] = useIonAlert();
+    const [presentAlert] = useIonAlert();
+    const handleConfirm = useCallback((message: string): Promise<boolean> => {
+        return new Promise(resolve => {
+            confirm(message, [
+                {
+                    text: 'OK',
+                    handler: () => resolve(true)
+                }, {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: () => resolve(false)
+                }
+            ])
+        });
+    }, [confirm]);
 
     const handleSave = useCallback(async () => {
         if (!part || !id) return;
@@ -132,7 +160,7 @@ export const PartDetailPage = () => {
         const confirmMessage = '以下の項目を更新します：\n' +
             maskFields.map(f => `- ${f}`).join('\n') +
             '\nよろしいですか？';
-        if (!window.confirm(confirmMessage)) return;
+        if (await handleConfirm(confirmMessage) === false) return;
 
         try {
             // 複数の fieldMask を繰り返しパラメータとして渡す
@@ -148,15 +176,13 @@ export const PartDetailPage = () => {
                 setSelectedMakerId(updated.maker.id);
                 setImageUrls(updated.images ?? []);
                 // 成功メッセージ
-                window.alert('更新が完了しました。');
+                await presentAlert('更新が完了しました。')
             }
         } catch (err) {
             const { message, status } = await parseApiError(err);
             setError(`部品情報の更新に失敗しました。${message}:${status}`);
         }
-    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, updateComponentApi]);
-
-
+    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, updateComponentApi, handleConfirm, presentAlert]);
 
     return (
         <IonPage>
@@ -165,9 +191,9 @@ export const PartDetailPage = () => {
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/"></IonBackButton>
                     </IonButtons>
-                    <IonTitle></IonTitle>
+                    <IonTitle>{name} - {part?.currentStock}個</IonTitle>
                     <IonButtons slot="end">
-                        <IonButton>更新</IonButton>
+                        <IonButton onClick={handleSave}>更新</IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
@@ -177,7 +203,7 @@ export const PartDetailPage = () => {
                         <IonCol size="6">
                             <IonItem>
                                 <IonInput
-                                    labelPlacement="stacked"
+                                    labelPlacement="floating"
                                     required
                                     value={name}
                                     onIonInput={(e) => setName(e.detail.value ?? undefined)}
@@ -217,7 +243,7 @@ export const PartDetailPage = () => {
                         <IonCol>
                             <IonItem>
                                 <IonInput
-                                    labelPlacement="stacked"
+                                    labelPlacement="floating"
                                     required
                                     value={modelName}
                                     onIonInput={(e) => setModelName(e.detail.value ?? undefined)}
@@ -237,7 +263,6 @@ export const PartDetailPage = () => {
                                 <IonLabel position="stacked">カテゴリ <span style={{ color: 'red' }}>*</span></IonLabel>
                                 <IonSelect
                                     required
-                                    labelPlacement='stacked'
                                     value={selectedCategoryId}
                                     onIonChange={(e) => setSelectedCategoryId(e.detail.value)}
                                     placeholder="選択してください"
@@ -281,12 +306,10 @@ export const PartDetailPage = () => {
 
                     {/* MD */}
                     <IonRow>
-                        <IonCol size="11"></IonCol>
                         <IonCol>
                             <IonButton size="small" fill="clear" onClick={() => setIsPreviewMd(!isPreviewMD)}>
                                 <IonIcon icon={createOutline} />
                                 {isPreviewMD ? '編集' : 'プレビュー'}
-
                             </IonButton>
                         </IonCol>
                     </IonRow>
@@ -299,21 +322,7 @@ export const PartDetailPage = () => {
                                         (
                                             <IonRow>
                                                 <IonCol>
-                                                    <ReactMarkdown
-                                                        components={{
-                                                            a: ({ ...props }) => {
-                                                                const isExternal = props.href?.startsWith('http');
-                                                                return (
-                                                                    <a
-                                                                        {...props}
-                                                                        className={`underline ${isExternal ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}
-                                                                        target={isExternal ? '_blank' : undefined}
-                                                                        rel={isExternal ? 'noopener noreferrer' : undefined}
-                                                                    />
-                                                                );
-                                                            },
-                                                        }}
-                                                    >
+                                                    <ReactMarkdown components={markdownComponent}>
                                                         {description}
                                                     </ReactMarkdown>
                                                 </IonCol>
@@ -325,29 +334,15 @@ export const PartDetailPage = () => {
                                                 <IonCol size="6">
                                                     <IonTextarea
                                                         label='説明・仕様'
-                                                        labelPlacement='stacked'
+                                                        labelPlacement='floating'
                                                         placeholder='出力電圧min,max など'
                                                         value={description}
                                                         onIonInput={(e) => setDescription(e.detail.value ?? undefined)}
-                                                        rows={30}
+                                                        rows={25}
                                                     />
                                                 </IonCol>
                                                 <IonCol>
-                                                    <ReactMarkdown
-                                                        components={{
-                                                            a: ({ ...props }) => {
-                                                                const isExternal = props.href?.startsWith('http');
-                                                                return (
-                                                                    <a
-                                                                        {...props}
-                                                                        className={`underline ${isExternal ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}
-                                                                        target={isExternal ? '_blank' : undefined}
-                                                                        rel={isExternal ? 'noopener noreferrer' : undefined}
-                                                                    />
-                                                                );
-                                                            },
-                                                        }}
-                                                    >
+                                                    <ReactMarkdown components={markdownComponent}>
                                                         {description}
                                                     </ReactMarkdown>
                                                 </IonCol>
@@ -371,8 +366,7 @@ export const PartDetailPage = () => {
                                 {pdfLinks.map((link, idx) => {
                                     const fileName = link.split('/').pop()?.split('?')[0] ?? `ファイル${idx + 1}`;
                                     return (
-
-                                        <IonButton key={idx} fill="outline" target="_blank" rel="noopener noreferrer" href={link}>
+                                        <IonButton size="small" key={idx} fill="outline" target="_blank" rel="noopener noreferrer" href={link}>
                                             <IonIcon icon={documentOutline} />
                                             {fileName}
                                         </IonButton>
