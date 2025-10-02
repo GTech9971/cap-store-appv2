@@ -21,9 +21,17 @@ import {
     useIonAlert
 } from '@ionic/react';
 import ImageCarousel from './ImageCarousel';
-import type { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, FetchComponentByAkizukiCatalogIdResponse, MakersApi, RegistryComponentRequest } from 'cap-store-api-def';
+import type {
+    AkizukiCatalogsApi,
+    CategoriesApi,
+    ComponentsApi,
+    FetchComponentByAkizukiCatalogIdResponse,
+    MakersApi,
+    RegistryComponentRequest
+} from 'cap-store-api-def';
 import z from 'zod';
 import { parseApiError } from '../utils/parseApiError';
+import './ComponentRegisterModal.css';
 
 interface Category {
     id: string;
@@ -61,7 +69,6 @@ export const ComponentRegisterModal: React.FC<Props> = ({
     akizukiApi,
     onClose
 }) => {
-
 
     const initialFormState: RegistryComponentRequest = useMemo(() => {
         return {
@@ -312,12 +319,14 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                                     onIonInput={(e) => handleFormChange('name', e.detail.value)}
                                 >
                                     <div slot="label">名称 <IonText color="danger">*</IonText></div>
+
+                                    {errors.name && (
+                                        <IonNote className='error-text' color="danger">
+                                            {errors.name}
+                                        </IonNote>
+                                    )}
                                 </IonInput>
-                                {errors.name && (
-                                    <IonNote color="danger" slot="helper">
-                                        {errors.name}
-                                    </IonNote>
-                                )}
+
                             </IonItem>
 
                             <IonItem>
@@ -328,12 +337,14 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                                     onIonInput={(e) => handleFormChange('modelName', e.detail.value)}
                                 >
                                     <div slot="label">型番 <IonText color="danger">*</IonText></div>
+
+                                    {errors.modelName && (
+                                        <IonNote className='error-text' color="danger">
+                                            {errors.modelName}
+                                        </IonNote>
+                                    )}
                                 </IonInput>
-                                {errors.modelName && (
-                                    <IonNote color="danger" slot="helper">
-                                        {errors.modelName}
-                                    </IonNote>
-                                )}
+
                             </IonItem>
 
                             <IonItem>
@@ -352,7 +363,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                                     ))}
                                 </IonSelect>
                                 {errors.categoryId && (
-                                    <IonNote color="danger" slot="helper">
+                                    <IonNote className='error-text' color="danger">
                                         {errors.categoryId}
                                     </IonNote>
                                 )}
@@ -372,7 +383,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                                     ))}
                                 </IonSelect>
                                 {errors.makerId && (
-                                    <IonNote color="danger" slot="helper">
+                                    <IonNote className='error-text' color="danger">
                                         {errors.makerId}
                                     </IonNote>
                                 )}
@@ -383,7 +394,9 @@ export const ComponentRegisterModal: React.FC<Props> = ({
 
                 <IonItem>
                     <IonTextarea
-                        placeholder='説明・仕様'
+                        label='説明・仕様'
+                        labelPlacement='stacked'
+                        placeholder='出力電圧min,max など'
                         value={form.description}
                         onIonInput={(e) => handleFormChange('description', e.detail.value)}
                         rows={4}
