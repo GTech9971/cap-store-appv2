@@ -26,11 +26,9 @@ import { useApiClint } from "./api/useApiClient";
 import { Category, Maker, PartsComponent } from "cap-store-api-def";
 import { parseApiError } from "./utils/parseApiError";
 import { menuOutline, addOutline } from "ionicons/icons"
-import { useComponentRegistryModal } from "./hooks/useComponentRegistryModal";
+import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -45,8 +43,10 @@ function App() {
   const [makerApiError, setMakerApiError] = useState<string | null>(null);
   const [makers, setMakers] = useState<Maker[]>([]);
 
-  const { categoryApi, makerApi } = useApiClint();
+  const { categoryApi, makerApi, componentApi, akizukiCatalogApi } = useApiClint();
 
+  // 登録モーダル
+  const [isOpenCModal, setIsOpenCModal] = useState<boolean>(false);
 
   // 検索フィルタリングされたコンポーネント
   const filteredComponents = components.filter(component => {
@@ -86,7 +86,7 @@ function App() {
       setMakerApiError(`メーカー一覧の取得に失敗しました。${message}:${status}`);
       return [];
     }
-  }, []);
+  }, [makerApi]);
 
   const handleCategorySelect = async (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -100,8 +100,6 @@ function App() {
   }
 
 
-  // 登録モーダル周り
-  const { setIsOpen, Modal } = useComponentRegistryModal();
 
   useEffect(() => {
     // 初期データ取得
@@ -123,7 +121,7 @@ function App() {
       }
     };
     fetchInitialData();
-  }, [categoryApi, fetchCategoriesList]);
+  }, [categoryApi, fetchCategoriesList, fetchMakersList]);
 
 
   async function greet() {
@@ -193,12 +191,19 @@ function App() {
 
 
       <IonFab vertical="bottom" horizontal="end">
-        <IonFabButton onClick={() => setIsOpen(true)}>
+        <IonFabButton onClick={() => setIsOpenCModal(true)}>
           <IonIcon icon={addOutline} />
         </IonFabButton>
       </IonFab>
 
-      <Modal />
+      <ComponentRegisterModal
+        isOpen={isOpenCModal}
+        onClose={() => setIsOpenCModal(false)}
+        categoryApi={categoryApi}
+        makerApi={makerApi}
+        componentApi={componentApi}
+        akizukiApi={akizukiCatalogApi}
+      />
 
     </IonSplitPane>
 
