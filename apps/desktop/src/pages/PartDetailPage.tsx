@@ -30,6 +30,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { useParams } from "react-router-dom"
 import ImageCarousel from "ui/components/ImageCarousel"
+import { InventoryModal } from "ui/components/InventoryModal";
+import { useConfirmUtils } from "ui/utils/alertUtils"
 
 export const PartDetailPage = () => {
     // URL
@@ -52,7 +54,7 @@ export const PartDetailPage = () => {
     const [imageUrls, setImageUrls] = useState<string[]>([]);
 
     // API
-    const { componentApi, categoryApi, makerApi, updateComponentApi } = useApiClint();
+    const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
 
     // Markdown
     const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
@@ -101,25 +103,15 @@ export const PartDetailPage = () => {
             }
         };
         if (id) fetchPart();
-    }, [id, componentApi, categoryApi, makerApi]);
+    }, [id, componentApi, categoryApi, makerApi, inventoryApi]);
+
+    // 在庫系
+    const [isOpenIModal, setIsOpenIModal] = useState<boolean>(false);
+
 
     // ダイアログ系
-    const [confirm] = useIonAlert();
+    const [handleConfirm] = useConfirmUtils();
     const [presentAlert] = useIonAlert();
-    const handleConfirm = useCallback((message: string): Promise<boolean> => {
-        return new Promise(resolve => {
-            confirm(message, [
-                {
-                    text: 'OK',
-                    handler: () => resolve(true)
-                }, {
-                    text: 'Cancel',
-                    role: 'cancel',
-                    handler: () => resolve(false)
-                }
-            ])
-        });
-    }, [confirm]);
 
     const handleSave = useCallback(async () => {
         if (!part || !id) return;
@@ -382,10 +374,17 @@ export const PartDetailPage = () => {
             </IonContent>
 
             <IonFab horizontal="end" vertical="bottom">
-                <IonFabButton>
+                <IonFabButton onClick={() => setIsOpenIModal(true)}>
                     <IonIcon icon={cubeOutline} />
                 </IonFabButton>
             </IonFab>
+
+            <InventoryModal
+                isOpen={isOpenIModal}
+                componentId={id!}
+                inventoryApi={inventoryApi}
+                onDidDismiss={() => { setIsOpenIModal(false) }}
+            />
         </IonPage>
     )
 }

@@ -1,123 +1,151 @@
 import React, { useState } from 'react';
-import { 
-    IonButton, 
-    IonInput, 
-    IonSelect, 
-    IonSelectOption, 
-    IonItem, 
+import {
+    IonButton,
+    IonInput,
+    IonSelect,
+    IonSelectOption,
+    IonItem,
     IonText,
     IonList,
-    IonAlert
+    IonNote
 } from '@ionic/react';
+import { RemoveType, type RemoveComponentInventoryRequest } from 'cap-store-api-def';
+import { z } from 'zod';
+import './RemoveInventoryForm.css';
+
+const removeSchema = z.object({
+    quantity: z.coerce.number({ error: '個数は数値で入力してください' })
+        .min(1, '個数は1以上を入力してください'),
+    remarks: z.string().min(1, '備考は必須です'),
+    type: z.enum(RemoveType, { error: '種類を選択してください' }),
+    executeAt: z.string().optional()
+});
 
 type RemoveInventoryFormProps = {
-    onSubmit?: (data: { quantity: string; remarks: string; type: 'use' | 'lost' | 'scrap'; executeAt: string }) => void;
+    onSubmit: (data: { quantity: number; remarks: string; type: RemoveType; executeAt: string }) => void;
 };
 
 export const RemoveInventoryForm: React.FC<RemoveInventoryFormProps> = ({ onSubmit }) => {
-    const [removeQuantity, setRemoveQuantity] = useState<string>('');
+    const [removeQuantity, setRemoveQuantity] = useState<number>(0);
     const [removeRemarks, setRemoveRemarks] = useState<string>('特になし');
-    const [removeType, setRemoveType] = useState<'use' | 'lost' | 'scrap'>('use');
+    const [removeType, setRemoveType] = useState<RemoveType>('use');
     const [removeExecuteAt, setRemoveExecuteAt] = useState<string>('');
-    const [removeError] = useState<string | null>(null);
-    const [showRemoveAlert, setShowRemoveAlert] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<keyof RemoveComponentInventoryRequest, string>>>({});
 
     const handleSubmit = () => {
-        onSubmit?.({ quantity: removeQuantity, remarks: removeRemarks, type: removeType, executeAt: removeExecuteAt });
-        setShowRemoveAlert(false);
+        const result = removeSchema.safeParse({
+            quantity: removeQuantity,
+            remarks: removeRemarks,
+            type: removeType,
+            executeAt: removeExecuteAt
+        });
+
+        if (result.error) {
+            const fieldErrors = result.error?.flatten().fieldErrors;
+            setErrors({
+                quantity: fieldErrors.quantity?.[0],
+                remarks: fieldErrors.remarks?.[0],
+                type: fieldErrors.type?.[0],
+                executeAt: fieldErrors.executeAt?.[0]
+            });
+            return;
+        }
+        onSubmit({ quantity: removeQuantity, remarks: removeRemarks, type: removeType, executeAt: removeExecuteAt });
     };
 
     return (
-        <>
-            <div style={{ padding: '16px' }}>
-                <IonText color="danger">
-                    <h4 style={{ margin: '0 0 12px 0' }}>削除登録</h4>
-                </IonText>
+        <div style={{ padding: '16px' }}>
+            <IonText color="danger">
+                <h4 style={{ margin: '0 0 12px 0' }}>削除登録</h4>
+            </IonText>
 
-                {removeError && (
-                    <IonText color="danger">
-                        <p style={{ fontSize: '12px', margin: '4px 0' }}>{removeError}</p>
-                    </IonText>
-                )}
+            <IonList style={{ margin: '0' }}>
+                <IonItem>
+                    <IonInput
+                        labelPlacement='stacked'
+                        type="number"
+                        required
+                        placeholder="1"
+                        min={0}
+                        value={removeQuantity}
+                        onIonInput={e => setRemoveQuantity(Number.parseInt(e.detail.value ?? '0'))}>
+                        <div slot="label"> 個数 <IonText color="danger">*</IonText></div>
 
-                <IonList style={{ margin: '0' }}>
-                    <IonItem>
-                        <IonInput
-                            labelPlacement='stacked'
-                            type="number"
-                            required
-                            placeholder="1"
-                            value={removeQuantity}
-                            onIonInput={e => setRemoveQuantity(e.detail.value!)}>
-                            <div slot="label">
-                                個数 <IonText color="danger">*</IonText>
-                            </div>
-                        </IonInput>
-                    </IonItem>
-                    <IonItem>
-                        <IonInput
-                            placeholder="理由など"
-                            required
-                            labelPlacement='stacked'
-                            value={removeRemarks}
-                            onIonInput={e => setRemoveRemarks(e.detail.value!)}>
-                            <div slot="label">
-                                備考 <IonText color="danger">*</IonText>
-                            </div>
-                        </IonInput>
-                    </IonItem>
-                    <IonItem>
-                        <IonSelect
-                            required
-                            label="種類"
-                            labelPlacement="stacked"
-                            value={removeType}
-                            onIonChange={e => setRemoveType(e.detail.value)}
-                        >
-                            <IonSelectOption value="use">使用</IonSelectOption>
-                            <IonSelectOption value="lost">紛失</IonSelectOption>
-                            <IonSelectOption value="scrap">破棄</IonSelectOption>
-                        </IonSelect>
+                        {errors.quantity && (
+                            <IonNote color="danger" className='error-text'>
+                                {errors.quantity}
+                            </IonNote>
+                        )}
+                    </IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonInput
+                        placeholder="理由など"
+                        required
+                        labelPlacement='stacked'
+                        value={removeRemarks}
+                        onIonInput={e => setRemoveRemarks(e.detail.value!)}>
                         <div slot="label">
-                            種類 <IonText color="danger">*</IonText>
+                            備考 <IonText color="danger">*</IonText>
                         </div>
-                    </IonItem>
-                    <IonItem>
-                        <IonInput
-                            label='実施日時'
-                            labelPlacement='stacked'
-                            type="datetime-local"
-                            value={removeExecuteAt}
-                            onIonInput={e => setRemoveExecuteAt(e.detail.value!)}
-                        />
-                    </IonItem>
-                </IonList>
 
-                <IonButton
-                    expand="block"
-                    color="danger"
-                    onClick={() => setShowRemoveAlert(true)}
-                >
-                    削除
-                </IonButton>
-            </div>
+                        {errors.remarks && (
+                            <IonNote color="danger" className='error-text'>
+                                {errors.remarks}
+                            </IonNote>
+                        )}
 
-            <IonAlert
-                isOpen={showRemoveAlert}
-                onDidDismiss={() => setShowRemoveAlert(false)}
-                header="確認"
-                message="削除登録を実行してもよろしいですか？"
-                buttons={[
-                    {
-                        text: 'キャンセル',
-                        role: 'cancel'
-                    },
-                    {
-                        text: '実行',
-                        handler: handleSubmit
-                    }
-                ]}
-            />
-        </>
+                    </IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonSelect
+                        required
+                        label="種類"
+                        labelPlacement="stacked"
+                        value={removeType}
+                        onIonChange={e => setRemoveType(e.detail.value)}
+                    >
+                        <IonSelectOption value="use">使用</IonSelectOption>
+                        <IonSelectOption value="lost">紛失</IonSelectOption>
+                        <IonSelectOption value="scrap">破棄</IonSelectOption>
+                        <IonSelectOption value="unknown">不明</IonSelectOption>
+                    </IonSelect>
+                    <div slot="label">
+                        種類 <IonText color="danger">*</IonText>
+                    </div>
+
+                    {errors.type && (
+                        <IonText color="danger" className='error-text'>
+                            {errors.type}
+                        </IonText>
+                    )}
+                </IonItem>
+                <IonItem>
+                    <IonInput
+                        label='実施日時'
+                        labelPlacement='stacked'
+                        type="datetime-local"
+                        value={removeExecuteAt}
+                        onIonInput={e => setRemoveExecuteAt(e.detail.value!)}
+                    >
+                        {errors.executeAt && (
+                            <IonText color='danger' className='error-text'>
+                                {errors.executeAt}
+                            </IonText>
+                        )}
+                    </IonInput>
+                </IonItem>
+            </IonList>
+
+            <IonButton
+                expand="block"
+                color="danger"
+                onClick={handleSubmit}
+            >
+                削除
+            </IonButton>
+        </div>
+
+
     );
 };
