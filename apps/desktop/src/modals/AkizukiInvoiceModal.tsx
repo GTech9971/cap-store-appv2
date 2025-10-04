@@ -179,7 +179,7 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
     }, [presentToast]);
 
     return (
-        <IonModal isOpen={isOpen}>
+        <IonModal isOpen={isOpen} className="modal">
             <IonHeader>
                 <IonToolbar>
                     <IonButtons slot="start" >
