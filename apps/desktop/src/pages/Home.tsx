@@ -13,22 +13,30 @@ import {
   IonItem,
   IonLabel,
   IonList,
+  IonListHeader,
   IonMenu,
   IonRow,
   IonSearchbar,
   IonSplitPane,
   IonText,
   IonTitle,
-  IonToolbar
+  IonToolbar,
+  useIonAlert
 } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "../api/useApiClient";
 import { Category, Maker, PartsComponent } from "cap-store-api-def";
 import { parseApiError } from "../utils/parseApiError";
-import { menuOutline, addOutline } from "ionicons/icons"
+import { menuOutline, addOutline, documentOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
 import { useNavigate } from "react-router-dom";
+
+// tauri
 import { useTauriDragDrop } from "@/hooks/useTauriDragDrop";
+import { open } from '@tauri-apps/plugin-dialog';
+
+import { Invoice } from "@/types/invoices/invoice";
+import { useInvoice } from "@/hooks/useInvoice";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -51,6 +59,10 @@ function Home() {
 
   // 登録モーダル
   const [isOpenCModal, setIsOpenCModal] = useState<boolean>(false);
+
+  // 納品書
+  const { parseInvoice, presentInvoice } = useInvoice();
+  const [present] = useIonAlert();
 
   // 検索フィルタリングされたコンポーネント
   const filteredComponents = components.filter(component => {
@@ -133,26 +145,44 @@ function Home() {
     // setGreetMsg(await invoke("greet", { name }));
   }
 
-
   // ドラックアンドドロップ
   useTauriDragDrop(async (event) => {
-    if (event.type === "over") {
-      console.log("Hover:", event.position);
-    } else if (event.type === "drop") {
-      console.log("Dropped:", event.paths);
+    if (event.type !== 'drop') { return; }
 
-      const paths: string[] = event.paths ?? [];
-      if (paths.length === 0) { return; }
-      console.log(paths);
+    const paths: string[] = event.paths ?? [];
+    if (paths.length === 0) { return; }
+    console.log(paths);
+
+    const result: Invoice = await parseInvoice(paths[0]);
+    console.log(result);
+  });
 
 
-      const result = await invoke('parse_invoice', { path: paths[0] });
-      console.log(result);
 
-    } else {
-      console.log("Cancelled");
-    }
-  })
+  const openInvoiceFile = useCallback(async () => {
+    const path: string | null = await open({
+      title: '納品書を開く',
+      multiple: false,
+      directory: false,
+      filters: [{ name: 'html', extensions: ['html'] }]
+    })
+    console.log(path);
+    if (!path) { return; }
+
+    const result = await parseInvoice(path);
+    console.log(result);
+
+    present({
+      header: result.order_id, message: presentInvoice(result), inputs: [
+        {
+          type: 'checkbox',
+          label: result.items[0].name,
+          value: result.items[0].catalog_Id
+        }
+      ]
+    });
+
+  }, [parseInvoice, presentInvoice, present]);
 
 
   return (
@@ -161,11 +191,14 @@ function Home() {
       <IonMenu contentId="main">
         <IonHeader>
           <IonToolbar>
-            <IonTitle>カテゴリ一覧</IonTitle>
+            <IonTitle>CapStoreApp</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
-          <IonList>
+          <IonList inset={true}>
+            <IonListHeader>
+              カテゴリ一覧
+            </IonListHeader>
             {categories &&
               categories.map((category, index) => (
                 <IonItem button detail={false} key={index} color={selectedCategoryId == category.id ? 'primary' : undefined} onClick={() => handleCategorySelect(category.id)}>
@@ -174,6 +207,18 @@ function Home() {
               ))
             }
           </IonList>
+
+          <IonList inset>
+            <IonListHeader>
+              ファイル
+            </IonListHeader>
+            <IonItem button detail={false} onClick={openInvoiceFile}>
+              <IonIcon slot="start" icon={documentOutline} />
+              <IonLabel>納品書</IonLabel>
+            </IonItem>
+          </IonList>
+
+
         </IonContent>
       </IonMenu>
       <div className="ion-page" id="main">
