@@ -30,7 +30,7 @@ export const InvoiceItem: React.FC<Props> = ({ item, isUnRegistry, onClick }) =>
             <IonLabel>
                 <strong>{item.name}</strong>
                 <IonNote color="medium" className="ion-text-wrap">
-                    カタログID: {item.catalog_Id}
+                    カタログID: {item.catalog_id}
                 </IonNote>
             </IonLabel>
             <div className="metadata-end-wrapper" slot="end">
