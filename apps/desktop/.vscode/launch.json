@@ -10,6 +10,21 @@
             "name": "localhost Chrome",
             "url": "http://localhost:1420",
             "webRoot": "${workspaceFolder}"
-        }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Tauri Development Debug",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--manifest-path=./src-tauri/Cargo.toml",
+                    "--no-default-features"
+                ]
+            },
+            // `beforeDevCommand` のタスクを使用する場合は、`.vscode/tasks.json` で設定する必要があります。
+            "preLaunchTask": "ui:dev:start",
+            "postDebugTask": "ui:dev:stop",
+        },
     ]
 }
