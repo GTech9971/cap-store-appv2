@@ -3,7 +3,7 @@ export type Item = {
      *
      * カタログID
      */
-    catalog_Id: string,
+    catalog_id: string,
     /**
      *
      * 部品名

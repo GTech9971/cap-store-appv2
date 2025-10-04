@@ -63,6 +63,8 @@ function Home() {
 
   // 納品書
   const { parseInvoice, presentInvoice } = useInvoice();
+  const [invoice, setInvoice] = useState<Invoice>();
+  const [isOpenIModal, setIsIModal] = useState<boolean>(false);
   const [present] = useIonAlert();
 
   // 検索フィルタリングされたコンポーネント
@@ -155,6 +157,10 @@ function Home() {
     console.log(paths);
 
     const result: Invoice = await parseInvoice(paths[0]);
+    if (result) {
+      setInvoice(result);
+      setIsIModal(true);
+    }
     console.log(result);
   });
 
@@ -173,17 +179,12 @@ function Home() {
     const result = await parseInvoice(path);
     console.log(result);
 
-    present({
-      header: result.order_id, message: presentInvoice(result), inputs: [
-        {
-          type: 'checkbox',
-          label: result.items[0].name,
-          value: result.items[0].catalog_Id
-        }
-      ]
-    });
+    if (result) {
+      setInvoice(result);
+      setIsIModal(true);
+    }
 
-  }, [parseInvoice, presentInvoice, present]);
+  }, [parseInvoice]);
 
 
   return (
@@ -278,7 +279,14 @@ function Home() {
         akizukiApi={akizukiCatalogApi}
       />
 
-      <AkizukiInvoiceModal isOpen={true} />
+      {invoice &&
+        <AkizukiInvoiceModal
+          isOpen={isOpenIModal}
+          invoice={invoice}
+          onClose={() => setIsIModal(false)}
+        />
+      }
+
 
     </IonSplitPane>
 

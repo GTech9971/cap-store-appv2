@@ -1,7 +1,6 @@
 import { Invoice } from "@/types/invoices/invoice";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback } from "react";
-import { open } from '@tauri-apps/plugin-dialog';
 
 /**
  * 納品書の処理

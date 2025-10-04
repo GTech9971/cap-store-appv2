@@ -3,61 +3,74 @@ import {
     IonButtons,
     IonContent,
     IonHeader,
+    IonIcon,
+    IonItem,
     IonLabel,
     IonList,
     IonListHeader,
     IonModal,
-    IonText,
+    IonNote,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    useIonAlert,
+    useIonToast
 } from "@ionic/react"
 import "./AkizukiInvoiceModal.css";
 import { Item } from "@/types/invoices/item";
 import { InvoiceItem } from "@/components/InvoiceItem";
 import { useApiClint } from "@/api/useApiClient";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FetchComponentByAkizukiCatalogIdData, FetchComponentByAkizukiCatalogIdRequest, RegistryComponentRequest } from "cap-store-api-def";
+import { useCallback, useEffect, useState } from "react";
+import { FetchComponentByAkizukiCatalogIdData, FetchComponentByAkizukiCatalogIdRequest, Maker, RegistryComponentRequest } from "cap-store-api-def";
 import { parseApiError } from "@/utils/parseApiError";
 import { useConfirmUtils } from "ui/utils/alertUtils";
+import { clipboardOutline, checkmarkOutline } from 'ionicons/icons'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { Invoice } from "@/types/invoices/invoice";
 
 type CustomItem = Item & { isUnRegistry: boolean, data?: FetchComponentByAkizukiCatalogIdData };
 
 interface Props {
-    isOpen: boolean
+    isOpen: boolean,
+    invoice: Invoice,
+    onClose: () => void
 }
 
 export const AkizukiInvoiceModal: React.FC<Props> = ({
     isOpen,
+    invoice,
+    onClose,
 }) => {
-
-    const [list, setList] = useState<CustomItem[]>([]);
-
-
-    const items: Item[] = useMemo(() => {
-        const a: Item = {
-            catalog_Id: '123456',
-            name: '丸ピンICソケット ( 6P)',
-            img_url: "/img/goods/M/128818.jpg",
-            quantity: 12,
-            unit_price: 200
-        }
-
-        const b: Item = {
-            catalog_Id: '34631',
-            name: '積層セラミックコンデンサー 0.1μF50V X7R 2.54mm',
-            img_url: "/img/goods/M/109862.jpg",
-            quantity: 1,
-            unit_price: 100
-        }
-        return [a, b]
-    }, []);
-
-    const [handleConfirm] = useConfirmUtils();
     const { categoryApi, makerApi, akizukiCatalogApi, componentApi } = useApiClint();
+    const [error, setError] = useState<string>();
+
+    // 納品
+    const [list, setList] = useState<CustomItem[]>([]);
+    const [makers, setMakers] = useState<Maker[]>([]);
+
+    // ダイアログ系
+    const [handleConfirm] = useConfirmUtils();
+    const [presentAlert] = useIonAlert();
+
+    // クリップボード
+    const [copied, setCopied] = useState<boolean>(false);
+    const [presentToast] = useIonToast();
+
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const makerResponse = await makerApi.fetchMakers();
+                setMakers(makerResponse?.data ?? []);
+            } catch (error) {
+                const { message, status } = await parseApiError(error);
+                setError(`メーカーの取得に失敗 ${message}:${status}`);
+            }
+        })();
+    }, [makerApi]);
 
     /**
-     * データ登録確認
-     */
+    * データ登録確認
+    */
     const checkRegistry = useCallback(async (catalogId: string): Promise<{ isUnRegistry: boolean, data?: FetchComponentByAkizukiCatalogIdData }> => {
         const request: FetchComponentByAkizukiCatalogIdRequest = { catalogId: catalogId };
 
@@ -75,20 +88,30 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
         return { isUnRegistry, data };
     }, [akizukiCatalogApi]);
 
-    const handleUnRegistryData = useCallback(async () => {
-        if (await handleConfirm("未登録データを登録します。") === false) { return; }
-    }, [handleConfirm]);
-
+    // データ整形
+    useEffect(() => {
+        (async () => {
+            const list: CustomItem[] = [];
+            for (const item of invoice.items) {
+                const result = await checkRegistry(item.catalog_id);
+                list.push({ ...item, ...result, });
+            }
+            setList(list);
+        })();
+    }, [checkRegistry, invoice]);
 
 
     /**
      * カタログIDを使って登録
+     * @param item
+     * @param isShowConfirm
      */
     const registryComponentByCatalogId = useCallback(async (item: CustomItem, isShowConfirm: boolean) => {
         if (isShowConfirm) {
             if (await handleConfirm(`${item.name}を登録しますか？`) === false) { return; }
         }
 
+        // 未登録カテゴリー・メーカー登録
         let categoryId: string | undefined = item.data?.categoryId;
         let makerId: string | undefined;
         if (item.data?.unRegistered) {
@@ -100,7 +123,7 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
                     categoryId = res.data?.categoryId;
                 } catch (err: unknown) {
                     const { message, status } = await parseApiError(err);
-                    // setApiError(`未登録カテゴリの登録に失敗しました。${message}:${status}`);
+                    setError(`未登録カテゴリの登録に失敗しました。${message}:${status}`);
                 }
             }
             if (makerName) {
@@ -109,43 +132,58 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
                     makerId = res.data?.makerId;
                 } catch (err) {
                     const { message, status } = await parseApiError(err);
-                    // setApiError(`未登録メーカーの登録に失敗しました。${message}:${status}`);
+                    setError(`未登録メーカーの登録に失敗しました。${message}:${status}`);
                 }
             }
 
+            if (!makerId) {
+                makerId = makers.find(x => x.name === makerName)?.id;
+                if (!makerId) { throw new Error(); }
+            }
+
+            // 電子部品登録
             const request: RegistryComponentRequest = {
-                categoryId: categoryId,
+                categoryId: categoryId!,
                 makerId: makerId,
                 name: item.data.name,
                 modelName: item.data.modelName,
                 images: item.data.images,
-                description: item.data.description
+                description: item.data.description,
+                currentStock: 0
             }
 
-            const response = await componentApi.registryComponent(request);
+            try {
+                const response = await componentApi.registryComponent({ registryComponentRequest: request });
+                // 未登録マークを消す
+                setList(prev =>
+                    prev.map(x => x.name === item.name
+                        ? { ...x, isUnRegistry: false, data: undefined }
+                        : x)
+                );
+                await presentAlert({ header: response.data?.componentId, message: '登録しました。' });
+            } catch (error) {
+                const { message, status } = await parseApiError(error);
+                setError(`電子部品登録に失敗 ${message}:${status}`);
+            }
         }
+    }, [handleConfirm, presentAlert, categoryApi, makerApi, componentApi, makers,]);
 
 
-    }, [handleConfirm, categoryApi, makerApi, componentApi]);
-
-    // データ整形
-    useEffect(() => {
-        (async () => {
-            const list: CustomItem[] = [];
-            for (const item of items) {
-                const result = await checkRegistry(item.catalog_Id);
-                list.push({ ...item, isUnRegistry: result.isUnRegistry, data: result.data });
-            }
-            setList(list);
-        })();
-    }, [checkRegistry, items]);
+    /**
+     * 注文番号をクリップボードにコピー
+     */
+    const handleCopyOrderId = useCallback(async (orderId: string) => {
+        await writeText(orderId);
+        await presentToast('注文番号をコピーしました', 1000);
+        setCopied(true);
+    }, [presentToast]);
 
     return (
         <IonModal isOpen={isOpen}>
             <IonHeader>
                 <IonToolbar>
-                    <IonButtons slot="start">
-                        <IonButton>
+                    <IonButtons slot="start" >
+                        <IonButton onClick={onClose}>
                             閉じる
                         </IonButton>
                     </IonButtons>
@@ -156,26 +194,27 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
 
             <IonContent className="ion-padding" color="light">
 
-                <IonText>
-                    <h2>
-                        注文番号: E123456-09876123
-                    </h2>
-                </IonText>
+                <IonList inset>
+                    <IonItem button detail={false} onClick={() => handleCopyOrderId("123456")}>
+                        <IonLabel >注文番号: {invoice.order_id}</IonLabel>
+                        <IonIcon color={copied ? 'success' : undefined} icon={copied ? checkmarkOutline : clipboardOutline} />
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>注文日: {invoice.order_date}</IonLabel>
+                    </IonItem>
 
-                <IonText>
-                    注文日: 2025-02-12
-                </IonText>
-                <br />
-                <IonText>
-                    出荷日: 2025-03-12
-                </IonText>
+                    <IonItem>
+                        <IonLabel> 出荷日: {invoice.shipping_date}</IonLabel>
+                    </IonItem>
+                </IonList>
 
+                {error &&
+                    <IonNote color='danger'>{error}</IonNote>
+                }
 
-                合計: 3,190円
                 <IonList inset>
                     <IonListHeader lines="inset">
-                        <IonLabel>注文内容</IonLabel>
-                        <IonButton disabled={list.some(x => x.isUnRegistry) === false} onClick={handleUnRegistryData}>未登録データ</IonButton>
+                        <IonLabel>合計: {invoice.items.map(x => x.quantity * x.unit_price).reduce((sum, x) => sum + x)}円</IonLabel>
                     </IonListHeader>
                     {
                         list.map((item, idx) => (

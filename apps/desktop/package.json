@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "tauri:dev": "tauri dev",
     "tauri": "tauri",
     "lint": "eslint ."
   },
@@ -14,6 +15,7 @@
     "@ionic/core": "^8.7.5",
     "@ionic/react": "^8.7.5",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2.3.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
     "@tauri-apps/plugin-opener": "^2",
     "axios": "^1.12.2",
