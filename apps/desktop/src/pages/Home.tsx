@@ -28,6 +28,7 @@ import { parseApiError } from "../utils/parseApiError";
 import { menuOutline, addOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
 import { useNavigate } from "react-router-dom";
+import { useTauriDragDrop } from "@/hooks/useTauriDragDrop";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -131,6 +132,28 @@ function Home() {
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     // setGreetMsg(await invoke("greet", { name }));
   }
+
+
+  // ドラックアンドドロップ
+  useTauriDragDrop(async (event) => {
+    if (event.type === "over") {
+      console.log("Hover:", event.position);
+    } else if (event.type === "drop") {
+      console.log("Dropped:", event.paths);
+
+      const paths: string[] = event.paths ?? [];
+      if (paths.length === 0) { return; }
+      console.log(paths);
+
+
+      const result = await invoke('parse_invoice', { path: paths[0] });
+      console.log(result);
+
+    } else {
+      console.log("Cancelled");
+    }
+  })
+
 
   return (
 
