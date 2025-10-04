@@ -1,23 +1,15 @@
 import { useEffect } from "react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
-type DragDropHandler = (event: {
+export type DragDropEvent = {
     type: "over" | "drop" | "cancelled";
     position?: { x: number; y: number };
     paths?: string[];
-}) => void;
-
-function isTauri(): boolean {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return typeof window !== "undefined" && !!(window as any).__TAURI__;
 }
+type DragDropHandler = (event: DragDropEvent) => void;
 
 export function useTauriDragDrop(onEvent: DragDropHandler) {
     useEffect(() => {
-        // if (isTauri() === false) {
-        //     console.warn('not support');
-        //     return;
-        // }
         let webview;
         try {
             webview = getCurrentWebview();

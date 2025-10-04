@@ -8,22 +8,21 @@ import { useCallback } from "react";
  */
 export const useInvoice = () => {
 
+    /**
+     * 納品書を解析(rust)して返す
+     * @param 納品書(html)の物理パス
+     */
     const parseInvoice = useCallback(async (path: string): Promise<Invoice> => {
-        const result: Invoice = JSON.parse(await invoke('parse_invoice', { path: path }));
-        return result;
+        try {
+            const result = await invoke('parse_invoice', { path: path });
+            console.debug(result);
+            const invoice: Invoice = result as Invoice;
+            return invoice;
+        } catch (err) {
+            console.error(err);
+            throw new Error("納品書の解析に失敗しました。");
+        }
     }, []);
 
-
-    const presentInvoice = (invoice: Invoice) => {
-        const message: string =
-            `
-        注文番号: ${invoice.order_id}
-        注文日:  ${invoice.order_date}
-        出荷日:  ${invoice.shipping_date}
-        `;
-
-        return message;
-    }
-
-    return { parseInvoice, presentInvoice };
+    return { parseInvoice };
 }

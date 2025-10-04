@@ -9,11 +9,15 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn parse_invoice(path: &str) -> String {
-    let html_content: String = fs::read_to_string(path).unwrap();
-    let invoice: Invoice = html_parser::parse_invoice(&html_content);
+fn parse_invoice(path: &str) -> Result<Invoice, String> {
+    let html_content_result: Result<String, std::io::Error> = fs::read_to_string(path);
 
-    return invoice.to_json_pretty().unwrap();
+    match html_content_result {
+        Ok(html_content) => {
+            return html_parser::parse_invoice(&html_content);
+        }
+        Err(error) => return Err(error.to_string()),
+    };
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

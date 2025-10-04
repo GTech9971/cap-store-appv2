@@ -29,7 +29,7 @@ dependencies = [
 [[package]]
 name = "akizuki_invoice_parser"
 version = "0.1.0"
-source = "git+https://github.com/GTech9971/akizuki-invoice-parser.git?tag=0.0.2#0c74f6bf369c7cbb4c846f13e22b977d81417869"
+source = "git+https://github.com/GTech9971/akizuki-invoice-parser.git?tag=0.0.3#b060d96ea6a5e43079be8820bb2fbcd54eaa3c98"
 dependencies = [
  "chrono",
  "scraper",

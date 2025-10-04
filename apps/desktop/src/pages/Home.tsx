@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import {
   IonButton,
   IonButtons,
@@ -32,7 +31,7 @@ import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
 import { useNavigate } from "react-router-dom";
 
 // tauri
-import { useTauriDragDrop } from "@/hooks/useTauriDragDrop";
+import { DragDropEvent, useTauriDragDrop } from "@/hooks/useTauriDragDrop";
 import { open } from '@tauri-apps/plugin-dialog';
 
 import { Invoice } from "@/types/invoices/invoice";
@@ -56,16 +55,17 @@ function Home() {
 
   const { categoryApi, makerApi, componentApi, akizukiCatalogApi } = useApiClint();
 
+  const [presentAlert] = useIonAlert();
+
   const navigate = useNavigate();
 
   // 登録モーダル
   const [isOpenCModal, setIsOpenCModal] = useState<boolean>(false);
 
   // 納品書
-  const { parseInvoice, presentInvoice } = useInvoice();
+  const { parseInvoice } = useInvoice();
   const [invoice, setInvoice] = useState<Invoice>();
   const [isOpenIModal, setIsIModal] = useState<boolean>(false);
-  const [present] = useIonAlert();
 
   // 検索フィルタリングされたコンポーネント
   const filteredComponents = components.filter(component => {
@@ -143,29 +143,36 @@ function Home() {
   }, [categoryApi, fetchCategoriesList, fetchMakersList]);
 
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    // setGreetMsg(await invoke("greet", { name }));
-  }
-
-  // ドラックアンドドロップ
-  useTauriDragDrop(async (event) => {
+  /**
+   * ドラッグドロップ処理
+   */
+  const DragDropHandler = useCallback(async (event: DragDropEvent) => {
     if (event.type !== 'drop') { return; }
 
     const paths: string[] = event.paths ?? [];
     if (paths.length === 0) { return; }
-    console.log(paths);
-
-    const result: Invoice = await parseInvoice(paths[0]);
-    if (result) {
-      setInvoice(result);
-      setIsIModal(true);
+    console.debug(paths);
+    try {
+      const result: Invoice = await parseInvoice(paths[0]);
+      if (result) {
+        setInvoice(result);
+        setIsIModal(true);
+      }
+      console.debug(result);
+    } catch (err: unknown) {
+      console.error(err);
+      await presentAlert({ header: 'エラー', message: (err as Error).message });
     }
-    console.log(result);
-  });
+
+  }, [parseInvoice, presentAlert])
+
+  // ドラックアンドドロップ
+  useTauriDragDrop(DragDropHandler);
 
 
-
+  /**
+   * 納品書をファイルダイアログで開く
+   */
   const openInvoiceFile = useCallback(async () => {
     const path: string | null = await open({
       title: '納品書を開く',
@@ -173,18 +180,21 @@ function Home() {
       directory: false,
       filters: [{ name: 'html', extensions: ['html'] }]
     })
-    console.log(path);
+    console.debug(path);
     if (!path) { return; }
 
-    const result = await parseInvoice(path);
-    console.log(result);
-
-    if (result) {
-      setInvoice(result);
-      setIsIModal(true);
+    try {
+      const result = await parseInvoice(path);
+      console.debug(result);
+      if (result) {
+        setInvoice(result);
+        setIsIModal(true);
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      await presentAlert({ header: 'エラー', message: (err as Error).message });
     }
-
-  }, [parseInvoice]);
+  }, [parseInvoice, presentAlert]);
 
 
   return (
