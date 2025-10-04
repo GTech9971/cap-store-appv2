@@ -21,6 +21,8 @@ export const handlers = [
 
         if (catalogId === 'N') { return HttpResponse.json<FetchComponentByAkizukiCatalogIdResponse>({ data: undefined, errors: [] }, { status: 404 }); }
 
+        if (catalogId === '123456') { return HttpResponse.json<FetchComponentByAkizukiCatalogIdResponse>({ data: undefined, errors: [] }, { status: 409 }) }
+
         return HttpResponse.json<FetchComponentByAkizukiCatalogIdResponse>({
             data: {
                 name: '抵抗1/4W',

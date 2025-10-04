@@ -18,10 +18,15 @@ export function useTauriDragDrop(onEvent: DragDropHandler) {
         //     console.warn('not support');
         //     return;
         // }
-
-        const webview = getCurrentWebview();
-        if (!webview) {
-            console.warn("Tauri webview is not ready yet");
+        let webview;
+        try {
+            webview = getCurrentWebview();
+            if (!webview) {
+                console.warn("Tauri webview is not ready yet");
+                return;
+            }
+        } catch (err) {
+            console.warn(err);
             return;
         }
 

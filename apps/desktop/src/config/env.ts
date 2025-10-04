@@ -12,6 +12,8 @@ const createEnv = () => {
         // OKTA_ISSUER: z.string(),
         // OKTA_CLIENTID: z.string(),
         // OKTA_REDIRECTURI: z.string()
+
+        AKIZUKI_URL: z.string(),
     });
 
     const envVars = Object.entries(import.meta.env).reduce<

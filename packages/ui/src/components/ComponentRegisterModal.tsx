@@ -32,6 +32,7 @@ import type {
 import z from 'zod';
 import { parseApiError } from '../utils/parseApiError';
 import './ComponentRegisterModal.css';
+import { useConfirmUtils } from '../utils/alertUtils';
 
 interface Category {
     id: string;
@@ -100,26 +101,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
     const [apiError, setApiError] = useState<string | null>(null);
 
 
-    const [confirm] = useIonAlert();
-    const presentConfirm = useCallback((category: Category | undefined, makerName: string | undefined): Promise<boolean> => {
-        return new Promise((resolve) => {
-            confirm(`以下のカテゴリまたはメーカーが未登録です。` +
-                `${category ? `カテゴリ: ${category.name}\n` : ''}` +
-                `${makerName ? `メーカー: ${makerName}\n` : ''}` +
-                `\nこれらを登録しますか？`,
-                [
-                    {
-                        text: 'OK',
-                        handler: () => resolve(true),
-                    },
-                    {
-                        text: 'Cancel',
-                        role: 'cancel',
-                        handler: () => resolve(false)
-                    }
-                ])
-        })
-    }, [confirm])
+    const [handleConfirm] = useConfirmUtils();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -173,7 +155,12 @@ export const ComponentRegisterModal: React.FC<Props> = ({
             if (data.unRegistered) {
                 const { category, makerName } = data.unRegistered;
 
-                if (await presentConfirm(category, makerName)) {
+                const message = `以下のカテゴリまたはメーカーが未登録です。` +
+                    `${category ? `カテゴリ: ${category.name}\n` : ''}` +
+                    `${makerName ? `メーカー: ${makerName}\n` : ''}` +
+                    `\nこれらを登録しますか？`
+
+                if (await handleConfirm(message)) {
                     if (category) {
                         try {
                             await categoryApi.registryCategory({ registryCategoryRequest: category });
@@ -211,7 +198,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
             const { message, status } = await parseApiError(err);
             setApiError(`秋月電子の情報取得に失敗しました。通販コードをご確認ください。${message}:${status}`);
         }
-    }, [akizukiApi, categoryApi, makerApi, makers, presentConfirm]);
+    }, [akizukiApi, categoryApi, makerApi, makers, handleConfirm]);
 
 
     const [present] = useIonAlert();

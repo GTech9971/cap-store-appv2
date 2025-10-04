@@ -9,6 +9,13 @@ export type Item = {
      * 部品名
      */
     name: string,
+
+    /**
+     * 
+     * 画像URL(相対パス)
+     */
+    img_url: string,
+
     /**
      *
      * 個数

@@ -37,6 +37,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 
 import { Invoice } from "@/types/invoices/invoice";
 import { useInvoice } from "@/hooks/useInvoice";
+import { AkizukiInvoiceModal } from "@/modals/AkizukiInvoiceModal";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -276,6 +277,8 @@ function Home() {
         componentApi={componentApi}
         akizukiApi={akizukiCatalogApi}
       />
+
+      <AkizukiInvoiceModal isOpen={true} />
 
     </IonSplitPane>
 
