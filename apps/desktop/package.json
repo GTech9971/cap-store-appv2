@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "bundle:dev": "tauri build --debug --config ./src-tauri/tauri.conf.dev.json && tauri bundle --bundles dmg",
+    "bundle:stg": "tauri build --debug --config ./src-tauri/tauri.conf.stg.json && tauri bundle --bundles dmg",
+    "bundle:prod": "tauri build --debug --config ./src-tauri/tauri.conf.prod.json && tauri bundle --bundles dmg",
     "preview": "vite preview",
-    "tauri:dev": "tauri dev",
     "tauri": "tauri",
     "lint": "eslint ."
   },
