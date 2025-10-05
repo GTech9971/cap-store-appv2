@@ -111,10 +111,15 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
             if (await handleConfirm(`${item.name}を登録しますか？`) === false) { return; }
         }
 
+        if (item.data === undefined) {
+            setError("秋月電子からデータを取得できていません。");
+            return;
+        }
+
         // 未登録カテゴリー・メーカー登録
-        let categoryId: string | undefined = item.data?.categoryId;
+        let categoryId: string | undefined = item.data.categoryId;
         let makerId: string | undefined;
-        if (item.data?.unRegistered) {
+        if (item.data.unRegistered) {
             const { category, makerName } = item.data.unRegistered;
 
             if (category) {
@@ -135,37 +140,43 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
                     setError(`未登録メーカーの登録に失敗しました。${message}:${status}`);
                 }
             }
-
             if (!makerId) {
                 makerId = makers.find(x => x.name === makerName)?.id;
                 if (!makerId) { throw new Error(); }
             }
 
-            // 電子部品登録
-            const request: RegistryComponentRequest = {
-                categoryId: categoryId!,
-                makerId: makerId,
-                name: item.data.name,
-                modelName: item.data.modelName,
-                images: item.data.images,
-                description: item.data.description,
-                currentStock: 0
-            }
 
-            try {
-                const response = await componentApi.registryComponent({ registryComponentRequest: request });
-                // 未登録マークを消す
-                setList(prev =>
-                    prev.map(x => x.name === item.name
-                        ? { ...x, isUnRegistry: false, data: undefined }
-                        : x)
-                );
-                await presentAlert({ header: response.data?.componentId, message: '登録しました。' });
-            } catch (error) {
-                const { message, status } = await parseApiError(error);
-                setError(`電子部品登録に失敗 ${message}:${status}`);
-            }
+        } else {
+            makerId = makers.find(x => x.name === item.data!.makerName)?.id;
+            if (!makerId) { throw new Error(); }
         }
+
+
+        // 電子部品登録
+        const request: RegistryComponentRequest = {
+            categoryId: categoryId!,
+            makerId: makerId,
+            name: item.data.name,
+            modelName: item.data.modelName,
+            images: item.data.images,
+            description: item.data.description,
+            currentStock: 0
+        }
+
+        try {
+            const response = await componentApi.registryComponent({ registryComponentRequest: request });
+            // 未登録マークを消す
+            setList(prev =>
+                prev.map(x => x.name === item.name
+                    ? { ...x, isUnRegistry: false, data: undefined }
+                    : x)
+            );
+            await presentAlert({ header: response.data?.componentId, message: '登録しました。' });
+        } catch (error) {
+            const { message, status } = await parseApiError(error);
+            setError(`電子部品登録に失敗 ${message}:${status}`);
+        }
+
     }, [handleConfirm, presentAlert, categoryApi, makerApi, componentApi, makers,]);
 
 
