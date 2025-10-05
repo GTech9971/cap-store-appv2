@@ -99,6 +99,7 @@ function Home() {
     }
   }, [categoryApi]);
 
+  /** メーカー取得 */
   const fetchMakersList = useCallback(async (): Promise<Maker[]> => {
     try {
       const makersRes = await makerApi.fetchMakers();
@@ -112,11 +113,15 @@ function Home() {
     }
   }, [makerApi]);
 
+  /**
+   * カテゴリー選択
+   * @param categoryId 
+   */
   const handleCategorySelect = async (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     try {
-      const res = await categoryApi.fetchComponentsByCategoryId({ categoryId: categoryId });
-      setComponents(res?.data ?? []);
+      const response = await categoryApi.fetchComponentsByCategoryId({ categoryId: categoryId });
+      setComponents(response?.data ?? []);
     } catch (err) {
       const { message, status } = await parseApiError(err);
       setComponentApiError(`部品一覧の取得に失敗しました。${message}:${status}`);
