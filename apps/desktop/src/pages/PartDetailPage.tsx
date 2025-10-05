@@ -14,6 +14,8 @@ import {
     IonInput,
     IonItem,
     IonLabel,
+    IonList,
+    IonListHeader,
     IonPage,
     IonRow,
     IonSelect,
@@ -189,108 +191,118 @@ export const PartDetailPage = () => {
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
-            <IonContent fullscreen>
+            <IonContent fullscreen color='light'>
                 <IonGrid>
                     <IonRow>
                         <IonCol size="6">
-                            <IonItem>
-                                <IonInput
-                                    labelPlacement="floating"
-                                    required
-                                    value={name}
-                                    onIonInput={(e) => setName(e.detail.value ?? undefined)}
-                                >
-                                    <div slot="label">名称 <IonText color="danger">*</IonText></div>
+                            <IonList inset>
+                                <IonItem>
+                                    <IonInput
+                                        labelPlacement="floating"
+                                        required
+                                        value={name}
+                                        onIonInput={(e) => setName(e.detail.value ?? undefined)}
+                                    >
+                                        <div slot="label">名称 <IonText color="danger">*</IonText></div>
 
-                                    {/* {errors.name && (
+                                        {/* {errors.name && (
                                         <IonNote className='error-text' color="danger">
                                             {errors.name}
                                         </IonNote>
                                     )} */}
-                                </IonInput>
+                                    </IonInput>
 
-                            </IonItem>
+                                </IonItem>
 
-                            <ImageCarousel
-                                images={imageUrls}
-                                onDelete={(index) => {
-                                    const updated = (imageUrls || []).filter((_, i) => i !== index);
-                                    setImageUrls(updated);
-                                }}
-                            />
-                            <IonItem>
-                                <IonInput
-                                    placeholder='画像URL（カンマ区切りで複数可）'
-                                    value={imageUrls?.join(', ') || ''}
-                                    onIonInput={(e) => {
-                                        const urls = (e.detail.value as string).split(',').map(url => url.trim()).filter(url => url);
-                                        setImageUrls(urls);
+                                <ImageCarousel
+                                    images={imageUrls}
+                                    onDelete={(index) => {
+                                        const updated = (imageUrls || []).filter((_, i) => i !== index);
+                                        setImageUrls(updated);
                                     }}
-                                >
-                                </IonInput>
-                            </IonItem>
+                                />
+                                <IonItem>
+                                    <IonInput
+                                        placeholder='画像URL（カンマ区切りで複数可）'
+                                        value={imageUrls?.join(', ') || ''}
+                                        onIonInput={(e) => {
+                                            const urls = (e.detail.value as string).split(',').map(url => url.trim()).filter(url => url);
+                                            setImageUrls(urls);
+                                        }}
+                                    >
+                                    </IonInput>
+                                </IonItem>
+
+                            </IonList>
+
                         </IonCol>
 
 
                         <IonCol>
-                            <IonItem>
-                                <IonInput
-                                    labelPlacement="floating"
-                                    required
-                                    value={modelName}
-                                    onIonInput={(e) => setModelName(e.detail.value ?? undefined)}
-                                >
-                                    <div slot="label">型番 <IonText color="danger">*</IonText></div>
 
-                                    {/* {errors.modelName && (
+                            <IonList inset>
+
+                                <IonItem>
+                                    <IonInput
+                                        labelPlacement="floating"
+                                        required
+                                        value={modelName}
+                                        onIonInput={(e) => setModelName(e.detail.value ?? undefined)}
+                                    >
+                                        <div slot="label">型番 <IonText color="danger">*</IonText></div>
+
+                                        {/* {errors.modelName && (
                                         <IonNote className='error-text' color="danger">
                                             {errors.modelName}
                                         </IonNote>
                                     )} */}
-                                </IonInput>
+                                    </IonInput>
 
-                            </IonItem>
+                                </IonItem>
 
-                            <IonItem>
-                                <IonLabel position="stacked">カテゴリ <span style={{ color: 'red' }}>*</span></IonLabel>
-                                <IonSelect
-                                    required
-                                    value={selectedCategoryId}
-                                    onIonChange={(e) => setSelectedCategoryId(e.detail.value)}
-                                    placeholder="選択してください"
-                                >
-                                    {categories.map(cat => (
-                                        <IonSelectOption key={cat.id} value={cat.id}>
-                                            {cat.name}
-                                        </IonSelectOption>
-                                    ))}
-                                </IonSelect>
-                                {/* {errors.categoryId && (
+                                <IonItem>
+                                    <IonLabel position="stacked">カテゴリ <span style={{ color: 'red' }}>*</span></IonLabel>
+                                    <IonSelect
+                                        required
+                                        value={selectedCategoryId}
+                                        onIonChange={(e) => setSelectedCategoryId(e.detail.value)}
+                                        placeholder="選択してください"
+                                    >
+                                        {categories.map(cat => (
+                                            <IonSelectOption key={cat.id} value={cat.id}>
+                                                {cat.name}
+                                            </IonSelectOption>
+                                        ))}
+                                    </IonSelect>
+                                    {/* {errors.categoryId && (
                                     <IonNote className='error-text' color="danger">
                                         {errors.categoryId}
                                     </IonNote>
                                 )} */}
-                            </IonItem>
+                                </IonItem>
 
-                            <IonItem>
-                                <IonLabel position="stacked">メーカー <span style={{ color: 'red' }}>*</span></IonLabel>
-                                <IonSelect
-                                    value={selectedMakerId}
-                                    onIonChange={(e) => setSelectedMakerId(e.detail.value)}
-                                    placeholder="選択してください"
-                                >
-                                    {makers.map((maker, index) => (
-                                        <IonSelectOption key={index} value={maker.id}>
-                                            {maker.name}
-                                        </IonSelectOption>
-                                    ))}
-                                </IonSelect>
-                                {/* {errors.makerId && (
+                                <IonItem>
+                                    <IonLabel position="stacked">メーカー <span style={{ color: 'red' }}>*</span></IonLabel>
+                                    <IonSelect
+                                        value={selectedMakerId}
+                                        onIonChange={(e) => setSelectedMakerId(e.detail.value)}
+                                        placeholder="選択してください"
+                                    >
+                                        {makers.map((maker, index) => (
+                                            <IonSelectOption key={index} value={maker.id}>
+                                                {maker.name}
+                                            </IonSelectOption>
+                                        ))}
+                                    </IonSelect>
+                                    {/* {errors.makerId && (
                                     <IonNote className='error-text' color="danger">
                                         {errors.makerId}
                                     </IonNote>
                                 )} */}
-                            </IonItem>
+                                </IonItem>
+
+                            </IonList>
+
                         </IonCol>
                     </IonRow>
 
@@ -299,19 +311,20 @@ export const PartDetailPage = () => {
                     {/* MD */}
                     <IonRow>
                         <IonCol>
-                            <IonButton size="small" fill="clear" onClick={() => setIsPreviewMd(!isPreviewMD)}>
-                                <IonIcon icon={createOutline} />
-                                {isPreviewMD ? '編集' : 'プレビュー'}
-                            </IonButton>
-                        </IonCol>
-                    </IonRow>
+                            <IonList inset>
+                                <IonListHeader>
 
-                    <IonRow>
-                        <IonCol>
-                            <IonItem lines="none">
-                                {
-                                    isPreviewMD ?
-                                        (
+                                    <IonLabel> 説明・仕様</IonLabel>
+
+                                    <IonButton style={{ marginRight: '20px' }} size="small" fill="clear" onClick={() => setIsPreviewMd(!isPreviewMD)}>
+                                        <IonIcon icon={createOutline} />
+                                        {isPreviewMD ? '編集' : 'プレビュー'}
+                                    </IonButton>
+
+                                </IonListHeader>
+                                <IonItem lines="none">
+                                    {
+                                        isPreviewMD ?
                                             <IonRow>
                                                 <IonCol>
                                                     <ReactMarkdown components={markdownComponent}>
@@ -319,29 +332,29 @@ export const PartDetailPage = () => {
                                                     </ReactMarkdown>
                                                 </IonCol>
                                             </IonRow>
-                                        )
-                                        :
-                                        <IonGrid>
-                                            <IonRow>
-                                                <IonCol size="6">
-                                                    <IonTextarea
-                                                        label='説明・仕様'
-                                                        labelPlacement='floating'
-                                                        placeholder='出力電圧min,max など'
-                                                        value={description}
-                                                        onIonInput={(e) => setDescription(e.detail.value ?? undefined)}
-                                                        rows={25}
-                                                    />
-                                                </IonCol>
-                                                <IonCol>
-                                                    <ReactMarkdown components={markdownComponent}>
-                                                        {description}
-                                                    </ReactMarkdown>
-                                                </IonCol>
-                                            </IonRow>
-                                        </IonGrid>
-                                }
-                            </IonItem>
+                                            :
+                                            <IonGrid>
+                                                <IonRow>
+                                                    <IonCol size="6">
+                                                        <IonTextarea
+                                                            label='説明・仕様'
+                                                            labelPlacement='floating'
+                                                            placeholder='出力電圧min,max など'
+                                                            value={description}
+                                                            onIonInput={(e) => setDescription(e.detail.value ?? undefined)}
+                                                            rows={25}
+                                                        />
+                                                    </IonCol>
+                                                    <IonCol>
+                                                        <ReactMarkdown components={markdownComponent}>
+                                                            {description}
+                                                        </ReactMarkdown>
+                                                    </IonCol>
+                                                </IonRow>
+                                            </IonGrid>
+                                    }
+                                </IonItem>
+                            </IonList>
                         </IonCol>
                     </IonRow>
 
@@ -383,7 +396,7 @@ export const PartDetailPage = () => {
                 isOpen={isOpenIModal}
                 componentId={id!}
                 inventoryApi={inventoryApi}
-                onDidDismiss={() => { setIsOpenIModal(false) }}
+                onDidDismiss={() => setIsOpenIModal(false)}
             />
         </IonPage>
     )
