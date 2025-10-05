@@ -1,4 +1,12 @@
-import { IonBadge, IonCard, IonCardContent, IonCardSubtitle, IonCardTitle, IonImg, IonText } from "@ionic/react";
+import {
+    IonBadge,
+    IonCard,
+    IonCardContent,
+    IonCardSubtitle,
+    IonCardTitle,
+    IonImg,
+    IonText
+} from "@ionic/react";
 import { useMemo, useState, type CSSProperties } from "react";
 
 export interface ComponentCardProps {
@@ -61,23 +69,14 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, i
                         src={img}
                         alt={name}
                         style={{
-                            width: 'clamp(48px, 15vw, 80px)',
-                            height: 'clamp(48px, 15vw, 80px)',
+                            width: 'clamp(48px, 15vw, 120px)',
+                            height: 'clamp(48px, 15vw, 120px)',
                             objectFit: 'fit',
                             borderRadius: '8px'
                         }}
                     />
                 </div>
 
-                <IonBadge
-                    color="danger"
-                    style={{
-                        position: 'absolute',
-                        bottom: '14px',
-                        right: '8px'
-                    }}>
-                    {currentStock}個
-                </IonBadge>
 
             </IonCard>
             <IonCardContent onClick={() => setShowAllName(!showAllName)}
@@ -85,16 +84,19 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, i
                 <IonCardTitle style={showAllName ? showAllNameStyle : showPartNameStyle}>
                     {name}
                 </IonCardTitle>
-                <IonCardSubtitle style={{ fontSize: '12px', margin: '4px 0 0 0' }}>
-                    {model}
-                    {
-                        showAllName ?
-                            <>
-                                <br />
-                                <IonText style={{ fontSize: '10px' }}>ID:{id}</IonText>
-                            </>
-                            : <></>
+                <IonCardSubtitle style={{ margin: '4px 0 0 0' }}>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <IonText>{model}</IonText>
+                        <IonBadge color="danger" style={{ marginLeft: '5px', fontSize: '8px' }}>
+                            {currentStock}個
+                        </IonBadge>
+                    </div>
+
+                    {showAllName &&
+                        <IonText style={{ fontSize: '10px' }}>ID:{id}</IonText>
                     }
+
                 </IonCardSubtitle>
             </IonCardContent>
         </div>

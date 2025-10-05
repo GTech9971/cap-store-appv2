@@ -230,7 +230,6 @@ export const ComponentRegisterModal: React.FC<Props> = ({
         }
     }, [componentApi, componentSchema, form, present, handleClose]);
 
-    console.log(errors);
 
     return (
         <IonModal isOpen={isOpen} onDidDismiss={handleClose}>
