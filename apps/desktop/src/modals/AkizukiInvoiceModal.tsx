@@ -10,6 +10,8 @@ import {
     IonListHeader,
     IonModal,
     IonNote,
+    IonSpinner,
+    IonText,
     IonTitle,
     IonToolbar,
     useIonAlert,
@@ -91,11 +93,12 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
     // データ整形
     useEffect(() => {
         (async () => {
-            const list: CustomItem[] = [];
-            for (const item of invoice.items) {
-                const result = await checkRegistry(item.catalog_id);
-                list.push({ ...item, ...result, });
-            }
+            const list: CustomItem[] = await Promise.all(
+                invoice.items.map(async (item) => {
+                    const result = await checkRegistry(item.catalog_id);
+                    return { ...item, ...result, };
+                })
+            );
             setList(list);
         })();
     }, [checkRegistry, invoice]);
@@ -228,14 +231,26 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
                         <IonLabel>合計: {invoice.items.map(x => x.quantity * x.unit_price).reduce((sum, x) => sum + x)}円</IonLabel>
                     </IonListHeader>
                     {
-                        list.map((item, idx) => (
-                            <InvoiceItem
-                                key={idx}
-                                item={item}
-                                isUnRegistry={item.isUnRegistry}
-                                onClick={() => item.isUnRegistry ? registryComponentByCatalogId(item, true) : undefined}
-                            />
-                        ))
+                        list.length > 0 ?
+                            list.map((item, idx) => (
+                                <InvoiceItem
+                                    key={idx}
+                                    item={item}
+                                    isUnRegistry={item.isUnRegistry}
+                                    onClick={() => item.isUnRegistry ? registryComponentByCatalogId(item, true) : undefined}
+                                />
+                            ))
+                            :
+                            <IonItem>
+                                <IonLabel>
+                                    <IonNote>
+                                        <IonText>
+                                            納品書のカタログIDからデータ取得中
+                                        </IonText>
+                                    </IonNote>
+                                </IonLabel>
+                                <IonSpinner />
+                            </IonItem>
                     }
 
                 </IonList>
