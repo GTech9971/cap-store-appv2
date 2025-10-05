@@ -2,34 +2,35 @@ import axios, { AxiosInstance } from "axios";
 import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, InventoriesApi, MakersApi, UpdateComponentRequest, UpdateComponentResponse } from "cap-store-api-def";
 import { useCallback, useMemo } from "react";
 import { env } from "@/config/env";
+import { useOktaAuth } from "@okta/okta-react";
 
 export const useApiClint = () => {
 
+    const { authState } = useOktaAuth();
 
     const axiosClient: AxiosInstance = axios.create({ baseURL: env.API_URL });
 
     axiosClient.interceptors.request.use((config) => {
-        // const token: string | undefined = authState?.isAuthenticated
-        //     ? authState.accessToken?.accessToken
-        //     : undefined;
-        // if (token) {
-        //     config.headers.Authorization = `Bearer ${token}`;
-        // }
-
+        const token: string | undefined = authState?.isAuthenticated
+            ? authState.accessToken?.accessToken
+            : undefined;
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
     });
 
     const config: Configuration = useMemo(() => {
-        // const token: string | undefined = authState?.isAuthenticated
-        //     ? authState.accessToken?.accessToken
-        //     : undefined;
+        const token: string | undefined = authState?.isAuthenticated
+            ? authState.accessToken?.accessToken
+            : undefined;
         return new Configuration({
             basePath: env.API_URL,
-            // headers: ({
-            //     Authorization: `Bearer ${token}`
-            // })
+            headers: ({
+                Authorization: `Bearer ${token}`
+            })
         })
-    }, []);
+    }, [authState]);
 
     const componentApi: ComponentsApi = useMemo(() => { return new ComponentsApi(config) }, [config]);
     const categoryApi: CategoriesApi = useMemo(() => { return new CategoriesApi(config); }, [config]);

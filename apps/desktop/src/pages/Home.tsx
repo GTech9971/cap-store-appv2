@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  IonAvatar,
+  IonBadge,
   IonButton,
   IonButtons,
+  IonChip,
   IonCol,
   IonContent,
   IonFab,
   IonFabButton,
+  IonFooter,
   IonGrid,
   IonHeader,
   IonIcon,
@@ -37,6 +41,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { Invoice } from "@/types/invoices/invoice";
 import { useInvoice } from "@/hooks/useInvoice";
 import { AkizukiInvoiceModal } from "@/modals/AkizukiInvoiceModal";
+import { useOktaAuth } from "@okta/okta-react";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -196,6 +201,21 @@ function Home() {
     }
   }, [parseInvoice, presentAlert]);
 
+  // okta系
+  const { authState, oktaAuth } = useOktaAuth();
+  // ユーザー名取得用 state
+  const [userName, setUserName] = useState<string>('');
+
+  // 認証状態変化時にユーザー情報を取得
+  useEffect(() => {
+    (async () => {
+      if (authState?.isAuthenticated) {
+        const user = await oktaAuth.getUser();
+        setUserName(user.name || '');
+      }
+    })();
+  }, [authState, oktaAuth]);
+
 
   return (
 
@@ -206,7 +226,7 @@ function Home() {
             <IonTitle>CapStoreApp</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding">
+        <IonContent className="ion-padding" color="light">
           <IonList inset={true}>
             <IonListHeader>
               カテゴリ一覧
@@ -230,8 +250,35 @@ function Home() {
             </IonItem>
           </IonList>
 
-
         </IonContent>
+
+        {/* フッター アカウント系 */}
+        <IonFooter translucent className="ion-no-border">
+          <IonList inset>
+            <IonItem>
+              {
+                authState?.isAuthenticated ? (
+                  <>
+                    <IonChip>
+                      <IonAvatar>
+                        <img alt="" src="https://ionicframework.com/docs/img/demos/avatar.svg" />
+                      </IonAvatar>
+                      <IonLabel>{userName}</IonLabel>
+                    </IonChip>
+
+                    <IonButton slot="end" fill="clear" onClick={() => oktaAuth.signOut()}>ログアウト</IonButton>
+                  </>
+
+                ) : (
+                  <IonLabel color='primary'>
+                    <IonButton fill="clear" onClick={() => oktaAuth.signInWithRedirect()}>ログイン</IonButton>
+                  </IonLabel>
+                )
+              }
+            </IonItem>
+          </IonList>
+        </IonFooter>
+
       </IonMenu>
       <div className="ion-page" id="main">
         <IonHeader>
@@ -241,20 +288,25 @@ function Home() {
                 <IonIcon icon={menuOutline} />
               </IonButton>
             </IonButtons>
-            <IonTitle>CapStoreApp v2</IonTitle>
+
+            <IonTitle>{selectedCategoryId ? `「${selectedCategoryId}」の部品一覧` : `カテゴリーの取得失敗`}</IonTitle>
           </IonToolbar>
+
           <IonToolbar>
             <IonSearchbar value={searchQuery} onIonBlur={e => setSearchQuery(e.target.value ?? '')} placeholder="部品を検索"></IonSearchbar>
           </IonToolbar>
         </IonHeader>
-        <IonContent fullscreen>
-          <IonText>
-            {selectedCategoryId ? `「${selectedCategoryId}」の部品一覧` : `カテゴリーの取得失敗`}
-          </IonText>
-          <br />
-          <IonText>{categories.length}件の部品が見つかりました</IonText>
 
-          <IonGrid>
+
+        <IonContent fullscreen className="ion-padding" color="light">
+
+          <IonItem lines="none" color='light'>
+            <IonBadge color='secondary'>{filteredComponents.length}件</IonBadge>
+            <IonText>の部品が見つかりました</IonText>
+          </IonItem>
+
+
+          <IonGrid className="ion-padding">
             {
               Array.from({ length: Math.ceil(filteredComponents.length / 4) }, (_, rowIndex) => filteredComponents.slice(rowIndex * 4, (rowIndex + 1) * 4)).map((rowItems, index) => (
                 <IonRow key={index}>

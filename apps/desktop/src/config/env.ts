@@ -8,12 +8,11 @@ const createEnv = () => {
             .refine((s) => s === 'true' || s === 'false')
             .transform((s) => s === 'true')
             .optional(),
-
-        // OKTA_ISSUER: z.string(),
-        // OKTA_CLIENTID: z.string(),
-        // OKTA_REDIRECTURI: z.string()
-
         AKIZUKI_URL: z.string(),
+
+        OKTA_ISSUER: z.string(),
+        OKTA_CLIENTID: z.string(),
+        OKTA_REDIRECTURI: z.string(),
     });
 
     const envVars = Object.entries(import.meta.env).reduce<
