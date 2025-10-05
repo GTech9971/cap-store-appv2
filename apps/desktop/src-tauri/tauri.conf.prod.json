@@ -18,7 +18,13 @@
             }
         ],
         "security": {
-            "csp": null
+            "csp": {
+                "default-src": "'self' asset: customprotocol:",
+                "connect-src": "'self' https://dev-75695150.okta.com https://nukomabo.work ipc: http://ipc.localhost",
+                "img-src": "'self' https://ionicframework.com  https://akizukidenshi.com",
+                "script-src": "'self'",
+                "style-src": "'unsafe-inline' 'self'"
+            }
         }
     },
     "bundle": {
