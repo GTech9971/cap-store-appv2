@@ -4,6 +4,7 @@ import {
   IonBadge,
   IonButton,
   IonButtons,
+  IonCard,
   IonChip,
   IonCol,
   IonContent,
@@ -310,6 +311,8 @@ function Home() {
             <IonText>の部品が見つかりました</IonText>
           </IonItem>
 
+          {/* 以下を記載しないと電子部品カードの表示がされないことの予想だが、事前にスタイル設定を1度でも読み込まないと後から動的に追加した際に反映されない？ */}
+          <IonCard style={{ display: 'none' }}></IonCard>
 
           <IonGrid className="ion-padding">
             {
