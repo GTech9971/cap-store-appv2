@@ -9,7 +9,14 @@ VITE_APP_API_URL=http://localhost:5000
 VITE_APP_ENABLE_API_MOCKING=false
 
 VITE_APP_AKIZUKI_URL=https://akizukidenshi.com
+
+VITE_APP_OKTA_ISSUER=XXXX
+VITE_APP_OKTA_CLIENTID=XXXX
+VITE_APP_OKTA_REDIRECTURI=XXXX
 ```
+
+Windowsは`http://tauri.localhost`
+Macは`tauri://localhost`
 
 ## MSW
 
