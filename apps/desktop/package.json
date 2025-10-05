@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "icon": "tauri icon src-tauri/icon/画像.png",
     "build": "tsc && vite build",
     "bundle:dev": "tauri build --debug --config ./src-tauri/tauri.conf.dev.json && tauri bundle --bundles dmg",
     "bundle:stg": "tauri build --debug --config ./src-tauri/tauri.conf.stg.json && tauri bundle --bundles dmg",
