@@ -26,9 +26,7 @@ export const useApiClint = () => {
             : undefined;
         return new Configuration({
             basePath: env.API_URL,
-            headers: ({
-                Authorization: `Bearer ${token}`
-            })
+            headers: (token ? { Authorization: `Bearer ${token}` } : undefined)
         })
     }, [authState]);
 
