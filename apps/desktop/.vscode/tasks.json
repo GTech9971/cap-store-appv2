@@ -2,12 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Tauri bundle dmg",
-            "type": "shell",
-            "command": "cross-env REACT_APP_ENV=${input:envSelector} npm run tauri build -- --bundles dmg",
-            "problemMatcher": []
-        },
-        {
             "label": "ui:dev:start",
             "type": "shell",
             "isBackground": true,
@@ -44,17 +38,6 @@
         }
     ],
     "inputs": [
-        {
-            "id": "envSelector",
-            "type": "pickString",
-            "description": "ビルド環境を選択してください",
-            "options": [
-                "development",
-                "staging",
-                "production"
-            ],
-            "default": "development"
-        },
         {
             "id": "terminate",
             "type": "command",
