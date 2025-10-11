@@ -1,18 +1,19 @@
-import { IonBadge } from "@ionic/react";
-import React, { useCallback, useRef, useState } from "react";
+import React, { cloneElement, useCallback, useRef, useState, type DOMAttributes, type ReactElement, } from "react";
 
 export interface Prop {
+    children: ReactElement<DOMAttributes<HTMLElement>>,
     text: string,
     defaultText: string,
     onCommit: (text: string) => void
 }
 
 /**
- * 編集可能なIonBadge
+ * 編集可能
  * @param param0 
  * @returns 
  */
-export const EditableBadge: React.FC<Prop> = ({
+export const Editable: React.FC<Prop> = ({
+    children,
     text,
     defaultText,
     onCommit
@@ -20,7 +21,7 @@ export const EditableBadge: React.FC<Prop> = ({
 
     const ref = useRef<HTMLDivElement>(null);
     const [isEdit, setIsEdit] = useState<boolean>(false);
-    const [edit, setEdit] = useState<string>(defaultText);
+    const [edit, setEdit] = useState<string>(text ?? defaultText);
 
     const commitEdit = useCallback((): string => {
         setIsEdit(false);
@@ -49,6 +50,20 @@ export const EditableBadge: React.FC<Prop> = ({
         }
     }, [commitEdit, text, onCommit]);
 
+    const handleInput = useCallback(() => {
+        if (ref.current && ref.current.textContent === '') {
+            // 1文字残す（例：ゼロ幅スペース）
+            ref.current.textContent = defaultText;
+            // キャレットを末尾に移動
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(ref.current);
+            range.collapse(false);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+        }
+    }, [defaultText]);
+
     return (
         isEdit ?
             <div
@@ -57,14 +72,16 @@ export const EditableBadge: React.FC<Prop> = ({
                 contentEditable
                 suppressContentEditableWarning
                 onBlur={commitEdit}
-                onKeyDown={handleKeyDownTagBadge}>
-                <IonBadge>
-                    {edit}
-                </IonBadge>
+                onKeyDown={handleKeyDownTagBadge}
+                onInput={handleInput}>
+                {cloneElement(children, {
+                    children: edit
+                })}
             </div>
             :
-            <IonBadge onClick={() => setIsEdit(true)}>
-                {edit}
-            </IonBadge>
+            cloneElement(children, {
+                onClick: () => setIsEdit(true),
+                children: edit
+            })
     )
 }
