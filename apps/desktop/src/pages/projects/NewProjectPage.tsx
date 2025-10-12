@@ -199,6 +199,10 @@ export const NewProjectPage = () => {
                                         onEditedLink={e => { }}
                                         onEditedTag={e => { }}
                                         onEditedTitle={e => { }}
+                                        onDelete={e => {
+                                            const list = form.externalLinks?.filter(x => x.link !== e) ?? [];
+                                            handleFormChange('externalLinks', list);
+                                        }}
                                     />
                                 )
                             })
