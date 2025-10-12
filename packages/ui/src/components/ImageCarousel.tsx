@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { IonButton, IonIcon, IonImg, IonText } from '@ionic/react';
-import { chevronBack, chevronForward, close } from 'ionicons/icons';
+import { chevronBack, chevronForward, close, imageOutline } from 'ionicons/icons';
 
 export interface ImageCarouselProps {
     images: string[];
@@ -18,9 +18,21 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
 
     if (!images || images.length === 0) {
         return (
-            <IonText color="medium" style={{ padding: '20px', textAlign: 'center' }}>
-                画像プレビュー
-            </IonText>
+            <div style={{
+                height: '192px',
+                backgroundColor: 'var(--ion-color-light)',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <IonText color="medium" style={{ padding: '20px', textAlign: 'center', }}>
+                    画像プレビュー
+                </IonText>
+                <br />
+                <IonIcon icon={imageOutline} />
+            </div>
         );
     }
 
@@ -48,8 +60,8 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                 />
                 {onDelete && (
                     <IonButton
-                        fill="solid"
-                        color="light"
+                        fill="clear"
+                        color="danger"
                         size="small"
                         onClick={() => onDelete(index)}
                         style={{
@@ -71,8 +83,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                 {images.length > 1 && (
                     <>
                         <IonButton
-                            fill="solid"
-                            color="light"
+                            fill="clear"
                             size="small"
                             onClick={() => setIndex((index - 1 + images.length) % images.length)}
                             style={{
@@ -89,8 +100,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                             <IonIcon icon={chevronBack} />
                         </IonButton>
                         <IonButton
-                            fill="solid"
-                            color="light"
+                            fill="clear"
                             size="small"
                             onClick={() => setIndex((index + 1) % images.length)}
                             style={{
@@ -123,7 +133,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                             width: '8px',
                             height: '8px',
                             borderRadius: '50%',
-                            backgroundColor: i === index ? '#333' : '#ccc',
+                            backgroundColor: i === index ? 'var(--ion-color-primary)' : '#ccc',
                             cursor: 'pointer'
                         }}
                         onClick={() => setIndex(i)}
