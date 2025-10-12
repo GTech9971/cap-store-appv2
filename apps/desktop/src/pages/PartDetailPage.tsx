@@ -32,8 +32,8 @@ import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { useParams } from "react-router-dom"
-import ImageCarousel from "ui/components/ImageCarousel"
-import ImageCarouselSelectModal from "ui/components/ImageCarouselSelectModal"
+import ImageCarousel from "ui/components/image-carousels/ImageCarousel"
+import ImageCarouselSelectModal from "ui/components/image-carousels/ImageCarouselSelectModal"
 import { InventoryModal } from "ui/components/InventoryModal";
 import { useConfirmUtils } from "ui/utils/alertUtils"
 

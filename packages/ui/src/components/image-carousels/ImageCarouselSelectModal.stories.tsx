@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { IonButton, } from '@ionic/react';
@@ -7,7 +6,7 @@ import { ImageCarouselSelectModal } from './ImageCarouselSelectModal';
 import ImageCarousel from './ImageCarousel';
 
 const meta: Meta<typeof ImageCarouselSelectModal> = {
-    title: 'Components/ImageCarouselSelectModal',
+    title: 'Components/images/ImageCarouselSelectModal',
     component: ImageCarouselSelectModal,
     parameters: {
         layout: 'centered',

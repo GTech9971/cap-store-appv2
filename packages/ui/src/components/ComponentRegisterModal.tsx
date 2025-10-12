@@ -20,7 +20,7 @@ import {
     IonNote,
     useIonAlert
 } from '@ionic/react';
-import ImageCarousel from './ImageCarousel';
+import ImageCarousel from './image-carousels/ImageCarousel';
 import type {
     AkizukiCatalogsApi,
     CategoriesApi,
@@ -33,7 +33,7 @@ import z from 'zod';
 import { parseApiError } from '../utils/parseApiError';
 import './ComponentRegisterModal.css';
 import { useConfirmUtils } from '../utils/alertUtils';
-import ImageCarouselSelectModal from './ImageCarouselSelectModal';
+import ImageCarouselSelectModal from './image-carousels/ImageCarouselSelectModal';
 
 interface Category {
     id: string;

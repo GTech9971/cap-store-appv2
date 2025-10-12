@@ -23,8 +23,8 @@ import { pricetagOutline } from "ionicons/icons"
 import { Editable } from "ui/components/editable/Editable"
 import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard"
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
-import ImageCarousel from "ui/components/ImageCarousel"
-import ImageCarouselSelectModal from "ui/components/ImageCarouselSelectModal"
+import ImageCarousel from "ui/components/image-carousels/ImageCarousel"
+import ImageCarouselSelectModal from "ui/components/image-carousels/ImageCarouselSelectModal"
 import { ProjectExternalLink, ProjectImg, RegistryProjectRequest } from "cap-store-api-def";
 import { CSSProperties, useCallback, useMemo, useState } from "react";
 import z from "zod";
