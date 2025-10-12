@@ -15,7 +15,7 @@
     "@ionic/core": "^8.7.3",
     "@ionic/react": "^8.7.3",
     "axios": "^1.12.2",
-    "cap-store-api-def": "^1.0.13",
+    "cap-store-api-def": "^1.0.18",
     "ionicons": "^8.0.13",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

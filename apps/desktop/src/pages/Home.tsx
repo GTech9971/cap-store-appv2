@@ -19,6 +19,7 @@ import {
   IonList,
   IonListHeader,
   IonMenu,
+  IonNote,
   IonRow,
   IonSearchbar,
   IonSplitPane,
@@ -248,11 +249,21 @@ function Home() {
 
           <IonList inset>
             <IonListHeader>
-              ファイル
+              <IonLabel>プロジェクト</IonLabel>
+              <IonButton onClick={() => navigate('/projects/new')}>追加</IonButton>
+            </IonListHeader>
+            <IonItem>
+              <IonNote>プロジェクト登録なし</IonNote>
+            </IonItem>
+          </IonList>
+
+          <IonList inset>
+            <IonListHeader>
+              納品書
             </IonListHeader>
             <IonItem button detail={false} onClick={openInvoiceFile}>
               <IonIcon slot="start" icon={documentOutline} />
-              <IonLabel>納品書</IonLabel>
+              <IonLabel>アップロード</IonLabel>
             </IonItem>
           </IonList>
 
