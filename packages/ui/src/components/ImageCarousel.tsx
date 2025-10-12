@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { IonButton, IonIcon, IonImg, IonText } from '@ionic/react';
-import { chevronBack, chevronForward, close } from 'ionicons/icons';
+import { chevronBack, chevronForward, close, imageOutline } from 'ionicons/icons';
 
 export interface ImageCarouselProps {
     images: string[];
@@ -18,9 +18,21 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
 
     if (!images || images.length === 0) {
         return (
-            <IonText color="medium" style={{ padding: '20px', textAlign: 'center' }}>
-                画像プレビュー
-            </IonText>
+            <div style={{
+                height: '192px',
+                backgroundColor: '#f5f5f5',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <IonText color="medium" style={{ padding: '20px', textAlign: 'center', }}>
+                    画像プレビュー
+                </IonText>
+                <br />
+                <IonIcon icon={imageOutline} />
+            </div>
         );
     }
 
