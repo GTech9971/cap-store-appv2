@@ -16,6 +16,7 @@ import {
     IonLabel,
     IonList,
     IonListHeader,
+    IonNote,
     IonPage,
     IonRow,
     IonSelect,
@@ -32,6 +33,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { useParams } from "react-router-dom"
 import ImageCarousel from "ui/components/ImageCarousel"
+import ImageCarouselSelectModal from "ui/components/ImageCarouselSelectModal"
 import { InventoryModal } from "ui/components/InventoryModal";
 import { useConfirmUtils } from "ui/utils/alertUtils"
 
@@ -54,6 +56,7 @@ export const PartDetailPage = () => {
     const [selectedCategoryId, setSelectedCategoryId] = useState<unknown>();
     const [selectedMakerId, setSelectedMakerId] = useState<unknown>();
     const [imageUrls, setImageUrls] = useState<string[]>([]);
+    const [isOpenImageModal, setIsOpenImageModal] = useState<boolean>(false);
 
     // API
     const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
@@ -192,6 +195,9 @@ export const PartDetailPage = () => {
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen color='light'>
+                {error &&
+                    <IonNote color='danger'>{error}</IonNote>
+                }
                 <IonGrid>
                     <IonRow>
                         <IonCol size="6">
@@ -205,11 +211,6 @@ export const PartDetailPage = () => {
                                     >
                                         <div slot="label">名称 <IonText color="danger">*</IonText></div>
 
-                                        {/* {errors.name && (
-                                        <IonNote className='error-text' color="danger">
-                                            {errors.name}
-                                        </IonNote>
-                                    )} */}
                                     </IonInput>
 
                                 </IonItem>
@@ -222,15 +223,15 @@ export const PartDetailPage = () => {
                                     }}
                                 />
                                 <IonItem>
-                                    <IonInput
-                                        placeholder='画像URL（カンマ区切りで複数可）'
-                                        value={imageUrls?.join(', ') || ''}
-                                        onIonInput={(e) => {
-                                            const urls = (e.detail.value as string).split(',').map(url => url.trim()).filter(url => url);
-                                            setImageUrls(urls);
-                                        }}
-                                    >
-                                    </IonInput>
+                                    <IonButton slot="end" fill="clear" onClick={() => setIsOpenImageModal(true)}>
+                                        編集
+                                    </IonButton>
+
+                                    <ImageCarouselSelectModal
+                                        isOpen={isOpenImageModal}
+                                        onDismiss={() => setIsOpenImageModal(false)}
+                                        onChange={e => { setImageUrls(e) }}
+                                        images={imageUrls} />
                                 </IonItem>
 
                             </IonList>
@@ -250,12 +251,6 @@ export const PartDetailPage = () => {
                                         onIonInput={(e) => setModelName(e.detail.value ?? undefined)}
                                     >
                                         <div slot="label">型番 <IonText color="danger">*</IonText></div>
-
-                                        {/* {errors.modelName && (
-                                        <IonNote className='error-text' color="danger">
-                                            {errors.modelName}
-                                        </IonNote>
-                                    )} */}
                                     </IonInput>
 
                                 </IonItem>
@@ -274,11 +269,6 @@ export const PartDetailPage = () => {
                                             </IonSelectOption>
                                         ))}
                                     </IonSelect>
-                                    {/* {errors.categoryId && (
-                                    <IonNote className='error-text' color="danger">
-                                        {errors.categoryId}
-                                    </IonNote>
-                                )} */}
                                 </IonItem>
 
                                 <IonItem>
@@ -294,11 +284,6 @@ export const PartDetailPage = () => {
                                             </IonSelectOption>
                                         ))}
                                     </IonSelect>
-                                    {/* {errors.makerId && (
-                                    <IonNote className='error-text' color="danger">
-                                        {errors.makerId}
-                                    </IonNote>
-                                )} */}
                                 </IonItem>
 
                             </IonList>

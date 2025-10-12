@@ -20,7 +20,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
         return (
             <div style={{
                 height: '192px',
-                backgroundColor: '#f5f5f5',
+                backgroundColor: 'var(--ion-color-light)',
                 border: '1px solid #ddd',
                 borderRadius: '8px',
                 display: 'flex',
@@ -60,8 +60,8 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                 />
                 {onDelete && (
                     <IonButton
-                        fill="solid"
-                        color="light"
+                        fill="clear"
+                        color="danger"
                         size="small"
                         onClick={() => onDelete(index)}
                         style={{
@@ -83,8 +83,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                 {images.length > 1 && (
                     <>
                         <IonButton
-                            fill="solid"
-                            color="light"
+                            fill="clear"
                             size="small"
                             onClick={() => setIndex((index - 1 + images.length) % images.length)}
                             style={{
@@ -101,8 +100,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                             <IonIcon icon={chevronBack} />
                         </IonButton>
                         <IonButton
-                            fill="solid"
-                            color="light"
+                            fill="clear"
                             size="small"
                             onClick={() => setIndex((index + 1) % images.length)}
                             style={{
@@ -135,7 +133,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, onDelete }
                             width: '8px',
                             height: '8px',
                             borderRadius: '50%',
-                            backgroundColor: i === index ? '#333' : '#ccc',
+                            backgroundColor: i === index ? 'var(--ion-color-primary)' : '#ccc',
                             cursor: 'pointer'
                         }}
                         onClick={() => setIndex(i)}

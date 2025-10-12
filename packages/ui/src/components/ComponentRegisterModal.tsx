@@ -33,6 +33,7 @@ import z from 'zod';
 import { parseApiError } from '../utils/parseApiError';
 import './ComponentRegisterModal.css';
 import { useConfirmUtils } from '../utils/alertUtils';
+import ImageCarouselSelectModal from './ImageCarouselSelectModal';
 
 interface Category {
     id: string;
@@ -94,6 +95,8 @@ export const ComponentRegisterModal: React.FC<Props> = ({
 
     const [akizukiCode, setAkizukiCode] = useState<string | undefined>(undefined);
     const [form, setForm] = useState<RegistryComponentRequest>(initialFormState);
+
+    const [isOpenImageModal, setIsOpenImageModal] = useState<boolean>(false);
 
     const [errors, setErrors] = useState<Partial<Record<keyof RegistryComponentRequest, string>>>({});
     const [categories, setCategories] = useState<Category[]>([]);
@@ -284,16 +287,17 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                                     handleFormChange('images', updated);
                                 }}
                             />
-                            <IonItem>
-                                <IonInput
-                                    placeholder='画像URL（カンマ区切りで複数可）'
-                                    value={form.images?.join(', ') || ''}
-                                    onIonInput={(e) => {
-                                        const urls = (e.detail.value as string).split(',').map(url => url.trim()).filter(url => url);
-                                        handleFormChange('images', urls);
-                                    }}
-                                >
-                                </IonInput>
+                            <IonItem lines='none'>
+                                <IonButton slot='end' fill='clear' onClick={() => setIsOpenImageModal(true)}>
+                                    編集
+                                </IonButton>
+
+                                <ImageCarouselSelectModal
+                                    isOpen={isOpenImageModal}
+                                    images={form.images ?? []}
+                                    onChange={e => handleFormChange('images', e)}
+                                    onDismiss={() => setIsOpenImageModal(false)} />
+
                             </IonItem>
                         </IonCol>
                         <IonCol size="12" sizeMd="6">

@@ -142,3 +142,5 @@ export const ImageCarouselSelectModal: React.FC<Prop> = ({
         </IonModal>
     )
 }
+
+export default ImageCarouselSelectModal;
