@@ -25,3 +25,15 @@ export const Default: Story = {
         onEditedTag: (tag) => console.warn(tag)
     },
 };
+
+export const DeleteButton: Story = {
+    args: {
+        link: 'https://github.com/GTech9971/CapStore-api-definition',
+        onEditedLink: (link) => console.warn(link),
+        title: 'Github',
+        onEditedTitle: (title) => console.warn(title),
+        tag: 'Github',
+        onEditedTag: (tag) => console.warn(tag),
+        onDelete: (link) => console.warn(link)
+    },
+};

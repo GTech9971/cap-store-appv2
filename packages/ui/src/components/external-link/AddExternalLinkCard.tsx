@@ -16,8 +16,11 @@ export const AddExternalLinkCard = ({ onClick }: Prop) => {
     const css: CSSProperties = {
         textOverflow: 'ellipsis',
         overflow: 'hidden',
-        width: '200px',
-        whiteSpace: 'nowrap'
+        width: '232px',
+        height: '69px',
+        whiteSpace: 'nowrap',
+        display: 'flex',
+        justifyContent: 'center'
     }
     const center: CSSProperties = {
         display: 'flex',
