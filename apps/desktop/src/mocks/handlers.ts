@@ -5,14 +5,63 @@ import {
     FetchComponentResponse,
     FetchComponentsByCategoryIdResponse,
     FetchMakersResponse,
+    FetchProjectResponse,
+    FetchProjectsResponse,
     RegistryCategoryResponse,
+    RegistryComponentInventoryResponse,
     RegistryComponentResponse,
     RegistryMakerResponse,
+    RegistryProjectRequest,
+    RegistryProjectResponse,
+    Project,
     UpdateComponentResponse,
     FetchComponentInventoryResponse,
     RemoveComponentInventoryResponse,
-    RegistryComponentInventoryResponse,
 } from 'cap-store-api-def';
+
+const initialProjectTimestamp = new Date('2025-01-01T09:00:00Z');
+
+type MockProject = Omit<Project, 'createdAt' | 'lastModified'> & {
+    createdAt: Date;
+    lastModified: Date;
+};
+
+let projectStore: MockProject[] = [
+    {
+        id: 'P-001',
+        name: 'IoT 温湿度モニタ',
+        summary: '倉庫内の温度と湿度を遠隔監視するプロジェクト。',
+        status: 'planning',
+        description: 'BLE センサーノードとクラウドダッシュボードを組み合わせた監視システム。',
+        tag: 'IoT',
+        imgUrls: [
+            {
+                url: 'https://example.com/projects/iot-monitor/dashboard.png',
+                title: 'ダッシュボード',
+                tag: 'UI'
+            },
+            {
+                url: 'https://example.com/projects/iot-monitor/hardware.jpg',
+                title: 'センサーノード',
+                tag: 'Hardware'
+            }
+        ],
+        externalLinks: [
+            {
+                link: 'https://github.com/example/iot-monitor',
+                title: 'GitHub',
+                tag: 'Repository'
+            },
+            {
+                link: 'https://docs.example.com/iot-monitor',
+                title: '仕様書',
+                tag: 'Docs'
+            }
+        ],
+        createdAt: new Date(initialProjectTimestamp),
+        lastModified: new Date(initialProjectTimestamp)
+    }
+];
 
 export const handlers = [
     // GET /akizuki/catalogs/:catalogId
@@ -397,4 +446,70 @@ XD3232は2つのラインドライバー、2つのラインレシーバー、1�
             errors: []
         }, { status: 200 });
     }),
+
+    // GET /projects
+    http.get('/projects', () => {
+        const totalCount = projectStore.length;
+        return HttpResponse.json<FetchProjectsResponse>({
+            data: projectStore,
+            pageIndex: 1,
+            pageSize: totalCount,
+            totalPages: 1,
+            totalCount,
+            hasNext: false,
+            hasPrevious: false,
+            errors: []
+        }, { status: 200 });
+    }),
+
+    // GET /projects/:projectId
+    http.get('/projects/:projectId', ({ params }) => {
+        const project = projectStore.find((item) => item.id === params.projectId);
+        if (!project) {
+            return HttpResponse.json<FetchProjectResponse>({
+                data: undefined,
+                errors: []
+            }, { status: 404 });
+        }
+
+        return HttpResponse.json<FetchProjectResponse>({
+            data: project,
+            errors: []
+        }, { status: 200 });
+    }),
+
+    // POST /projects
+    http.post('/projects', async ({ request }) => {
+        const body = await request.json() as RegistryProjectRequest;
+
+        const newId = `P-${String(projectStore.length + 1).padStart(3, '0')}`;
+        const timestamp = new Date();
+        const newProject: MockProject = {
+            id: newId,
+            name: body.name,
+            summary: body.summary,
+            status: 'planning',
+            description: body.description,
+            tag: body.tag,
+            imgUrls: body.imgUrls?.map((img) => ({
+                url: img.url,
+                title: img.title,
+                tag: img.tag
+            })),
+            externalLinks: body.externalLinks?.map((link) => ({
+                link: link.link,
+                title: link.title,
+                tag: link.tag
+            })),
+            createdAt: timestamp,
+            lastModified: timestamp
+        };
+
+        projectStore = [...projectStore, newProject];
+
+        return HttpResponse.json<RegistryProjectResponse>({
+            data: { projectId: newId },
+            errors: []
+        }, { status: 201 });
+    })
 ];
