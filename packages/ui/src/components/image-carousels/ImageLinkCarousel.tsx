@@ -30,7 +30,7 @@ export const ImageLinkCarousel: React.FC<ImageLinkCarouselProps> = ({
         }
     }, [images, index]);
 
-    const url: string = useMemo(() => images[index].url, [images, index]);
+    const url: string = useMemo(() => images[index]?.url, [images, index]);
     const title: string = useMemo(() => images[index]?.title ?? 'タイトル無し', [images, index]);
     const tag: string = useMemo(() => images[index]?.tag ?? 'タグ無し', [images, index]);
 
