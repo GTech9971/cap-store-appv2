@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, InventoriesApi, MakersApi, ProjectsApi, UpdateComponentRequest, UpdateComponentResponse } from "cap-store-api-def";
+import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, InventoriesApi, MakersApi, ProjectsApi, UpdateComponentRequest, UpdateComponentResponse, UpdateProjectRequest, UpdateProjectResponse } from "cap-store-api-def";
 import { useCallback, useMemo } from "react";
 import { env } from "@/config/env";
 import { useOktaAuth } from "@okta/okta-react";
@@ -47,5 +47,14 @@ export const useApiClint = () => {
         return (await axiosClient.patch<UpdateComponentResponse>(url, updateRequest)).data;
     }, [axiosClient]);
 
-    return { componentApi, updateComponentApi, categoryApi, makerApi, inventoryApi, akizukiCatalogApi, projectApi };
+    /**
+     * プロジェクト更新API
+     */
+    const updateProjectApi = useCallback(async (projectId: string, updateRequest: UpdateProjectRequest, maskFields: string[]): Promise<UpdateProjectResponse> => {
+        const query: string = maskFields.map((mask) => `fieldMask=${encodeURIComponent(mask)}`).join("&");
+        const url = `/projects/${projectId}?${query}`;
+        return (await axiosClient.patch<UpdateProjectResponse>(url, updateRequest)).data;
+    }, [axiosClient]);
+
+    return { componentApi, updateComponentApi, categoryApi, makerApi, inventoryApi, akizukiCatalogApi, projectApi, updateProjectApi };
 }

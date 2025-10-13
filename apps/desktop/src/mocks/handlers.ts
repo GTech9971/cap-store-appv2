@@ -15,6 +15,8 @@ import {
     RegistryProjectResponse,
     Project,
     UpdateComponentResponse,
+    UpdateProjectRequest,
+    UpdateProjectResponse,
     FetchComponentInventoryResponse,
     RemoveComponentInventoryResponse,
 } from 'cap-store-api-def';
@@ -511,5 +513,92 @@ XD3232は2つのラインドライバー、2つのラインレシーバー、1�
             data: { projectId: newId },
             errors: []
         }, { status: 201 });
+    }),
+
+    // PATCH /projects/:projectId
+    http.patch('/projects/:projectId', async ({ params, request }) => {
+        const projectId = params.projectId as string;
+        const index = projectStore.findIndex((item) => item.id === projectId);
+        if (index === -1) {
+            return HttpResponse.json<UpdateProjectResponse>({
+                data: undefined,
+                errors: []
+            }, { status: 404 });
+        }
+
+        const url = new URL(request.url);
+        const fieldMasks = url.searchParams.getAll('fieldMask');
+        const body = await request.json() as UpdateProjectRequest;
+
+        const current = projectStore[index];
+        const next: MockProject = {
+            ...current,
+            imgUrls: current.imgUrls ? current.imgUrls.map((img) => ({ ...img })) : undefined,
+            externalLinks: current.externalLinks ? current.externalLinks.map((link) => ({ ...link })) : undefined,
+        };
+
+        const applyOptionalText = (field: keyof MockProject, value: string | undefined) => {
+            if (value === undefined || value === null) {
+                delete (next as Record<string, unknown>)[field];
+            } else {
+                (next as Record<string, unknown>)[field] = value;
+            }
+        };
+
+        fieldMasks.forEach((mask) => {
+            switch (mask) {
+                case 'name':
+                    if (body.name !== undefined) next.name = body.name;
+                    break;
+                case 'summary':
+                    if (body.summary !== undefined) next.summary = body.summary;
+                    break;
+                case 'status':
+                    if (body.status !== undefined) next.status = body.status;
+                    break;
+                case 'description':
+                    applyOptionalText('description', body.description);
+                    break;
+                case 'tag':
+                    applyOptionalText('tag', body.tag);
+                    break;
+                case 'imgUrls':
+                    next.imgUrls = body.imgUrls?.map((img) => ({
+                        url: img.url,
+                        title: img.title,
+                        tag: img.tag
+                    }));
+                    break;
+                case 'externalLinks':
+                    next.externalLinks = body.externalLinks?.map((link) => ({
+                        link: link.link,
+                        title: link.title,
+                        tag: link.tag
+                    }));
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        next.lastModified = new Date();
+        projectStore[index] = next;
+
+        return HttpResponse.json<UpdateProjectResponse>({
+            data: next,
+            errors: []
+        }, { status: 200 });
+    }),
+
+    // DELETE /projects/:projectId
+    http.delete('/projects/:projectId', ({ params }) => {
+        const projectId = params.projectId as string;
+        const index = projectStore.findIndex((item) => item.id === projectId);
+        if (index === -1) {
+            return HttpResponse.json(undefined, { status: 404 });
+        }
+
+        projectStore.splice(index, 1);
+        return HttpResponse.json(undefined, { status: 204 });
     })
 ];
