@@ -61,7 +61,25 @@ let projectStore: MockProject[] = [
             }
         ],
         createdAt: new Date(initialProjectTimestamp),
-        lastModified: new Date(initialProjectTimestamp)
+        lastModified: new Date(initialProjectTimestamp),
+        bomList: [
+            {
+                id: 'B-001',
+                componentId: 'C-001',
+                quantity: 2,
+                footPrintName: 'DIP-8',
+                remarks: 'メインマイコン',
+                refName: 'U1'
+            },
+            {
+                id: 'B-002',
+                componentId: 'C-010',
+                quantity: 4,
+                footPrintName: '0402',
+                remarks: 'センサーバイパス',
+                refName: 'C1-C4'
+            }
+        ]
     }
 ];
 
@@ -535,6 +553,7 @@ XD3232は2つのラインドライバー、2つのラインレシーバー、1�
             ...current,
             imgUrls: current.imgUrls ? current.imgUrls.map((img) => ({ ...img })) : undefined,
             externalLinks: current.externalLinks ? current.externalLinks.map((link) => ({ ...link })) : undefined,
+            bomList: current.bomList ? current.bomList.map((bom) => ({ ...bom })) : undefined,
         };
 
         const applyOptionalText = (field: keyof MockProject, value: string | undefined) => {
@@ -575,6 +594,16 @@ XD3232は2つのラインドライバー、2つのラインレシーバー、1�
                         title: link.title,
                         tag: link.tag
                     }));
+                    break;
+                case 'bomList':
+                    next.bomList = body.bomList?.map((bom) => ({
+                        id: bom.id,
+                        componentId: bom.componentId,
+                        quantity: bom.quantity,
+                        footPrintName: bom.footPrintName,
+                        remarks: bom.remarks,
+                        refName: bom.refName
+                    })) ?? [];
                     break;
                 default:
                     break;

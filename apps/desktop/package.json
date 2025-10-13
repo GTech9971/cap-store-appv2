@@ -19,6 +19,7 @@
     "@ionic/core": "^8.7.5",
     "@ionic/react": "^8.7.5",
     "@okta/okta-react": "^6.10.0",
+    "@tanstack/react-table": "^8.21.3",
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",

@@ -15,25 +15,35 @@ import {
     IonRow,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     IonText,
     IonTextarea,
     IonTitle,
     IonToolbar,
-    IonSpinner,
     useIonAlert
 } from "@ionic/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Project, ProjectExternalLink, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
-import { timeOutline, createOutline, pricetagOutline } from "ionicons/icons";
+import { useApiClint } from "@/api/useApiClient";
+import { parseApiError } from "@/utils/parseApiError";
+import { useConfirmUtils } from "ui/utils/alertUtils";
 import ImageLinkCarousel from "ui/components/image-carousels/ImageLinkCarousel";
 import ImageLinkCarouselSelectModal from "ui/components/image-carousels/ImageLinkCarouselSelectModal";
 import { Editable } from "ui/components/editable/Editable";
 import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
-import { useApiClint } from "@/api/useApiClient";
-import { parseApiError } from "@/utils/parseApiError";
-import { useConfirmUtils } from "ui/utils/alertUtils";
+import { Bom, Project, ProjectExternalLink, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
+import { createOutline, pricetagOutline, timeOutline } from "ionicons/icons";
+
+import ProjectBomList from "./projects/ProjectBomList";
+
+const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: "planning", label: "計画中" },
+    { value: "processing", label: "進行中" },
+    { value: "pause", label: "一時停止" },
+    { value: "cancel", label: "中止" },
+    { value: "complete", label: "完了" }
+];
 
 type ProjectFormState = {
     name: string;
@@ -43,22 +53,16 @@ type ProjectFormState = {
     tag?: string;
     imgUrls: ProjectImg[];
     externalLinks: ProjectExternalLink[];
+    bomList: Bom[];
 };
-
-const PROJECT_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
-    { value: "planning", label: "計画中" },
-    { value: "processing", label: "進行中" },
-    { value: "pause", label: "一時停止" },
-    { value: "cancel", label: "中止" },
-    { value: "complete", label: "完了" }
-];
 
 const normalizeProject = (project: Project): Project => ({
     ...project,
     createdAt: project.createdAt instanceof Date ? project.createdAt : new Date(project.createdAt),
     lastModified: project.lastModified instanceof Date ? project.lastModified : new Date(project.lastModified),
     imgUrls: project.imgUrls ?? [],
-    externalLinks: project.externalLinks ?? []
+    externalLinks: project.externalLinks ?? [],
+    bomList: project.bomList ?? []
 });
 
 const mapProjectToForm = (project: Project): ProjectFormState => ({
@@ -68,13 +72,9 @@ const mapProjectToForm = (project: Project): ProjectFormState => ({
     description: project.description ?? undefined,
     tag: project.tag ?? undefined,
     imgUrls: project.imgUrls ?? [],
-    externalLinks: project.externalLinks ?? []
+    externalLinks: project.externalLinks ?? [],
+    bomList: project.bomList ?? []
 });
-
-const formatDateTime = (value?: Date) => {
-    if (!value) return "-";
-    return value.toLocaleString("ja-JP");
-};
 
 export const ProjectMainPage = () => {
     const { projectApi, updateProjectApi } = useApiClint();
@@ -86,16 +86,48 @@ export const ProjectMainPage = () => {
     const [projectId, setProjectId] = useState<string | null>(searchParams.get("projectId"));
     const [project, setProject] = useState<Project | null>(null);
     const [form, setForm] = useState<ProjectFormState | null>(null);
-    const [isImageModalOpen, setIsImageModalOpen] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
-    const [isUpdating, setIsUpdating] = useState<boolean>(false);
-    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         setProjectId(searchParams.get("projectId"));
     }, [searchParams]);
+
+    const normalizeImages = useCallback((images: ProjectImg[] | undefined) => {
+        return (images ?? []).map((img) => ({
+            url: img.url.trim(),
+            title: img.title?.trim() || undefined,
+            tag: img.tag?.trim() || undefined
+        }));
+    }, []);
+
+    const normalizeLinks = useCallback((links: ProjectExternalLink[] | undefined) => {
+        return (links ?? []).map((link) => ({
+            link: link.link.trim(),
+            title: link.title?.trim() || undefined,
+            tag: link.tag?.trim() || undefined
+        })).filter((link) => link.link.length > 0);
+    }, []);
+
+    const normalizeBoms = useCallback((bomList: Bom[] | undefined) => {
+        return (bomList ?? [])
+            .map((bom) => {
+                const trimmedComponentId = bom.componentId.trim();
+                return {
+                    id: (bom.id ?? "").trim() || trimmedComponentId,
+                    componentId: trimmedComponentId,
+                    quantity: Number(bom.quantity) || 0,
+                    footPrintName: bom.footPrintName?.trim() || undefined,
+                    remarks: bom.remarks?.trim() || undefined,
+                    refName: bom.refName?.trim() || undefined
+                };
+            })
+            .filter((bom) => bom.componentId.length > 0 && bom.quantity > 0);
+    }, []);
 
     const fetchProject = useCallback(async (targetId: string | null) => {
         setIsLoading(true);
@@ -124,11 +156,13 @@ export const ProjectMainPage = () => {
             setProjectId(fetched.id);
             setProject(fetched);
             setForm(mapProjectToForm(fetched));
+            setSubmitError(null);
         } catch (err) {
             const { message, status } = await parseApiError(err);
             setLoadError(`プロジェクトの取得に失敗しました。${message}${status ? `:${status}` : ""}`);
             setProject(null);
             setForm(null);
+            setSubmitError(null);
         } finally {
             setIsLoading(false);
         }
@@ -146,9 +180,9 @@ export const ProjectMainPage = () => {
     const handleExternalLinkChange = useCallback((index: number, patch: Partial<ProjectExternalLink>) => {
         setForm((prev) => {
             if (!prev) return prev;
-            const nextLinks = [...prev.externalLinks];
-            nextLinks[index] = { ...nextLinks[index], ...patch };
-            return { ...prev, externalLinks: nextLinks };
+            const next = [...prev.externalLinks];
+            next[index] = { ...next[index], ...patch };
+            return { ...prev, externalLinks: next };
         });
         setSubmitError(null);
     }, []);
@@ -156,26 +190,68 @@ export const ProjectMainPage = () => {
     const handleExternalLinkDelete = useCallback((index: number) => {
         setForm((prev) => {
             if (!prev) return prev;
-            const nextLinks = prev.externalLinks.filter((_, idx) => idx !== index);
-            return { ...prev, externalLinks: nextLinks };
+            const next = prev.externalLinks.filter((_, idx) => idx !== index);
+            return { ...prev, externalLinks: next };
         });
         setSubmitError(null);
     }, []);
 
-    const normalizeImages = useCallback((images: ProjectImg[] | undefined) => {
-        return (images ?? []).map((img) => ({
-            url: img.url.trim(),
-            title: img.title?.trim() || undefined,
-            tag: img.tag?.trim() || undefined
-        }));
+    const handleExternalLinkAdd = useCallback(() => {
+        setForm((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                externalLinks: [
+                    ...prev.externalLinks,
+                    {
+                        link: "",
+                        title: "タイトルなし",
+                        tag: "タグ無し"
+                    }
+                ]
+            };
+        });
+        setSubmitError(null);
     }, []);
 
-    const normalizeLinks = useCallback((links: ProjectExternalLink[] | undefined) => {
-        return (links ?? []).map((link) => ({
-            link: link.link.trim(),
-            title: link.title?.trim() || undefined,
-            tag: link.tag?.trim() || undefined
-        })).filter((link) => link.link.length > 0);
+    const handleBomChange = useCallback((index: number, patch: Partial<Bom>) => {
+        setForm((prev) => {
+            if (!prev) return prev;
+            const next = [...prev.bomList];
+            next[index] = { ...next[index], ...patch };
+            return { ...prev, bomList: next };
+        });
+        setSubmitError(null);
+    }, []);
+
+    const handleBomDelete = useCallback((index: number) => {
+        setForm((prev) => {
+            if (!prev) return prev;
+            const next = prev.bomList.filter((_, idx) => idx !== index);
+            return { ...prev, bomList: next };
+        });
+        setSubmitError(null);
+    }, []);
+
+    const handleBomAdd = useCallback(() => {
+        setForm((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                bomList: [
+                    ...prev.bomList,
+                    {
+                        id: `TEMP-${Date.now()}`,
+                        componentId: "",
+                        quantity: 1,
+                        footPrintName: undefined,
+                        remarks: undefined,
+                        refName: undefined
+                    }
+                ]
+            };
+        });
+        setSubmitError(null);
     }, []);
 
     const handleUpdate = useCallback(async () => {
@@ -189,6 +265,7 @@ export const ProjectMainPage = () => {
 
         const sanitizedImages = normalizeImages(form.imgUrls);
         const sanitizedLinks = normalizeLinks(form.externalLinks);
+        const sanitizedBoms = normalizeBoms(form.bomList);
 
         const updateRequest: UpdateProjectRequest = {};
         const fieldMask: string[] = [];
@@ -216,6 +293,7 @@ export const ProjectMainPage = () => {
 
         const currentImages = normalizeImages(project.imgUrls);
         const currentLinks = normalizeLinks(project.externalLinks);
+        const currentBoms = normalizeBoms(project.bomList);
 
         if (JSON.stringify(sanitizedImages) !== JSON.stringify(currentImages)) {
             updateRequest.imgUrls = sanitizedImages;
@@ -227,12 +305,17 @@ export const ProjectMainPage = () => {
             fieldMask.push("externalLinks");
         }
 
+        if (JSON.stringify(sanitizedBoms) !== JSON.stringify(currentBoms)) {
+            updateRequest.bomList = sanitizedBoms;
+            fieldMask.push("bomList");
+        }
+
         if (fieldMask.length === 0) {
             setSubmitError("更新対象がありません。");
             return;
         }
 
-        if (await handleConfirm('この内容でプロジェクトを更新しますか？') === false) {
+        if (await handleConfirm("この内容でプロジェクトを更新しますか？") === false) {
             return;
         }
 
@@ -245,7 +328,7 @@ export const ProjectMainPage = () => {
             if (updated) {
                 setProject(updated);
                 setForm(mapProjectToForm(updated));
-                await presentAlert('プロジェクトを更新しました');
+                await presentAlert("プロジェクトを更新しました");
             }
         } catch (err) {
             const { message, status } = await parseApiError(err);
@@ -253,20 +336,20 @@ export const ProjectMainPage = () => {
         } finally {
             setIsUpdating(false);
         }
-    }, [project, form, projectId, normalizeImages, normalizeLinks, handleConfirm, updateProjectApi, presentAlert]);
+    }, [project, form, projectId, normalizeImages, normalizeLinks, normalizeBoms, handleConfirm, updateProjectApi, presentAlert]);
 
     const handleDelete = useCallback(async () => {
         if (!projectId) return;
 
-        if (await handleConfirm('このプロジェクトを削除しますか？') === false) {
+        if (await handleConfirm("このプロジェクトを削除しますか？") === false) {
             return;
         }
 
         try {
             setIsDeleting(true);
             await projectApi.deleteProject({ projectId });
-            await presentAlert('プロジェクトを削除しました');
-            navigate('/', { replace: true });
+            await presentAlert("プロジェクトを削除しました");
+            navigate("/", { replace: true });
         } catch (err) {
             const { message, status } = await parseApiError(err);
             setSubmitError(`プロジェクトの削除に失敗しました。${message}${status ? `:${status}` : ""}`);
@@ -275,17 +358,14 @@ export const ProjectMainPage = () => {
         }
     }, [projectId, handleConfirm, projectApi, presentAlert, navigate]);
 
-    const currentStatusLabel = useMemo(() => {
-        if (!form) return '';
-        const option = PROJECT_STATUS_OPTIONS.find((opt) => opt.value === form.status);
-        return option?.label ?? form.status;
+    const statusLabel = useMemo(() => {
+        if (!form) return "";
+        return STATUS_OPTIONS.find((opt) => opt.value === form.status)?.label ?? form.status;
     }, [form]);
 
     const headerTitle = useMemo(() => {
-        if (project && form) {
-            return `${form.name} ${project.id}`;
-        }
-        return 'プロジェクト詳細';
+        if (project && form) return `${form.name} ${project.id}`;
+        return "プロジェクト詳細";
     }, [project, form]);
 
     return (
@@ -295,25 +375,32 @@ export const ProjectMainPage = () => {
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/"></IonBackButton>
                     </IonButtons>
-
                     <IonTitle>{headerTitle}</IonTitle>
-
                     <IonButtons slot="end">
-                        <IonButton fill="clear" color="danger" onClick={handleDelete} disabled={isDeleting || isUpdating || isLoading || !project}>
+                        <IonButton
+                            fill="clear"
+                            color="danger"
+                            onClick={async () => { await handleDelete(); }}
+                            disabled={isDeleting || isUpdating || isLoading || !project}
+                        >
                             削除
                         </IonButton>
-                        <IonButton fill="clear" onClick={handleUpdate} disabled={isUpdating || isDeleting || isLoading || !form}>
+                        <IonButton
+                            fill="clear"
+                            onClick={async () => { await handleUpdate(); }}
+                            disabled={isUpdating || isDeleting || isLoading || !form}
+                        >
                             更新
                         </IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen color='light'>
+            <IonContent fullscreen color="light">
                 {isLoading && (
                     <IonGrid>
                         <IonRow>
-                            <IonCol className="ion-text-center" style={{ paddingTop: '40px' }}>
+                            <IonCol className="ion-text-center" style={{ paddingTop: "40px" }}>
                                 <IonSpinner />
                             </IonCol>
                         </IonRow>
@@ -342,7 +429,7 @@ export const ProjectMainPage = () => {
 
                         <IonRow>
                             <IonCol size="4">
-                                <IonList lines="none" inset color="light">
+                                <IonList inset lines="none" color="light">
                                     <IonItem>
                                         <IonLabel position="stacked">プロジェクト名</IonLabel>
                                         <Editable text={form.name} defaultText="タイトル" onCommit={(value) => handleFormChange("name", value)}>
@@ -387,7 +474,7 @@ export const ProjectMainPage = () => {
                                             label="説明・備考"
                                             labelPlacement="stacked"
                                             rows={12}
-                                            value={form.description ?? ''}
+                                            value={form.description ?? ""}
                                             onIonInput={(e) => handleFormChange("description", e.detail.value ?? undefined)}
                                         />
                                     </IonItem>
@@ -397,16 +484,15 @@ export const ProjectMainPage = () => {
                             <IonCol size="3">
                                 <IonList inset color="light">
                                     <IonItem lines="none">
-                                        <IonNote style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                             <IonIcon icon={createOutline} />
-                                            {formatDateTime(project.createdAt)}
+                                            {project.createdAt.toLocaleString("ja-JP")}
                                         </IonNote>
                                     </IonItem>
-
                                     <IonItem lines="none">
-                                        <IonNote style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                             <IonIcon icon={timeOutline} />
-                                            {formatDateTime(project.lastModified)}
+                                            {project.lastModified.toLocaleString("ja-JP")}
                                         </IonNote>
                                     </IonItem>
 
@@ -415,9 +501,9 @@ export const ProjectMainPage = () => {
                                         <IonSelect
                                             interface="popover"
                                             value={form.status}
-                                            onIonChange={(e) => handleFormChange("status", (e.detail.value as string))}
+                                            onIonChange={(e) => handleFormChange("status", e.detail.value as string)}
                                         >
-                                            {PROJECT_STATUS_OPTIONS.map((option) => (
+                                            {STATUS_OPTIONS.map((option) => (
                                                 <IonSelectOption key={option.value} value={option.value}>
                                                     {option.label}
                                                 </IonSelectOption>
@@ -426,33 +512,23 @@ export const ProjectMainPage = () => {
                                     </IonItem>
 
                                     <IonItem>
-                                        <IonBadge>{currentStatusLabel}</IonBadge>
+                                        <IonBadge>{statusLabel}</IonBadge>
 
-                                        <IonBadge slot="end" color='light' style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <IonBadge slot="end" color="light" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                                             <IonIcon icon={pricetagOutline} />
-                                            <Editable text={form.tag ?? 'タグなし'} defaultText="タグなし" onCommit={(value) => handleFormChange("tag", value.trim() || undefined)}>
+                                            <Editable text={form.tag ?? "タグなし"} defaultText="タグなし" onCommit={(value) => handleFormChange("tag", value.trim() || undefined)}>
                                                 <IonText />
                                             </Editable>
                                         </IonBadge>
                                     </IonItem>
+
                                 </IonList>
                             </IonCol>
                         </IonRow>
 
                         <IonRow>
                             <IonCol size="auto">
-                                <AddExternalLinkCard
-                                    onClick={() => {
-                                        handleFormChange("externalLinks", [
-                                            ...form.externalLinks,
-                                            {
-                                                link: '',
-                                                title: 'タイトルなし',
-                                                tag: 'タグ無し'
-                                            }
-                                        ]);
-                                    }}
-                                />
+                                <AddExternalLinkCard onClick={handleExternalLinkAdd} />
                             </IonCol>
 
                             {(form.externalLinks ?? []).map((link, index) => (
@@ -466,6 +542,17 @@ export const ProjectMainPage = () => {
                                     />
                                 </IonCol>
                             ))}
+                        </IonRow>
+
+                        <IonRow>
+                            <IonCol>
+                                <ProjectBomList
+                                    bomList={form.bomList}
+                                    onAdd={handleBomAdd}
+                                    onChange={handleBomChange}
+                                    onDelete={handleBomDelete}
+                                />
+                            </IonCol>
                         </IonRow>
                     </IonGrid>
                 )}

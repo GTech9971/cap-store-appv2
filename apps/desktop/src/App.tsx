@@ -4,7 +4,7 @@ import { PartDetailPage } from "./pages/PartDetailPage"
 import { LoginCallback, Security } from '@okta/okta-react';
 import { OktaAuth, toRelativeUrl } from '@okta/okta-auth-js';
 import { oktaConfig } from "./OktaConfig";
-import { ProjectPage } from "./pages/ProjectPage";
+import { ProjectMainPage } from "./pages/ProjectMainPage";
 import { NewProjectPage } from "./pages/projects/NewProjectPage";
 
 const oktaAuth = new OktaAuth(oktaConfig);
@@ -30,7 +30,7 @@ export const App = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/parts/:id" element={<PartDetailPage />} />
                 <Route path="/projects/new" element={<NewProjectPage />} />
-                <Route path="/projects" element={<ProjectPage />} />
+                <Route path="/projects" element={<ProjectMainPage />} />
 
                 <Route path="/login/callback" element={<LoginCallback loadingElement={<h3>Loading...</h3>} />} />
 
