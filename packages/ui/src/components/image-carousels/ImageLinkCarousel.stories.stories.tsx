@@ -29,16 +29,11 @@ export const SingleImage: Story = {
                 tag: 'タグ'
             },
         ],
-        onEditedTitle: (index, title) => { console.warn(index, title) },
-        onEditedTag: (index, tag) => { console.warn(index, tag) },
         onDelete: undefined,
     },
 };
 
 export const MultipleImages: Story = {
-
-
-
     args: {
         images: [
             {
@@ -51,26 +46,8 @@ export const MultipleImages: Story = {
                 title: 'サブ',
                 tag: 'サブ'
             }
-
-            // 'https://akizukidenshi.com//img/goods/2/113065.jpg',
-            // 'https://akizukidenshi.com//img/goods/3/113065.jpg',
-            // 'https://akizukidenshi.com//img/goods/4/113065.jpg'
         ],
-        onEditedTitle: (index, title) => { console.warn(index, title) },
-        onEditedTag: (index, tag) => { console.warn(index, tag) },
         onDelete: undefined,
     },
 };
 
-// export const WithDeleteButton: Story = {
-//     args: {
-//         images: [
-//             'https://akizukidenshi.com//img/goods/L/113065.jpg',
-//             'https://akizukidenshi.com//img/goods/1/113065.jpg',
-//             'https://akizukidenshi.com//img/goods/2/113065.jpg',
-//             'https://akizukidenshi.com//img/goods/3/113065.jpg',
-//             'https://akizukidenshi.com//img/goods/4/113065.jpg'
-//         ],
-//         onDelete: (index: number) => console.log(`Delete image at index: ${index}`),
-//     },
-// };

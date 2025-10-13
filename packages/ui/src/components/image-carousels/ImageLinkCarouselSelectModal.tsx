@@ -12,7 +12,6 @@ import {
     IonLabel,
     IonList,
     IonModal,
-    IonText,
     IonThumbnail,
     IonTitle,
     IonToolbar

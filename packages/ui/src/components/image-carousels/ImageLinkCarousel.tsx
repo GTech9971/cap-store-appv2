@@ -1,11 +1,10 @@
 import { IonBadge, IonIcon, IonImg, IonLabel, IonText } from "@ionic/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { imageOutline } from 'ionicons/icons';
 import { Indicator } from "./Indicator";
 import { DeleteButton } from "./DeleteButton";
 import { PreviousButton } from "./PreviousButton";
 import { NextButton } from "./NextButtons";
-import { Editable } from "../editable/Editable";
 
 export type ImageLink = {
     url: string,
@@ -15,15 +14,11 @@ export type ImageLink = {
 
 export interface ImageLinkCarouselProps {
     images: ImageLink[];
-    onEditedTitle: (index: number, title: string) => void,
-    onEditedTag: (index: number, tag: string) => void,
     onDelete?: (index: number) => void;
 }
 
 export const ImageLinkCarousel: React.FC<ImageLinkCarouselProps> = ({
     images,
-    onEditedTitle,
-    onEditedTag,
     onDelete
 }) => {
 
@@ -34,6 +29,10 @@ export const ImageLinkCarousel: React.FC<ImageLinkCarouselProps> = ({
             setIndex(images.length > 0 ? images.length - 1 : 0);
         }
     }, [images, index]);
+
+    const url: string = useMemo(() => images[index].url, [images, index]);
+    const title: string = useMemo(() => images[index]?.title ?? 'タイトル無し', [images, index]);
+    const tag: string = useMemo(() => images[index]?.tag ?? 'タグ無し', [images, index]);
 
     if (!images || images.length === 0) {
         return (
@@ -69,7 +68,7 @@ export const ImageLinkCarousel: React.FC<ImageLinkCarouselProps> = ({
                 justifyContent: 'center'
             }}>
                 <IonImg
-                    src={images[index].url}
+                    src={url}
                     alt="preview"
                     style={{
                         height: '100%',
@@ -78,45 +77,34 @@ export const ImageLinkCarousel: React.FC<ImageLinkCarouselProps> = ({
                     }}
                 />
 
-
-                <Editable
-                    text={images[index].title ?? 'タイトル無し'}
-                    onCommit={e => onEditedTitle(index, e)}
-                    defaultText="タイトル無し">
-                    <IonLabel
-                        style={{
-                            position: 'absolute',
-                            right: '4px',
-                            top: '4px',
-                            zIndex: 10,
-                            '--padding-start': '8px',
-                            '--padding-end': '8px',
-                            '--padding-top': '4px',
-                            '--padding-bottom': '4px',
-                        }}
-                    />
-                </Editable>
+                <IonLabel
+                    style={{
+                        position: 'absolute',
+                        right: '4px',
+                        top: '4px',
+                        zIndex: 10,
+                        '--padding-start': '8px',
+                        '--padding-end': '8px',
+                        '--padding-top': '4px',
+                        '--padding-bottom': '4px',
+                    }}>
+                    {title}
+                </IonLabel>
 
 
-                <Editable
-                    text={images[index].tag ?? 'タグ無し'}
-                    defaultText="タグ無し"
-                    onCommit={e => onEditedTag(index, e)}>
-                    <IonBadge
-                        style={{
-                            position: 'absolute',
-                            right: '8px',
-                            top: '28px',
-                            zIndex: 10,
-                            '--padding-start': '8px',
-                            '--padding-end': '8px',
-                            '--padding-top': '4px',
-                            '--padding-bottom': '4px',
-                        }}
-                    />
-                </Editable>
-
-
+                <IonBadge
+                    style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '28px',
+                        zIndex: 10,
+                        '--padding-start': '8px',
+                        '--padding-end': '8px',
+                        '--padding-top': '4px',
+                        '--padding-bottom': '4px',
+                    }}>
+                    {tag}
+                </IonBadge>
 
                 {onDelete && (
                     <DeleteButton
@@ -148,7 +136,7 @@ export const ImageLinkCarousel: React.FC<ImageLinkCarouselProps> = ({
                     />
                 ))}
             </div>
-        </div>
+        </div >
     );
 }
 
