@@ -30,7 +30,7 @@ import {
 } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "../api/useApiClient";
-import { Category, Maker, PartsComponent } from "cap-store-api-def";
+import { Category, Maker, PartsComponent, Project } from "cap-store-api-def";
 import { parseApiError } from "../utils/parseApiError";
 import { menuOutline, addOutline, documentOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
@@ -60,7 +60,27 @@ function Home() {
   const [makerApiError, setMakerApiError] = useState<string | null>(null);
   const [makers, setMakers] = useState<Maker[]>([]);
 
-  const { categoryApi, makerApi, componentApi, akizukiCatalogApi } = useApiClint();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectApiError, setProjectApiError] = useState<string | null>(null);
+
+  const getProjectStatusLabel = useCallback((status: string) => {
+    switch (status) {
+      case "planning":
+        return "計画中";
+      case "processing":
+        return "進行中";
+      case "pause":
+        return "一時停止";
+      case "cancel":
+        return "中止";
+      case "complete":
+        return "完了";
+      default:
+        return status;
+    }
+  }, []);
+
+  const { categoryApi, makerApi, componentApi, projectApi, akizukiCatalogApi } = useApiClint();
 
   const [presentAlert] = useIonAlert();
 
@@ -153,6 +173,21 @@ function Home() {
     };
     fetchInitialData();
   }, [categoryApi, fetchCategoriesList, fetchMakersList]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setProjectApiError(null);
+      try {
+        const res = await projectApi.fetchProjects({ pageIndex: 1, pageSize: 20 });
+        setProjects(res?.data ?? []);
+      } catch (err) {
+        const { message, status } = await parseApiError(err);
+        setProjectApiError(`プロジェクト一覧の取得に失敗しました。${message}${status ? `:${status}` : ''}`);
+        setProjects([]);
+      }
+    };
+    fetchProjects();
+  }, [projectApi]);
 
 
   /**
@@ -252,9 +287,30 @@ function Home() {
               <IonLabel>プロジェクト</IonLabel>
               <IonButton onClick={() => navigate('/projects/new')}>追加</IonButton>
             </IonListHeader>
-            <IonItem>
-              <IonNote>プロジェクト登録なし</IonNote>
-            </IonItem>
+            {projectApiError ? (
+              <IonItem>
+                <IonNote color="danger">{projectApiError}</IonNote>
+              </IonItem>
+            ) : projects.length === 0 ? (
+              <IonItem>
+                <IonNote>プロジェクト登録なし</IonNote>
+              </IonItem>
+            ) : (
+              projects.map((project) => (
+                <IonItem
+                  key={project.id}
+                  button
+                  detail={false}
+                  onClick={() => navigate(`/projects?projectId=${project.id}`)}
+                >
+                  <IonLabel>
+                    <IonText>{project.name}</IonText>
+                    <IonNote>{project.summary ?? '-'}</IonNote>
+                  </IonLabel>
+                  <IonBadge slot="end">{getProjectStatusLabel(project.status)}</IonBadge>
+                </IonItem>
+              ))
+            )}
           </IonList>
 
           <IonList inset>
