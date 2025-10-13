@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   IonAvatar,
   IonBadge,
@@ -19,7 +19,6 @@ import {
   IonList,
   IonListHeader,
   IonMenu,
-  IonNote,
   IonRow,
   IonSearchbar,
   IonSplitPane,
@@ -30,7 +29,9 @@ import {
 } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "../api/useApiClient";
-import { Category, Maker, PartsComponent, Project } from "cap-store-api-def";
+import { PartsComponent } from "cap-store-api-def";
+import { ProjectList } from "ui/components/projects/ProjectList"
+import { CategoryList } from "ui/components/categories/CategoryList"
 import { parseApiError } from "../utils/parseApiError";
 import { menuOutline, addOutline, documentOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
@@ -48,37 +49,9 @@ import { useOktaAuth } from "@okta/okta-react";
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-
   const [components, setComponents] = useState<PartsComponent[]>([]); // cap-store-api-def より
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [componentApiError, setComponentApiError] = useState<string | null>(null);
-
-  const [categoryApiError, setCategoryApiError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  const [makerApiError, setMakerApiError] = useState<string | null>(null);
-  const [makers, setMakers] = useState<Maker[]>([]);
-
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectApiError, setProjectApiError] = useState<string | null>(null);
-
-  const getProjectStatusLabel = useCallback((status: string) => {
-    switch (status) {
-      case "planning":
-        return "計画中";
-      case "processing":
-        return "進行中";
-      case "pause":
-        return "一時停止";
-      case "cancel":
-        return "中止";
-      case "complete":
-        return "完了";
-      default:
-        return status;
-    }
-  }, []);
 
   const { categoryApi, makerApi, componentApi, projectApi, akizukiCatalogApi } = useApiClint();
 
@@ -95,52 +68,27 @@ function Home() {
   const [isOpenIModal, setIsIModal] = useState<boolean>(false);
 
   // 検索フィルタリングされたコンポーネント
-  const filteredComponents = components.filter(component => {
-    if (!searchQuery.trim()) return true;
+  const filteredComponents = useMemo(() => {
+    return components.filter(component => {
+      if (!searchQuery.trim()) return true;
 
-    const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
-    const componentName = component.name.toLowerCase();
-    const modelName = component.modelName?.toLowerCase() || '';
+      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
+      const componentName = component.name.toLowerCase();
+      const modelName = component.modelName?.toLowerCase() || '';
 
-    return searchTerms.some(term =>
-      componentName.includes(term) || modelName.includes(term)
-    );
-  });
+      return searchTerms.some(term =>
+        componentName.includes(term) || modelName.includes(term)
+      );
+    });
+  }, [components, searchQuery]);
 
-  // カテゴリ一覧を取得する共通処理
-  const fetchCategoriesList = useCallback(async (): Promise<Category[]> => {
-    try {
-      const categoriesRes = await categoryApi.fetchCategories();
-      const fetchedCategories = categoriesRes?.data ?? [];
-      setCategories(fetchedCategories);
-      return fetchedCategories;
-    } catch (err) {
-      const { message, status } = await parseApiError(err);
-      setCategoryApiError(`カテゴリ一覧の取得に失敗しました。${message}:${status}`);
-      return [];
-    }
-  }, [categoryApi]);
-
-  /** メーカー取得 */
-  const fetchMakersList = useCallback(async (): Promise<Maker[]> => {
-    try {
-      const makersRes = await makerApi.fetchMakers();
-      const fetchedMakers = makersRes?.data ?? [];
-      setMakers(fetchedMakers);
-      return fetchedMakers;
-    } catch (err) {
-      const { message, status } = await parseApiError(err);
-      setMakerApiError(`メーカー一覧の取得に失敗しました。${message}:${status}`);
-      return [];
-    }
-  }, [makerApi]);
-
+  const [categoryId, setCategoryId] = useState<string>();
   /**
    * カテゴリー選択
    * @param categoryId 
    */
-  const handleCategorySelect = async (categoryId: string) => {
-    setSelectedCategoryId(categoryId);
+  const handleCategorySelect = useCallback(async (categoryId: string) => {
+    setCategoryId(categoryId);
     try {
       const response = await categoryApi.fetchComponentsByCategoryId({ categoryId: categoryId });
       setComponents(response?.data ?? []);
@@ -148,46 +96,7 @@ function Home() {
       const { message, status } = await parseApiError(err);
       setComponentApiError(`部品一覧の取得に失敗しました。${message}:${status}`);
     }
-  }
-
-
-
-  useEffect(() => {
-    // 初期データ取得
-    const fetchInitialData = async () => {
-      const results: Category[] = await fetchCategoriesList();
-      // 初期カテゴリがあれば部品を取得
-      if (results.length > 0) {
-        const initialCategoryId = results[0].id;
-        setSelectedCategoryId(initialCategoryId);
-        try {
-          const componentsRes = await categoryApi.fetchComponentsByCategoryId({ categoryId: initialCategoryId });
-          setComponents(componentsRes?.data ?? []);
-        } catch (err) {
-          const { message, status } = await parseApiError(err);
-          setComponentApiError(`初期カテゴリの部品取得に失敗しました。${message}:${status}`);
-        }
-
-        await fetchMakersList();
-      }
-    };
-    fetchInitialData();
-  }, [categoryApi, fetchCategoriesList, fetchMakersList]);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setProjectApiError(null);
-      try {
-        const res = await projectApi.fetchProjects({ pageIndex: 1, pageSize: 20 });
-        setProjects(res?.data ?? []);
-      } catch (err) {
-        const { message, status } = await parseApiError(err);
-        setProjectApiError(`プロジェクト一覧の取得に失敗しました。${message}${status ? `:${status}` : ''}`);
-        setProjects([]);
-      }
-    };
-    fetchProjects();
-  }, [projectApi]);
+  }, [categoryApi]);
 
 
   /**
@@ -269,49 +178,13 @@ function Home() {
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding" color="light">
-          <IonList inset={true}>
-            <IonListHeader>
-              カテゴリ一覧
-            </IonListHeader>
-            {categories &&
-              categories.map((category, index) => (
-                <IonItem button detail={false} key={index} color={selectedCategoryId == category.id ? 'primary' : undefined} onClick={() => handleCategorySelect(category.id)}>
-                  <IonLabel>{category.name}</IonLabel>
-                </IonItem>
-              ))
-            }
-          </IonList>
 
-          <IonList inset>
-            <IonListHeader>
-              <IonLabel>プロジェクト</IonLabel>
-              <IonButton onClick={() => navigate('/projects/new')}>追加</IonButton>
-            </IonListHeader>
-            {projectApiError ? (
-              <IonItem>
-                <IonNote color="danger">{projectApiError}</IonNote>
-              </IonItem>
-            ) : projects.length === 0 ? (
-              <IonItem>
-                <IonNote>プロジェクト登録なし</IonNote>
-              </IonItem>
-            ) : (
-              projects.map((project) => (
-                <IonItem
-                  key={project.id}
-                  button
-                  detail={false}
-                  onClick={() => navigate(`/projects?projectId=${project.id}`)}
-                >
-                  <IonLabel>
-                    <IonText>{project.name}</IonText>
-                    <IonNote>{project.summary ?? '-'}</IonNote>
-                  </IonLabel>
-                  <IonBadge slot="end">{getProjectStatusLabel(project.status)}</IonBadge>
-                </IonItem>
-              ))
-            )}
-          </IonList>
+          <CategoryList
+            onClick={handleCategorySelect}
+            categoryApi={categoryApi} />
+
+          <ProjectList
+            projectApi={projectApi} />
 
           <IonList inset>
             <IonListHeader>
@@ -362,7 +235,7 @@ function Home() {
               </IonButton>
             </IonButtons>
 
-            <IonTitle>{selectedCategoryId ? `「${selectedCategoryId}」の部品一覧` : `カテゴリーの取得失敗`}</IonTitle>
+            <IonTitle>{categoryId ? `「${categoryId}」の部品一覧` : `カテゴリーの取得失敗`}</IonTitle>
           </IonToolbar>
 
           <IonToolbar>
