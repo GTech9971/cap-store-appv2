@@ -3,29 +3,77 @@ import {
     IonCol,
     IonGrid,
     IonIcon,
+    IonImg,
     IonInput,
     IonItem,
     IonLabel,
     IonList,
     IonNote,
-    IonRow
+    IonRow,
+    IonSelect,
+    IonSelectOption,
+    IonThumbnail
 } from "@ionic/react";
-import { addOutline, trashOutline } from "ionicons/icons";
-import { Bom } from "cap-store-api-def";
-import { useMemo } from "react";
+import { addOutline } from "ionicons/icons";
+import { Bom, ComponentsApi, FetchComponentsRequest, PartsComponent } from "cap-store-api-def";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { parseApiError } from "ui/utils/parseApiError";
 
 export type ProjectBomListProps = {
+    componentApi: ComponentsApi,
     bomList: Bom[];
     onAdd: () => void;
     onChange: (index: number, patch: Partial<Bom>) => void;
     onDelete: (index: number) => void;
 };
 
-export const ProjectBomList: React.FC<ProjectBomListProps> = ({ bomList, onAdd, onChange, onDelete }) => {
+export const ProjectBomList: React.FC<ProjectBomListProps> = ({
+    componentApi,
+    bomList,
+    onAdd,
+    onChange,
+    onDelete }) => {
     const totalQuantity = useMemo(() => bomList.reduce((sum, bom) => sum + (bom.quantity ?? 0), 0), [bomList]);
+
+    const [components, setComponents] = useState<PartsComponent[]>([]);
+    const [componentIdList, setComponentIdList] = useState<string[]>([]);
+    const [apiError, setApiError] = useState<string | null>(null);
+
+    const fetchComponents = useCallback(async () => {
+        if (components.length > 0) { return; }
+        try {
+            const request: FetchComponentsRequest = {
+                pageIndex: 1,
+                pageSize: 50
+            };
+            const response = await componentApi.fetchComponents(request);
+            if (response?.data) {
+                setComponents(response.data);
+                setComponentIdList(response.data.map(x => x.id));
+            }
+        } catch (error) {
+            const { message, status } = await parseApiError(error);
+            setApiError(`電子部品情報の取得に失敗。 ${message}:${status}`);
+        }
+    }, [componentApi, components.length]);
+
+    useEffect(() => {
+        fetchComponents();
+    }, [fetchComponents]);
+
+    const findComponentById = useCallback((id: string): PartsComponent | undefined => {
+        return components.find(x => x.id === id);
+    }, [components]);
 
     return (
         <IonList inset>
+
+            {apiError &&
+                <IonNote color='danger'>
+                    {apiError}
+                </IonNote>
+            }
+
             <IonItem lines="full">
                 <IonLabel>BOM</IonLabel>
                 <IonButton slot="end" fill="clear" onClick={onAdd}>
@@ -43,12 +91,24 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({ bomList, onAdd, 
                         <IonGrid>
                             <IonRow>
                                 <IonCol size="2">
-                                    <IonInput
-                                        label="部品ID"
-                                        labelPlacement="stacked"
+                                    <IonThumbnail>
+                                        <IonImg src={findComponentById(bom.componentId)?.images?.[0] ?? undefined} />
+                                    </IonThumbnail>
+                                </IonCol>
+                                <IonCol size="2">
+                                    <IonLabel position="stacked">部品ID <span style={{ color: 'red' }}>*</span></IonLabel>
+                                    <IonSelect
+                                        required
                                         value={bom.componentId}
-                                        onIonInput={(e) => onChange(index, { componentId: e.detail.value ?? "" })}
-                                    />
+                                        onIonChange={(e) => onChange(index, { id: e.detail.value })}
+                                        placeholder="選択してください">
+                                        {componentIdList.map(id => (
+                                            <IonSelectOption key={id} value={id}>
+                                                {id}
+                                            </IonSelectOption>
+                                        ))}
+                                    </IonSelect>
+
                                 </IonCol>
                                 <IonCol size="1.5">
                                     <IonInput
@@ -86,7 +146,7 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({ bomList, onAdd, 
                                 </IonCol>
                                 <IonCol size="auto" className="ion-align-self-end">
                                     <IonButton color="danger" fill="clear" onClick={() => onDelete(index)}>
-                                        <IonIcon slot="icon-only" icon={trashOutline} />
+                                        削除
                                     </IonButton>
                                 </IonCol>
                             </IonRow>

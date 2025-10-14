@@ -1,18 +1,32 @@
 import { http, HttpResponse } from 'msw';
-import { FetchComponentResponse, RegistryComponentResponse, UpdateComponentResponse } from 'cap-store-api-def';
+import { FetchComponentResponse, FetchComponentsResponse, PartsComponent, RegistryComponentResponse, UpdateComponentResponse } from 'cap-store-api-def';
 
-export const componentHandlers = [
-    http.post('/components', async () => HttpResponse.json<RegistryComponentResponse>({
-        data: { componentId: 'C-12345' },
-        errors: []
-    }, { status: 201 })),
-
-    http.get('/components/:id', async () => HttpResponse.json<FetchComponentResponse>({
-        data: {
-            id: 'C-12345',
-            name: '抵抗1/4W',
-            modelName: 'R-100Ω',
-            description: `
+const list: PartsComponent[] = [
+    {
+        id: 'C-001',
+        name: '炭素皮膜抵抗',
+        modelName: 'R-100Ω',
+        description: '1/4W 100Ωの標準抵抗',
+        images: ['https://akizukidenshi.com/img/goods/L/130195.jpg'],
+        category: { id: 'resistor', name: '抵抗' },
+        maker: { id: 'rohm', name: 'ROHM' },
+        currentStock: 32
+    },
+    {
+        id: 'C-002',
+        name: '金属皮膜抵抗',
+        modelName: 'R-1KΩ',
+        description: '1/4W 1KΩの高精度抵抗',
+        images: ['https://akizukidenshi.com/img/goods/1/130195.jpg'],
+        category: { id: 'resistor', name: '抵抗' },
+        maker: { id: 'toshiba', name: '東芝' },
+        currentStock: 127
+    },
+    {
+        id: 'C-12345',
+        name: '抵抗1/4W',
+        modelName: 'R-100Ω',
+        description: `
 XD3232は2つのラインドライバー、2つのラインレシーバー、1つのデュアルチャージポンプ回路で構成されており、±15kVのピン間(シリアルポート接続ピン、GNDを含む)ESD保護機能を備えています。TIA/EIA-232-Fの要件を満たし、非同期通信コントローラとシリアルポート・コネクタの間の電気的インターフェイスとして機能します。チャージポンプと4つの小さな外付けコンデンサにより、3V～5.5Vの単一電源で動作できます。
 
 [データシート](https://akizukidenshi.com//goodsaffix/XD3232.pdf)
@@ -38,24 +52,46 @@ XD3232は2つのラインドライバー、2つのラインレシーバー、1�
 
 ・パッケージタイプ：DIP16
 `,
-            images: [
-                'https://akizukidenshi.com/img/goods/L/130195.jpg',
-                'https://akizukidenshi.com/img/goods/1/130195.jpg',
-                'https://akizukidenshi.com/img/goods/2/130195.jpg',
-                'https://akizukidenshi.com/img/goods/3/130195.jpg',
-                'https://akizukidenshi.com/img/goods/4/130195.jpg',
-                'https://akizukidenshi.com/img/goods/6/130195.jpg'
-            ],
-            category: {
-                id: 'resistor',
-                name: '抵抗'
-            },
-            maker: {
-                id: 'M-JPN-0001',
-                name: 'Panasonic'
-            },
-            currentStock: 90
+        images: [
+            'https://akizukidenshi.com/img/goods/L/130195.jpg',
+            'https://akizukidenshi.com/img/goods/1/130195.jpg',
+            'https://akizukidenshi.com/img/goods/2/130195.jpg',
+            'https://akizukidenshi.com/img/goods/3/130195.jpg',
+            'https://akizukidenshi.com/img/goods/4/130195.jpg',
+            'https://akizukidenshi.com/img/goods/6/130195.jpg'
+        ],
+        category: {
+            id: 'resistor',
+            name: '抵抗'
         },
+        maker: {
+            id: 'M-JPN-0001',
+            name: 'Panasonic'
+        },
+        currentStock: 90
+    },
+]
+
+export const componentHandlers = [
+
+    http.get('/components', async () => HttpResponse.json<FetchComponentsResponse>({
+        data: list,
+        pageIndex: 1,
+        pageSize: 50,
+        hasNext: false,
+        hasPrevious: false,
+        totalCount: list.length,
+        totalPages: 1,
+        errors: [],
+    }, { status: 200 })),
+
+    http.post('/components', async () => HttpResponse.json<RegistryComponentResponse>({
+        data: { componentId: 'C-12345' },
+        errors: []
+    }, { status: 201 })),
+
+    http.get('/components/:id', async () => HttpResponse.json<FetchComponentResponse>({
+        data: list[list.length - 1],
         errors: []
     }, { status: 200 })),
 

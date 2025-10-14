@@ -77,7 +77,7 @@ const mapProjectToForm = (project: Project): ProjectFormState => ({
 });
 
 export const ProjectMainPage = () => {
-    const { projectApi, updateProjectApi } = useApiClint();
+    const { projectApi, componentApi, updateProjectApi } = useApiClint();
     const [handleConfirm] = useConfirmUtils();
     const [presentAlert] = useIonAlert();
     const navigate = useNavigate();
@@ -547,6 +547,7 @@ export const ProjectMainPage = () => {
                         <IonRow>
                             <IonCol>
                                 <ProjectBomList
+                                    componentApi={componentApi}
                                     bomList={form.bomList}
                                     onAdd={handleBomAdd}
                                     onChange={handleBomChange}

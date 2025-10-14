@@ -61,7 +61,7 @@ let projectStore: MockProject[] = [
             },
             {
                 id: 'B-002',
-                componentId: 'C-010',
+                componentId: 'C-002',
                 quantity: 4,
                 footPrintName: '0402',
                 remarks: 'センサーバイパス',
