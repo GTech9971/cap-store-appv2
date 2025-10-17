@@ -1,18 +1,19 @@
 import { IonBadge, IonButton, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonText } from "@ionic/react";
 import { ProjectsApi, type Project } from "cap-store-api-def"
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"
 import { parseApiError } from "../../utils/parseApiError";
 
 export interface Prop {
     projectApi: ProjectsApi,
+    onClickAdd?: () => void,
+    onClickProject?: (projectId: string) => void
 }
 
 export const ProjectList: React.FC<Prop> = ({
-    projectApi
+    projectApi,
+    onClickAdd,
+    onClickProject
 }) => {
-
-    const navigate = useNavigate();
 
     const [projects, setProjects] = useState<Project[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export const ProjectList: React.FC<Prop> = ({
         <IonList inset>
             <IonListHeader>
                 <IonLabel>プロジェクト</IonLabel>
-                <IonButton onClick={() => navigate('/projects/new')}>追加</IonButton>
+                <IonButton onClick={onClickAdd}>追加</IonButton>
             </IonListHeader>
             {apiError ? (
                 <IonItem>
@@ -71,7 +72,7 @@ export const ProjectList: React.FC<Prop> = ({
                         key={project.id}
                         button
                         detail={false}
-                        onClick={() => navigate(`/projects?projectId=${project.id}`)}
+                        onClick={() => onClickProject?.(project.id)}
                     >
                         <IonLabel>
                             <IonText>{project.name}</IonText>
