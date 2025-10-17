@@ -18,6 +18,7 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
+  IonLoading,
   IonMenu,
   IonRow,
   IonSearchbar,
@@ -29,12 +30,11 @@ import {
 } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "../api/useApiClient";
-import { PartsComponent } from "cap-store-api-def";
 import { ProjectList } from "ui/components/projects/ProjectList"
 import { CategoryList } from "ui/components/categories/CategoryList"
-import { parseApiError } from "../utils/parseApiError";
 import { menuOutline, addOutline, documentOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
+import { useFetchComponentsApi } from 'ui/api/components/useFetchComponentsApi';
 import { useNavigate } from "react-router-dom";
 
 // tauri
@@ -45,14 +45,12 @@ import { Invoice } from "@/types/invoices/invoice";
 import { useInvoice } from "@/hooks/useInvoice";
 import { AkizukiInvoiceModal } from "@/modals/AkizukiInvoiceModal";
 import { useOktaAuth } from "@okta/okta-react";
+import { ErrorNote } from "ui/components/ErrorNote";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
 
-  const [components, setComponents] = useState<PartsComponent[]>([]); // cap-store-api-def より
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [componentApiError, setComponentApiError] = useState<string | null>(null);
-
   const { categoryApi, makerApi, componentApi, projectApi, akizukiCatalogApi } = useApiClint();
 
   const [presentAlert] = useIonAlert();
@@ -66,6 +64,10 @@ function Home() {
   const { parseInvoice } = useInvoice();
   const [invoice, setInvoice] = useState<Invoice>();
   const [isOpenIModal, setIsIModal] = useState<boolean>(false);
+
+  const [categoryId, setCategoryId] = useState<string | undefined>();
+  const { components, isLoadingFetchComponents, fetchComponentsError, refreshComponents } = useFetchComponentsApi(categoryApi, categoryId);
+
 
   // 検索フィルタリングされたコンポーネント
   const filteredComponents = useMemo(() => {
@@ -82,21 +84,14 @@ function Home() {
     });
   }, [components, searchQuery]);
 
-  const [categoryId, setCategoryId] = useState<string>();
   /**
    * カテゴリー選択
    * @param categoryId 
    */
   const handleCategorySelect = useCallback(async (categoryId: string) => {
     setCategoryId(categoryId);
-    try {
-      const response = await categoryApi.fetchComponentsByCategoryId({ categoryId: categoryId });
-      setComponents(response?.data ?? []);
-    } catch (err) {
-      const { message, status } = await parseApiError(err);
-      setComponentApiError(`部品一覧の取得に失敗しました。${message}:${status}`);
-    }
-  }, [categoryApi]);
+    await refreshComponents();
+  }, [refreshComponents]);
 
 
   /**
@@ -249,12 +244,15 @@ function Home() {
           <IonItem lines="none" color='light'>
             <IonBadge color='secondary'>{filteredComponents.length}件</IonBadge>
             <IonText>の部品が見つかりました</IonText>
+            <ErrorNote error={fetchComponentsError} />
           </IonItem>
 
           {/* 以下を記載しないと電子部品カードの表示がされないことの予想だが、事前にスタイル設定を1度でも読み込まないと後から動的に追加した際に反映されない？ */}
           <IonCard style={{ display: 'none' }}></IonCard>
 
           <IonGrid className="ion-padding">
+            {isLoadingFetchComponents && (<IonLoading />)}
+
             {
               Array.from({ length: Math.ceil(filteredComponents.length / 4) }, (_, rowIndex) => filteredComponents.slice(rowIndex * 4, (rowIndex + 1) * 4)).map((rowItems, index) => (
                 <IonRow key={index}>

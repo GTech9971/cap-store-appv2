@@ -1,7 +1,7 @@
-import { IonItem, IonLabel, IonList, IonListHeader, IonNote } from "@ionic/react"
-import type { CategoriesApi, Category } from "cap-store-api-def";
-import { useCallback, useEffect, useState } from "react"
-import { parseApiError } from "../../utils/parseApiError";
+import { IonItem, IonLabel, IonList, IonListHeader, IonLoading, IonNote } from "@ionic/react"
+import type { CategoriesApi, } from "cap-store-api-def";
+import { useCallback, useState } from "react"
+import { UseFetchCategoryApiClient } from "../../api/categories/useFetchCategoryApi";
 
 export interface Prop {
     categoryApi: CategoriesApi,
@@ -13,26 +13,9 @@ export const CategoryList: React.FC<Prop> = ({
     onClick
 }) => {
 
+    const { categories, fetchCategoryError, isLoadingFetchCategory, } = UseFetchCategoryApiClient(categoryApi);
+
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>();
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [apiError, setApiError] = useState<string | null>(null);
-
-    const fetchCategory = useCallback(async () => {
-        try {
-            const categoriesRes = await categoryApi.fetchCategories();
-            const fetchedCategories = categoriesRes?.data ?? [];
-            setCategories(fetchedCategories);
-            return fetchedCategories;
-        } catch (err) {
-            const { message, status } = await parseApiError(err);
-            setApiError(`カテゴリ一覧の取得に失敗しました。${message}:${status}`);
-            return [];
-        }
-    }, [categoryApi]);
-
-    useEffect(() => {
-        fetchCategory();
-    }, [fetchCategory]);
 
     const handleOnClick = useCallback((categoryId: string) => {
         setSelectedCategoryId(categoryId);
@@ -45,15 +28,17 @@ export const CategoryList: React.FC<Prop> = ({
                 カテゴリ一覧
             </IonListHeader>
 
-            {apiError && (
+            {fetchCategoryError && (
                 <IonItem>
-                    <IonNote color="danger">{apiError}</IonNote>
+                    <IonNote color="danger">{fetchCategoryError?.message}:{fetchCategoryError?.status}</IonNote>
                 </IonItem>
             )}
 
+            {isLoadingFetchCategory && (<IonLoading />)}
+
             {categories.length === 0 && (
                 <IonItem>
-                    <IonNote>プロジェクト登録なし</IonNote>
+                    <IonNote>カテゴリー登録なし</IonNote>
                 </IonItem>
             )}
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     IonText,
     IonModal,
@@ -26,6 +26,7 @@ import type {
     CategoriesApi,
     ComponentsApi,
     FetchComponentByAkizukiCatalogIdResponse,
+    Maker,
     MakersApi,
     RegistryComponentRequest
 } from 'cap-store-api-def';
@@ -34,16 +35,11 @@ import { parseApiError } from '../utils/parseApiError';
 import './ComponentRegisterModal.css';
 import { useConfirmUtils } from '../utils/alertUtils';
 import ImageCarouselSelectModal from './image-carousels/ImageCarouselSelectModal';
+import { UseFetchCategoryApiClient } from '../api/categories/useFetchCategoryApi';
+import { UseFetchMakerApi } from '../api/makers/useFetchMakerApi';
+import { ErrorNote } from './ErrorNote';
 
-interface Category {
-    id: string;
-    name: string;
-}
 
-interface Maker {
-    id: string;
-    name: string;
-}
 
 export interface Data {
     name: string;
@@ -99,27 +95,14 @@ export const ComponentRegisterModal: React.FC<Props> = ({
     const [isOpenImageModal, setIsOpenImageModal] = useState<boolean>(false);
 
     const [errors, setErrors] = useState<Partial<Record<keyof RegistryComponentRequest, string>>>({});
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [makers, setMakers] = useState<Maker[]>([]);
+
+    const { categories, fetchCategoryError, refreshCategory } = UseFetchCategoryApiClient(categoryApi);
+    const { makers, fetchMakerError, refreshMaker } = UseFetchMakerApi(makerApi);
+
     const [apiError, setApiError] = useState<string | null>(null);
 
 
     const [handleConfirm] = useConfirmUtils();
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const categoryRes = await categoryApi.fetchCategories();
-                setCategories(categoryRes?.data ?? []);
-                const makerRes = await makerApi.fetchMakers();
-                setMakers(makerRes?.data ?? []);
-            } catch (error: unknown) {
-                const { message, status } = await parseApiError(error);
-                setApiError(`カテゴリやメーカーの取得に失敗しました。${message}:${status}`);
-            }
-        };
-        fetchData();
-    }, [categoryApi, makerApi]);
 
     // モーダルを閉じる前に入力をリセット
     const resetForm = useCallback(() => {
@@ -167,8 +150,8 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                     if (category) {
                         try {
                             await categoryApi.registryCategory({ registryCategoryRequest: category });
-                            const updatedCategories = await categoryApi.fetchCategories();
-                            setCategories(updatedCategories?.data ?? []);
+
+                            await refreshCategory();
                         } catch (err: unknown) {
                             const { message, status } = await parseApiError(err);
                             setApiError(`未登録カテゴリの登録に失敗しました。${message}:${status}`);
@@ -177,9 +160,9 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                     if (makerName) {
                         try {
                             await makerApi.registryMaker({ registryMakerRequest: { countryCode: 'JP', name: makerName } });
-                            const updatedMakers = await makerApi.fetchMakers();
-                            setMakers(updatedMakers?.data ?? []);
-                            maker = updatedMakers?.data?.find(x => x.name === data.makerName);
+
+                            const updatedMakers = await refreshMaker()
+                            maker = updatedMakers?.find(x => x.name === data.makerName);
                         } catch (err) {
                             const { message, status } = await parseApiError(err);
                             setApiError(`未登録メーカーの登録に失敗しました。${message}:${status}`);
@@ -201,7 +184,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
             const { message, status } = await parseApiError(err);
             setApiError(`秋月電子の情報取得に失敗しました。通販コードをご確認ください。${message}:${status}`);
         }
-    }, [akizukiApi, categoryApi, makerApi, makers, handleConfirm]);
+    }, [akizukiApi, categoryApi, refreshCategory, refreshMaker, makerApi, makers, handleConfirm]);
 
 
     const [present] = useIonAlert();
@@ -257,6 +240,9 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                         {apiError}
                     </IonNote>
                 )}
+
+                <ErrorNote error={fetchCategoryError} />
+                <ErrorNote error={fetchMakerError} />
 
                 <IonItem>
                     <IonInput
