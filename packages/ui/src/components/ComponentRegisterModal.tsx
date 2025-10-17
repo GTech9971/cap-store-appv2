@@ -35,8 +35,8 @@ import { parseApiError } from '../utils/parseApiError';
 import './ComponentRegisterModal.css';
 import { useConfirmUtils } from '../utils/alertUtils';
 import ImageCarouselSelectModal from './image-carousels/ImageCarouselSelectModal';
-import { UseFetchCategoryApiClient } from '../api/categories/useFetchCategoryApi';
-import { UseFetchMakerApi } from '../api/makers/useFetchMakerApi';
+import { useFetchCategoryApiClient } from '../api/categories/useFetchCategoryApi';
+import { useFetchMakerApi } from '../api/makers/useFetchMakerApi';
 import { ErrorNote } from './ErrorNote';
 
 
@@ -96,8 +96,8 @@ export const ComponentRegisterModal: React.FC<Props> = ({
 
     const [errors, setErrors] = useState<Partial<Record<keyof RegistryComponentRequest, string>>>({});
 
-    const { categories, fetchCategoryError, refreshCategory } = UseFetchCategoryApiClient(categoryApi);
-    const { makers, fetchMakerError, refreshMaker } = UseFetchMakerApi(makerApi);
+    const { categories, fetchCategoryError, refreshCategory } = useFetchCategoryApiClient(categoryApi);
+    const { makers, fetchMakerError, refreshMaker } = useFetchMakerApi(makerApi);
 
     const [apiError, setApiError] = useState<string | null>(null);
 

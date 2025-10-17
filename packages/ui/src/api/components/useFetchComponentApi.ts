@@ -10,7 +10,7 @@ import { parseApiError, type ParsedError } from "../../utils/parseApiError";
  * @param componentId 
  * @returns 
  */
-export const useFetchComponentApi = (componentApi: ComponentsApi, componentId: string) => {
+export const useFetchComponentApi = (componentApi: ComponentsApi, componentId?: string) => {
 
     const fetcher = useCallback(async (componentId: string): Promise<PartsComponent | undefined> => {
         try {
@@ -25,7 +25,7 @@ export const useFetchComponentApi = (componentApi: ComponentsApi, componentId: s
 
     const { data, error, isLoading, mutate } = useSWR<PartsComponent | undefined, ParsedError>(
         componentId ? ['fetchComponent', componentId] : null,
-        () => fetcher(componentId));
+        () => fetcher(componentId!));
 
     return {
         component: data,

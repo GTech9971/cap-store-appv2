@@ -9,7 +9,7 @@ import { parseApiError, type ParsedError } from "../../utils/parseApiError";
  * @param categoryApi 
  * @returns 
  */
-export const UseFetchCategoryApiClient = (categoryApi: CategoriesApi) => {
+export const useFetchCategoryApiClient = (categoryApi: CategoriesApi) => {
 
     const fetcher = useCallback(async (): Promise<Category[]> => {
         try {

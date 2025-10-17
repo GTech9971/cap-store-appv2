@@ -1,7 +1,7 @@
 import { IonItem, IonLabel, IonList, IonListHeader, IonLoading, IonNote } from "@ionic/react"
 import type { CategoriesApi, } from "cap-store-api-def";
 import { useCallback, useState } from "react"
-import { UseFetchCategoryApiClient } from "../../api/categories/useFetchCategoryApi";
+import { useFetchCategoryApiClient } from "../../api/categories/useFetchCategoryApi";
 
 export interface Prop {
     categoryApi: CategoriesApi,
@@ -13,7 +13,7 @@ export const CategoryList: React.FC<Prop> = ({
     onClick
 }) => {
 
-    const { categories, fetchCategoryError, isLoadingFetchCategory, } = UseFetchCategoryApiClient(categoryApi);
+    const { categories, fetchCategoryError, isLoadingFetchCategory, } = useFetchCategoryApiClient(categoryApi);
 
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>();
 

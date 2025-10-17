@@ -9,7 +9,7 @@ import { parseApiError, type ParsedError } from "../../utils/parseApiError";
  * @param makerApi 
  * @returns 
  */
-export const UseFetchMakerApi = (makerApi: MakersApi) => {
+export const useFetchMakerApi = (makerApi: MakersApi) => {
 
     const fetcher = useCallback(async (): Promise<Maker[]> => {
         try {
