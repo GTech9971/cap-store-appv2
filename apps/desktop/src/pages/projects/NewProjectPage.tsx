@@ -177,11 +177,11 @@ export const NewProjectPage = () => {
 
         try {
             setIsSubmitting(true);
-            await projectApi.registryProject({ registryProjectRequest: validation.data });
+            const response = await projectApi.registryProject({ registryProjectRequest: validation.data });
             await presentAlert('プロジェクトを登録しました');
             setForm(initialFormState);
             setErrors({});
-            navigate('/projects', { replace: true });
+            navigate(`/projects/${response.data?.projectId}`, { replace: true });
         } catch (err) {
             const { message, status } = await parseApiError(err);
             setSubmitError(`プロジェクトの登録に失敗しました。${message}${status ? `:${status}` : ''}`);

@@ -181,7 +181,7 @@ function Home() {
           <ProjectList
             projectApi={projectApi}
             onClickAdd={() => navigate('/projects/new')}
-            onClickProject={(id) => navigate(`/projects?projectId=${id}`)} />
+            onClickProject={(id) => navigate(`/projects/${id}`)} />
 
           <IonList inset>
             <IonListHeader>

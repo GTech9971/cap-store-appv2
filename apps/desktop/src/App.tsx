@@ -30,7 +30,7 @@ export const App = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/parts/:id" element={<PartDetailPage />} />
                 <Route path="/projects/new" element={<NewProjectPage />} />
-                <Route path="/projects" element={<ProjectMainPage />} />
+                <Route path="/projects/:projectId" element={<ProjectMainPage />} />
 
                 <Route path="/login/callback" element={<LoginCallback loadingElement={<h3>Loading...</h3>} />} />
 
