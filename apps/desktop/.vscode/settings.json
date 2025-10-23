@@ -3,5 +3,33 @@
         "Akizuki",
         "tauri",
         "unlisten"
+    ],
+    "taskExplorer.exclude": [
+        "**/.vscode-test/**",
+        "**/Assets/**",
+        "**/bin/**",
+        "**/build/**",
+        "**/dist/**",
+        "**/doc/**",
+        "**/example/**",
+        "**/examples/**",
+        "**/ext/**",
+        "**/obj/**",
+        "**/out/**",
+        "**/output/**",
+        "**/packages/**",
+        "**/release/**",
+        "**/releases/**",
+        "**/samples/**",
+        "**/sdks/**",
+        "**/static/**",
+        "**/target/**",
+        "**/test/**",
+        "**/third_party/**",
+        "**/vendor/**",
+        "**/work/**",
+        "/Users/george/Documents/GitHub/cap-store-appv2/apps/desktop/node_modules/estraverse/gulpfile.js",
+        "/Users/george/Documents/GitHub/cap-store-appv2/apps/desktop/node_modules/webcrypto-shim/gulpfile.js",
+        "/Users/george/Documents/GitHub/cap-store-appv2/apps/desktop/node_modules/delayed-stream/Makefile"
     ]
 }

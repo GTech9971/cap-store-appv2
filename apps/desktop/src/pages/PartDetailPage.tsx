@@ -1,4 +1,5 @@
 import { useApiClint } from "@/api/useApiClient"
+import { useAuthState } from "@/hooks/useAuthState"
 import { parseApiError } from "@/utils/parseApiError"
 import {
     IonBackButton,
@@ -27,6 +28,7 @@ import {
     IonToolbar,
     useIonAlert
 } from "@ionic/react"
+import { useOktaAuth } from "@okta/okta-react"
 import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
 import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -181,6 +183,10 @@ export const PartDetailPage = () => {
         }
     }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, updateComponentApi, handleConfirm, presentAlert]);
 
+
+    // 認証系
+    const { isAuthenticated } = useAuthState();
+
     return (
         <IonPage>
             <IonHeader>
@@ -190,7 +196,7 @@ export const PartDetailPage = () => {
                     </IonButtons>
                     <IonTitle>{name} - {part?.currentStock}個</IonTitle>
                     <IonButtons slot="end">
-                        <IonButton onClick={handleSave}>更新</IonButton>
+                        <IonButton disabled={!isAuthenticated} onClick={handleSave}>更新</IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>

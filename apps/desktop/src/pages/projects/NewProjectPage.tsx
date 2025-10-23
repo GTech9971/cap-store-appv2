@@ -33,6 +33,7 @@ import { useConfirmUtils } from "ui/utils/alertUtils";
 import { useApiClint } from "@/api/useApiClient";
 import { parseApiError } from "@/utils/parseApiError";
 import { useNavigate } from "react-router-dom";
+import { useAuthState } from "@/hooks/useAuthState";
 
 export const NewProjectPage = () => {
 
@@ -193,6 +194,8 @@ export const NewProjectPage = () => {
         fontSize: '10px'
     };
 
+    const { isAuthenticated } = useAuthState();
+
     return (
         <IonPage>
             <IonHeader>
@@ -204,7 +207,7 @@ export const NewProjectPage = () => {
                     <IonTitle>プロジェクト新規登録</IonTitle>
 
                     <IonButtons slot="end">
-                        <IonButton fill="clear" onClick={handleSubmit} disabled={isSubmitting}>
+                        <IonButton fill="clear" onClick={handleSubmit} disabled={isSubmitting || !isAuthenticated}>
                             登録
                         </IonButton>
                     </IonButtons>

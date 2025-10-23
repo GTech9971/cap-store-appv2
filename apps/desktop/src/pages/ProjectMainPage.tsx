@@ -36,6 +36,7 @@ import { Bom, Project, ProjectExternalLink, ProjectImg, UpdateProjectRequest } f
 import { createOutline, pricetagOutline, timeOutline } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
+import { useAuthState } from "@/hooks/useAuthState";
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
     { value: "planning", label: "計画中" },
@@ -368,6 +369,8 @@ export const ProjectMainPage = () => {
         return "プロジェクト詳細";
     }, [project, form]);
 
+    const { isAuthenticated } = useAuthState();
+
     return (
         <>
             <IonHeader>
@@ -381,14 +384,14 @@ export const ProjectMainPage = () => {
                             fill="clear"
                             color="danger"
                             onClick={async () => { await handleDelete(); }}
-                            disabled={isDeleting || isUpdating || isLoading || !project}
+                            disabled={isDeleting || isUpdating || isLoading || !project || !isAuthenticated}
                         >
                             削除
                         </IonButton>
                         <IonButton
                             fill="clear"
                             onClick={async () => { await handleUpdate(); }}
-                            disabled={isUpdating || isDeleting || isLoading || !form}
+                            disabled={isUpdating || isDeleting || isLoading || !form || !isAuthenticated}
                         >
                             更新
                         </IonButton>
