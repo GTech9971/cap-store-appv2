@@ -100,7 +100,7 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
                                     <IonSelect
                                         required
                                         value={bom.componentId}
-                                        onIonChange={(e) => onChange(index, { id: e.detail.value })}
+                                        onIonChange={(e) => onChange(index, { componentId: e.detail.value })}
                                         placeholder="選択してください">
                                         {componentIdList.map(id => (
                                             <IonSelectOption key={id} value={id}>

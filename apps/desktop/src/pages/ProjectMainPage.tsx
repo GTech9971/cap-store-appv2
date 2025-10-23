@@ -23,7 +23,7 @@ import {
     useIonAlert
 } from "@ionic/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useApiClint } from "@/api/useApiClient";
 import { parseApiError } from "@/utils/parseApiError";
 import { useConfirmUtils } from "ui/utils/alertUtils";
@@ -82,9 +82,9 @@ export const ProjectMainPage = () => {
     const [handleConfirm] = useConfirmUtils();
     const [presentAlert] = useIonAlert();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
 
-    const [projectId, setProjectId] = useState<string | null>(searchParams.get("projectId"));
+    const { projectId } = useParams<{ projectId: string }>();
+
     const [project, setProject] = useState<Project | null>(null);
     const [form, setForm] = useState<ProjectFormState | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -93,10 +93,6 @@ export const ProjectMainPage = () => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-
-    useEffect(() => {
-        setProjectId(searchParams.get("projectId"));
-    }, [searchParams]);
 
     const normalizeImages = useCallback((images: ProjectImg[] | undefined) => {
         return (images ?? []).map((img) => ({
@@ -130,31 +126,24 @@ export const ProjectMainPage = () => {
             .filter((bom) => bom.componentId.length > 0 && bom.quantity > 0);
     }, []);
 
-    const fetchProject = useCallback(async (targetId: string | null) => {
+    // プロジェクト取得
+    const fetchProject = useCallback(async () => {
+        if (!projectId) { return; }
+
         setIsLoading(true);
         setLoadError(null);
 
         try {
-            let fetched: Project | undefined;
-
-            if (targetId) {
-                const response = await projectApi.fetchProject({ projectId: targetId });
-                fetched = response.data ? normalizeProject(response.data) : undefined;
-            } else {
-                const response = await projectApi.fetchProjects({ pageIndex: 1, pageSize: 1 });
-                const data = response?.data?.[0];
-                fetched = data ? normalizeProject(data) : undefined;
-            }
+            const response = await projectApi.fetchProject({ projectId: projectId });
+            const fetched: Project | undefined = response.data ? normalizeProject(response.data) : undefined;
 
             if (!fetched) {
                 setProject(null);
                 setForm(null);
-                setProjectId(null);
                 setLoadError("表示できるプロジェクトがありません。");
                 return;
             }
 
-            setProjectId(fetched.id);
             setProject(fetched);
             setForm(mapProjectToForm(fetched));
             setSubmitError(null);
@@ -167,17 +156,19 @@ export const ProjectMainPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [projectApi]);
+    }, [projectApi, projectId]);
 
     useEffect(() => {
-        void fetchProject(projectId);
+        fetchProject();
     }, [fetchProject, projectId]);
 
+    // Form変更
     const handleFormChange = useCallback(<K extends keyof ProjectFormState>(field: K, value: ProjectFormState[K]) => {
         setForm((prev) => (prev ? { ...prev, [field]: value } : prev));
         setSubmitError(null);
     }, []);
 
+    //外部リンク変更
     const handleExternalLinkChange = useCallback((index: number, patch: Partial<ProjectExternalLink>) => {
         setForm((prev) => {
             if (!prev) return prev;
@@ -188,6 +179,7 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    // 外部リンク削除
     const handleExternalLinkDelete = useCallback((index: number) => {
         setForm((prev) => {
             if (!prev) return prev;
@@ -197,6 +189,7 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    //外部リンク追加
     const handleExternalLinkAdd = useCallback(() => {
         setForm((prev) => {
             if (!prev) return prev;
@@ -205,7 +198,7 @@ export const ProjectMainPage = () => {
                 externalLinks: [
                     ...prev.externalLinks,
                     {
-                        link: "",
+                        link: "http://example.com",
                         title: "タイトルなし",
                         tag: "タグ無し"
                     }
@@ -215,6 +208,7 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    // BOM変更
     const handleBomChange = useCallback((index: number, patch: Partial<Bom>) => {
         setForm((prev) => {
             if (!prev) return prev;
@@ -225,6 +219,7 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    // BOM削除
     const handleBomDelete = useCallback((index: number) => {
         setForm((prev) => {
             if (!prev) return prev;
@@ -234,6 +229,7 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    // BOM追加
     const handleBomAdd = useCallback(() => {
         setForm((prev) => {
             if (!prev) return prev;
@@ -255,6 +251,7 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    // 更新処理
     const handleUpdate = useCallback(async () => {
         if (!project || !form || !projectId) return;
 
@@ -316,13 +313,16 @@ export const ProjectMainPage = () => {
             return;
         }
 
-        if (await handleConfirm("この内容でプロジェクトを更新しますか？") === false) {
-            return;
-        }
+        if (await handleConfirm("この内容でプロジェクトを更新しますか？") === false) { return; }
 
         try {
             setIsUpdating(true);
             setSubmitError(null);
+
+            // OpenAPIのバグで配列をnullにできないため、更新対象でない場合でも[]を必ず設定
+            if (updateRequest.bomList === undefined) { updateRequest.bomList = []; }
+            if (updateRequest.imgUrls === undefined) { updateRequest.imgUrls = []; }
+            if (updateRequest.externalLinks === undefined) { updateRequest.externalLinks = []; }
 
             const response = await updateProjectApi(projectId, updateRequest, fieldMask);
             const updated = response.data ? normalizeProject(response.data) : null;
@@ -339,12 +339,12 @@ export const ProjectMainPage = () => {
         }
     }, [project, form, projectId, normalizeImages, normalizeLinks, normalizeBoms, handleConfirm, updateProjectApi, presentAlert]);
 
+
+    //削除処理
     const handleDelete = useCallback(async () => {
         if (!projectId) return;
 
-        if (await handleConfirm("このプロジェクトを削除しますか？") === false) {
-            return;
-        }
+        if (await handleConfirm("このプロジェクトを削除しますか？") === false) { return; }
 
         try {
             setIsDeleting(true);
