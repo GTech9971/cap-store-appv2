@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "cap-store-app"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "akizuki_invoice_parser",
  "serde",
