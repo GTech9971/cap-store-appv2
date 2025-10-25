@@ -23,7 +23,8 @@
                 "connect-src": "'self' https://dev-75695150.okta.com https://10.211.55.4 ipc: http://ipc.localhost",
                 "img-src": "'self' https://ionicframework.com  https://akizukidenshi.com",
                 "script-src": "'self'",
-                "style-src": "'unsafe-inline' 'self'"
+                "style-src": "'unsafe-inline' 'self'",
+                "frame-src": "'self' https://dev-75695150.okta.com"
             }
         }
     },

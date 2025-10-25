@@ -115,7 +115,7 @@ export const ProjectMainPage = () => {
             .map((bom) => {
                 const trimmedComponentId = bom.componentId.trim();
                 return {
-                    id: (bom.id ?? "").trim() || trimmedComponentId,
+                    id: (bom.id ?? "").trim() || undefined,
                     componentId: trimmedComponentId,
                     quantity: Number(bom.quantity) || 0,
                     footPrintName: bom.footPrintName?.trim() || undefined,
@@ -238,7 +238,7 @@ export const ProjectMainPage = () => {
                 bomList: [
                     ...prev.bomList,
                     {
-                        id: `TEMP-${Date.now()}`,
+                        id: null!,
                         componentId: "",
                         quantity: 1,
                         footPrintName: undefined,
