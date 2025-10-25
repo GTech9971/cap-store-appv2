@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { IonApp } from '@ionic/react';
 
 import { AddInventoryForm } from './AddInventoryForm';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AddInventoryFormWrapper = (args: any) => {
   return (
     <IonApp>

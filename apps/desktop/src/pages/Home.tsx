@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   IonAvatar,
   IonBadge,
@@ -18,6 +18,7 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
+  IonLoading,
   IonMenu,
   IonRow,
   IonSearchbar,
@@ -29,10 +30,11 @@ import {
 } from "@ionic/react";
 import { ComponentCard } from "ui/components/ComponentCard";
 import { useApiClint } from "../api/useApiClient";
-import { Category, Maker, PartsComponent } from "cap-store-api-def";
-import { parseApiError } from "../utils/parseApiError";
+import { ProjectList } from "ui/components/projects/ProjectList"
+import { CategoryList } from "ui/components/categories/CategoryList"
 import { menuOutline, addOutline, documentOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
+import { useFetchComponentsApi } from 'ui/api/components/useFetchComponentsApi';
 import { useNavigate } from "react-router-dom";
 
 // tauri
@@ -43,23 +45,13 @@ import { Invoice } from "@/types/invoices/invoice";
 import { useInvoice } from "@/hooks/useInvoice";
 import { AkizukiInvoiceModal } from "@/modals/AkizukiInvoiceModal";
 import { useOktaAuth } from "@okta/okta-react";
+import { ErrorNote } from "ui/components/ErrorNote";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-
-  const [components, setComponents] = useState<PartsComponent[]>([]); // cap-store-api-def より
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [componentApiError, setComponentApiError] = useState<string | null>(null);
-
-  const [categoryApiError, setCategoryApiError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  const [makerApiError, setMakerApiError] = useState<string | null>(null);
-  const [makers, setMakers] = useState<Maker[]>([]);
-
-  const { categoryApi, makerApi, componentApi, akizukiCatalogApi } = useApiClint();
+  const { categoryApi, makerApi, componentApi, projectApi, akizukiCatalogApi } = useApiClint();
 
   const [presentAlert] = useIonAlert();
 
@@ -73,85 +65,33 @@ function Home() {
   const [invoice, setInvoice] = useState<Invoice>();
   const [isOpenIModal, setIsIModal] = useState<boolean>(false);
 
+  const [categoryId, setCategoryId] = useState<string | undefined>();
+  const { components, isLoadingFetchComponents, fetchComponentsError, refreshComponents } = useFetchComponentsApi(categoryApi, categoryId);
+
+
   // 検索フィルタリングされたコンポーネント
-  const filteredComponents = components.filter(component => {
-    if (!searchQuery.trim()) return true;
+  const filteredComponents = useMemo(() => {
+    return components.filter(component => {
+      if (!searchQuery.trim()) return true;
 
-    const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
-    const componentName = component.name.toLowerCase();
-    const modelName = component.modelName?.toLowerCase() || '';
+      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/);
+      const componentName = component.name.toLowerCase();
+      const modelName = component.modelName?.toLowerCase() || '';
 
-    return searchTerms.some(term =>
-      componentName.includes(term) || modelName.includes(term)
-    );
-  });
-
-  // カテゴリ一覧を取得する共通処理
-  const fetchCategoriesList = useCallback(async (): Promise<Category[]> => {
-    try {
-      const categoriesRes = await categoryApi.fetchCategories();
-      const fetchedCategories = categoriesRes?.data ?? [];
-      setCategories(fetchedCategories);
-      return fetchedCategories;
-    } catch (err) {
-      const { message, status } = await parseApiError(err);
-      setCategoryApiError(`カテゴリ一覧の取得に失敗しました。${message}:${status}`);
-      return [];
-    }
-  }, [categoryApi]);
-
-  /** メーカー取得 */
-  const fetchMakersList = useCallback(async (): Promise<Maker[]> => {
-    try {
-      const makersRes = await makerApi.fetchMakers();
-      const fetchedMakers = makersRes?.data ?? [];
-      setMakers(fetchedMakers);
-      return fetchedMakers;
-    } catch (err) {
-      const { message, status } = await parseApiError(err);
-      setMakerApiError(`メーカー一覧の取得に失敗しました。${message}:${status}`);
-      return [];
-    }
-  }, [makerApi]);
+      return searchTerms.some(term =>
+        componentName.includes(term) || modelName.includes(term)
+      );
+    });
+  }, [components, searchQuery]);
 
   /**
    * カテゴリー選択
    * @param categoryId 
    */
-  const handleCategorySelect = async (categoryId: string) => {
-    setSelectedCategoryId(categoryId);
-    try {
-      const response = await categoryApi.fetchComponentsByCategoryId({ categoryId: categoryId });
-      setComponents(response?.data ?? []);
-    } catch (err) {
-      const { message, status } = await parseApiError(err);
-      setComponentApiError(`部品一覧の取得に失敗しました。${message}:${status}`);
-    }
-  }
-
-
-
-  useEffect(() => {
-    // 初期データ取得
-    const fetchInitialData = async () => {
-      const results: Category[] = await fetchCategoriesList();
-      // 初期カテゴリがあれば部品を取得
-      if (results.length > 0) {
-        const initialCategoryId = results[0].id;
-        setSelectedCategoryId(initialCategoryId);
-        try {
-          const componentsRes = await categoryApi.fetchComponentsByCategoryId({ categoryId: initialCategoryId });
-          setComponents(componentsRes?.data ?? []);
-        } catch (err) {
-          const { message, status } = await parseApiError(err);
-          setComponentApiError(`初期カテゴリの部品取得に失敗しました。${message}:${status}`);
-        }
-
-        await fetchMakersList();
-      }
-    };
-    fetchInitialData();
-  }, [categoryApi, fetchCategoriesList, fetchMakersList]);
+  const handleCategorySelect = useCallback(async (categoryId: string) => {
+    setCategoryId(categoryId);
+    await refreshComponents();
+  }, [refreshComponents]);
 
 
   /**
@@ -233,26 +173,23 @@ function Home() {
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding" color="light">
-          <IonList inset={true}>
-            <IonListHeader>
-              カテゴリ一覧
-            </IonListHeader>
-            {categories &&
-              categories.map((category, index) => (
-                <IonItem button detail={false} key={index} color={selectedCategoryId == category.id ? 'primary' : undefined} onClick={() => handleCategorySelect(category.id)}>
-                  <IonLabel>{category.name}</IonLabel>
-                </IonItem>
-              ))
-            }
-          </IonList>
+
+          <CategoryList
+            onClick={handleCategorySelect}
+            categoryApi={categoryApi} />
+
+          <ProjectList
+            projectApi={projectApi}
+            onClickAdd={() => navigate('/projects/new')}
+            onClickProject={(id) => navigate(`/projects/${id}`)} />
 
           <IonList inset>
             <IonListHeader>
-              ファイル
+              納品書
             </IonListHeader>
             <IonItem button detail={false} onClick={openInvoiceFile}>
               <IonIcon slot="start" icon={documentOutline} />
-              <IonLabel>納品書</IonLabel>
+              <IonLabel>アップロード</IonLabel>
             </IonItem>
           </IonList>
 
@@ -295,7 +232,7 @@ function Home() {
               </IonButton>
             </IonButtons>
 
-            <IonTitle>{selectedCategoryId ? `「${selectedCategoryId}」の部品一覧` : `カテゴリーの取得失敗`}</IonTitle>
+            <IonTitle>{categoryId ? `「${categoryId}」の部品一覧` : `カテゴリーの取得失敗`}</IonTitle>
           </IonToolbar>
 
           <IonToolbar>
@@ -309,12 +246,15 @@ function Home() {
           <IonItem lines="none" color='light'>
             <IonBadge color='secondary'>{filteredComponents.length}件</IonBadge>
             <IonText>の部品が見つかりました</IonText>
+            <ErrorNote error={fetchComponentsError} />
           </IonItem>
 
           {/* 以下を記載しないと電子部品カードの表示がされないことの予想だが、事前にスタイル設定を1度でも読み込まないと後から動的に追加した際に反映されない？ */}
           <IonCard style={{ display: 'none' }}></IonCard>
 
           <IonGrid className="ion-padding">
+            {isLoadingFetchComponents && (<IonLoading />)}
+
             {
               Array.from({ length: Math.ceil(filteredComponents.length / 4) }, (_, rowIndex) => filteredComponents.slice(rowIndex * 4, (rowIndex + 1) * 4)).map((rowItems, index) => (
                 <IonRow key={index}>

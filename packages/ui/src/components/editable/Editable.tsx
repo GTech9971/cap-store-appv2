@@ -28,22 +28,28 @@ export const Editable: React.FC<Prop> = ({
         if (!ref.current) { throw new Error(); }
 
         // editRef の内容を取得して state に反映
-        const newText = ref.current.textContent ?? '';
+        const newText = ref.current.textContent ?? ' ';
         setEdit(newText);
         return newText;
     }, []);
 
     const handleKeyDownTagBadge = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!ref.current) { return; }
+
         if (e.key === 'Enter') {
             e.preventDefault();
-            const text = commitEdit();
-            onCommit(text);
+
+            if (ref.current.textContent.trim() === '') {
+                e.preventDefault();
+                setEdit(text);
+                setIsEdit(false);
+                return;
+            } else {
+                const text = commitEdit();
+                onCommit(text);
+            }
         }
-        if (e.key === 'Backspace') {
-            if (!ref.current) { return; }
-            const text = ref.current.textContent ?? '';
-            if (text.length === 1) { e.preventDefault(); }
-        }
+
         if (e.key === 'Escape') {
             setEdit(text);
             setIsEdit(false);
@@ -53,7 +59,7 @@ export const Editable: React.FC<Prop> = ({
     const handleInput = useCallback(() => {
         if (ref.current && ref.current.textContent === '') {
             // 1文字残す（例：ゼロ幅スペース）
-            ref.current.textContent = defaultText;
+            ref.current.textContent = ' ';
             // キャレットを末尾に移動
             const range = document.createRange();
             const sel = window.getSelection();
@@ -62,7 +68,7 @@ export const Editable: React.FC<Prop> = ({
             sel?.removeAllRanges();
             sel?.addRange(range);
         }
-    }, [defaultText]);
+    }, []);
 
     return (
         isEdit ?
