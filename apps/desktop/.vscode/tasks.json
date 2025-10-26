@@ -28,6 +28,35 @@
             "command": "echo ${input:terminate}",
         },
         {
+            "label": "ui:stg:start",
+            "type": "shell",
+            "isBackground": true,
+            "command": "npm",
+            "args": [
+                "run",
+                "dev",
+                "--",
+                "--mode",
+                "staging"
+            ],
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*",
+                    "endsPattern": "Local:"
+                }
+            }
+        },
+        {
+            "label": "ui:stg:stop",
+            "type": "shell",
+            "command": "echo ${input:terminate-stg}",
+        },
+        {
             "label": "ui:build",
             "type": "shell",
             "command": "npm",
@@ -43,6 +72,12 @@
             "type": "command",
             "command": "workbench.action.tasks.terminate",
             "args": "ui:dev:start"
+        },
+        {
+            "id": "terminate-stg",
+            "type": "command",
+            "command": "workbench.action.tasks.terminate",
+            "args": "ui:stg:start"
         }
     ],
 }

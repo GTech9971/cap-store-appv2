@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "cap-store-app",
+  "productName": "[]cap-store-app",
   "version": "0.2.0",
   "identifier": "com.george.cap-store-app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "cap-store-app[dev]",
+        "title": "cap-store-app[]",
         "width": 1000,
         "height": 600
       }

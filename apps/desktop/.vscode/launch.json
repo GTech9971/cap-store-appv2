@@ -28,5 +28,23 @@
             "preLaunchTask": "ui:dev:start",
             "postDebugTask": "ui:dev:stop",
         },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Tauri Staging Debug",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--manifest-path=./src-tauri/Cargo.toml",
+                    "--no-default-features",
+                ]
+            },
+            "env": {
+                "TAURI_CONFIG": "src-tauri/tauri.conf.stg.json"
+            },
+            "envFile": "${workspaceFolder}/.env.staging",
+            "preLaunchTask": "ui:stg:start",
+            "postDebugTask": "ui:stg:stop"
+        },
     ]
 }

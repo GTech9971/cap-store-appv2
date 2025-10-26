@@ -20,7 +20,8 @@ import {
     IonTextarea,
     IonTitle,
     IonToolbar,
-    useIonAlert
+    useIonAlert,
+    useIonToast
 } from "@ionic/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -33,7 +34,7 @@ import { Editable } from "ui/components/editable/Editable";
 import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
 import { Bom, Project, ProjectExternalLink, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
-import { createOutline, pricetagOutline, timeOutline } from "ionicons/icons";
+import { createOutline, pricetagOutline, timeOutline, downloadOutline } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -78,9 +79,10 @@ const mapProjectToForm = (project: Project): ProjectFormState => ({
 });
 
 export const ProjectMainPage = () => {
-    const { projectApi, componentApi, updateProjectApi } = useApiClint();
+    const { projectApi, componentApi, updateProjectApi, downloadProjectPdf } = useApiClint();
     const [handleConfirm] = useConfirmUtils();
     const [presentAlert] = useIonAlert();
+    const [presentToast] = useIonToast();
     const navigate = useNavigate();
 
     const { projectId } = useParams<{ projectId: string }>();
@@ -93,6 +95,7 @@ export const ProjectMainPage = () => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isPdfDownloading, setIsPdfDownloading] = useState(false);
 
     const normalizeImages = useCallback((images: ProjectImg[] | undefined) => {
         return (images ?? []).map((img) => ({
@@ -359,6 +362,27 @@ export const ProjectMainPage = () => {
         }
     }, [projectId, handleConfirm, projectApi, presentAlert, navigate]);
 
+    //pdfダウンロード
+    const handleDownloadPdf = useCallback(async () => {
+        if (!projectId || !project) return;
+
+        try {
+            setIsPdfDownloading(true);
+            const downloadedFileName = await downloadProjectPdf(projectId, project.name);
+            await presentToast({
+                message: `${downloadedFileName} をダウンロードしました`,
+                duration: 2000,
+                position: 'bottom',
+                color: 'primary'
+            });
+        } catch (err) {
+            const { message, status } = await parseApiError(err);
+            setSubmitError(`PDFのダウンロードに失敗しました。${message}${status ? `:${status}` : ""}`);
+        } finally {
+            setIsPdfDownloading(false);
+        }
+    }, [projectId, project, downloadProjectPdf, presentToast]);
+
     const statusLabel = useMemo(() => {
         if (!form) return "";
         return STATUS_OPTIONS.find((opt) => opt.value === form.status)?.label ?? form.status;
@@ -380,6 +404,13 @@ export const ProjectMainPage = () => {
                     </IonButtons>
                     <IonTitle>{headerTitle}</IonTitle>
                     <IonButtons slot="end">
+                        <IonButton
+                            fill="clear"
+                            onClick={async () => { await handleDownloadPdf(); }}
+                            disabled={isPdfDownloading || isLoading || !project}
+                        >
+                            {isPdfDownloading ? <IonSpinner name="dots" /> : <IonIcon icon={downloadOutline} />}
+                        </IonButton>
                         <IonButton
                             fill="clear"
                             color="danger"

@@ -3,6 +3,7 @@ import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, Invent
 import { useCallback, useMemo } from "react";
 import { env } from "@/config/env";
 import { useOktaAuth } from "@okta/okta-react";
+import { downloadBlob } from "@/utils/downloadBlob";
 
 export const useApiClint = () => {
 
@@ -56,5 +57,88 @@ export const useApiClint = () => {
         return (await axiosClient.patch<UpdateProjectResponse>(url, updateRequest)).data;
     }, [axiosClient]);
 
-    return { componentApi, updateComponentApi, categoryApi, makerApi, inventoryApi, akizukiCatalogApi, projectApi, updateProjectApi };
+    /**
+     * プロジェクトPDF出力
+     */
+    const downloadProjectPdfApi = useCallback(async (projectId: string): Promise<{ blob: Blob; fileName?: string }> => {
+        const url = `/projects/${projectId}`;
+        const response = await axiosClient.get<Blob>(url, {
+            responseType: "blob",
+            headers: {
+                Accept: "application/pdf"
+            }
+        });
+
+        const dispositionHeader = response.headers["content-disposition"] ?? response.headers["Content-Disposition"];
+
+        const parseFileName = (disposition: string | undefined): string | undefined => {
+            if (!disposition) return undefined;
+
+            const segments = disposition.split(";").map((segment) => segment.trim());
+            let asciiValue: string | undefined;
+            let extendedValue: string | undefined;
+
+            segments.forEach((segment) => {
+                if (/^filename\*=/i.test(segment)) {
+                    extendedValue = segment.substring(segment.indexOf("=") + 1).trim();
+                } else if (/^filename=/i.test(segment)) {
+                    asciiValue = segment.substring(segment.indexOf("=") + 1).trim();
+                }
+            });
+
+            const cleanValue = (value: string | undefined): string | undefined => {
+                if (!value) return undefined;
+                const withoutQuotes = value.replace(/^"(.*)"$/, "$1");
+                return withoutQuotes.length > 0 ? withoutQuotes : undefined;
+            };
+
+            const decodeExtendedValue = (value: string | undefined): string | undefined => {
+                if (!value) return undefined;
+                const match = value.match(/^(?:UTF-8'')?(.*)$/i);
+                const encodedPortion = match?.[1] ?? value;
+                try {
+                    return decodeURIComponent(encodedPortion);
+                } catch {
+                    return encodedPortion;
+                }
+            };
+
+            const extended = decodeExtendedValue(cleanValue(extendedValue));
+            if (extended) {
+                return extended;
+            }
+
+            const ascii = cleanValue(asciiValue);
+            return ascii;
+        };
+
+        const fileName = parseFileName(dispositionHeader);
+
+        return { blob: response.data, fileName };
+    }, [axiosClient]);
+
+    /**
+     * プロジェクトPDFダウンロード
+     */
+    const downloadProjectPdf = useCallback(async (projectId: string, fallbackFileName?: string): Promise<string> => {
+        const { blob, fileName: headerFileName } = await downloadProjectPdfApi(projectId);
+        return downloadBlob(blob, {
+            fileName: headerFileName,
+            fallbackFileName,
+            defaultFileName: "project",
+            extension: ".pdf"
+        });
+    }, [downloadProjectPdfApi]);
+
+    return {
+        componentApi,
+        updateComponentApi,
+        categoryApi,
+        makerApi,
+        inventoryApi,
+        akizukiCatalogApi,
+        projectApi,
+        updateProjectApi,
+        downloadProjectPdf
+    };
 }
