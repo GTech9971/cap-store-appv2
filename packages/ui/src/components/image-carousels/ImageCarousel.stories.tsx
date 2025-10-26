@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ImageCarousel } from './ImageCarousel';
 
 const meta: Meta<typeof ImageCarousel> = {
-  title: 'Components/ImageCarousel',
+  title: 'Components/images/ImageCarousel',
   component: ImageCarousel,
   parameters: {
     layout: 'centered',

@@ -11,7 +11,7 @@ import {
 
 import "@ionic/react/css/text-transformation.css";
 import { type CSSProperties } from "react";
-import { openOutline } from 'ionicons/icons'
+import { openOutline, closeOutline } from 'ionicons/icons'
 import { Editable } from "../editable/Editable";
 
 export interface Props {
@@ -21,6 +21,7 @@ export interface Props {
     onEditedTitle: (title: string) => void,
     tag?: string | null,
     onEditedTag: (tag: string) => void,
+    onDelete?: (link: string) => void,
     cssProperties?: CSSProperties,
 }
 
@@ -31,6 +32,7 @@ export const ExternalLinkCard = ({
     onEditedTitle,
     tag,
     onEditedTag,
+    onDelete,
     cssProperties,
 }: Props) => {
 
@@ -49,6 +51,16 @@ export const ExternalLinkCard = ({
 
     return (
         <IonCard style={{ width: 'fit-content', cssProperties }}>
+            {onDelete &&
+                <IonButton onClick={() => onDelete(link)}
+                    size="small"
+                    fill="clear"
+                    color='danger'
+                    style={{ position: 'absolute', right: '2px', zIndex: 999 }}>
+                    <IonIcon slot="icon-only" icon={closeOutline} />
+                </IonButton>
+            }
+
             <IonCardContent>
                 <div style={center}>
                     <Editable text={title ?? 'タイトルなし'}
@@ -79,6 +91,7 @@ export const ExternalLinkCard = ({
                     <IonButton size="small" fill="clear" href={link}>
                         <IonIcon slot="icon-only" icon={openOutline} />
                     </IonButton>
+
                 </div>
 
             </IonCardContent>

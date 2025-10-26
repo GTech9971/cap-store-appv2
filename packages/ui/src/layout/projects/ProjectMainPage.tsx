@@ -18,7 +18,7 @@ import {
     IonTitle,
     IonToolbar
 } from "@ionic/react"
-import ImageCarousel from "../../components/ImageCarousel"
+import ImageCarousel from "../../components/image-carousels/ImageCarousel"
 import { Editable } from "../../components/editable/Editable"
 
 import { timeOutline, createOutline, pricetagOutline } from "ionicons/icons"
