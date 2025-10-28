@@ -12,12 +12,14 @@ import {
     IonRow,
     IonSelect,
     IonSelectOption,
+    IonText,
     IonThumbnail
 } from "@ionic/react";
 import { addOutline } from "ionicons/icons";
-import { Bom, ComponentsApi, FetchComponentsRequest, PartsComponent } from "cap-store-api-def";
+import { Bom, ComponentsApi, FetchComponentsRequest, PartsComponent, Supplier } from "cap-store-api-def";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { parseApiError } from "ui/utils/parseApiError";
+import { BomSupplierInputAlert } from "ui/components/projects/BomSupplierInputAlert";
 
 export type ProjectBomListProps = {
     componentApi: ComponentsApi,
@@ -65,6 +67,9 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
         return components.find(x => x.id === id);
     }, [components]);
 
+    const [presentSupplierAlert] = BomSupplierInputAlert();
+
+
     return (
         <IonList inset>
 
@@ -94,8 +99,16 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
                                     <IonThumbnail>
                                         <IonImg src={findComponentById(bom.componentId)?.images?.[0] ?? undefined} />
                                     </IonThumbnail>
+                                    <IonText>
+                                        {findComponentById(bom.componentId)?.name}
+                                    </IonText>
+                                    <br />
+                                    <IonNote>
+                                        {findComponentById(bom.componentId)?.modelName}
+                                    </IonNote>
+
                                 </IonCol>
-                                <IonCol size="2">
+                                <IonCol size="1.5">
                                     <IonLabel position="stacked">部品ID <span style={{ color: 'red' }}>*</span></IonLabel>
                                     <IonSelect
                                         required
@@ -110,7 +123,7 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
                                     </IonSelect>
 
                                 </IonCol>
-                                <IonCol size="1.5">
+                                <IonCol size="1">
                                     <IonInput
                                         type="number"
                                         label="数量"
@@ -144,7 +157,24 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
                                         onIonInput={(e) => onChange(index, { remarks: e.detail.value ?? undefined })}
                                     />
                                 </IonCol>
-                                <IonCol size="auto" className="ion-align-self-end">
+
+                                <IonCol style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <IonItem
+                                        button
+                                        detail={false}
+                                        onClick={async () => {
+                                            const input: Supplier | null = await presentSupplierAlert(bom?.supplier);
+                                            if (input === null) { return; }
+                                            onChange(index, { supplier: input });
+                                        }}>
+
+                                        <IonText color='secondary'>
+                                            購入先
+                                        </IonText>
+                                    </IonItem>
+                                </IonCol>
+
+                                <IonCol size="auto" style={{ display: 'flex', justifyContent: 'center' }}>
                                     <IonButton color="danger" fill="clear" onClick={() => onDelete(index)}>
                                         削除
                                     </IonButton>

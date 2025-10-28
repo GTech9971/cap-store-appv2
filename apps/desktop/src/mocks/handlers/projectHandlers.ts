@@ -57,7 +57,12 @@ let projectStore: MockProject[] = [
                 quantity: 2,
                 footPrintName: 'DIP-8',
                 remarks: 'メインマイコン',
-                refName: 'U1'
+                refName: 'U1',
+                supplier: {
+                    name: '秋月電子',
+                    url: 'https://akizukidenshi.com/catalog/g/g129462/',
+                    modelId: 'g129462'
+                }
             },
             {
                 id: 'B-002',
@@ -65,7 +70,8 @@ let projectStore: MockProject[] = [
                 quantity: 4,
                 footPrintName: '0402',
                 remarks: 'センサーバイパス',
-                refName: 'C1-C4'
+                refName: 'C1-C4',
+                supplier: undefined
             }
         ]
     }
@@ -206,12 +212,17 @@ export const projectHandlers = [
                     break;
                 case 'bomList':
                     next.bomList = body.bomList?.map((bom) => ({
-                        id: bom.id,
+                        id: bom.id ?? '',
                         componentId: bom.componentId,
                         quantity: bom.quantity,
                         footPrintName: bom.footPrintName,
                         remarks: bom.remarks,
-                        refName: bom.refName
+                        refName: bom.refName,
+                        supplier: bom.supplier ? {
+                            url: bom.supplier.url,
+                            name: bom.supplier.name,
+                            modelId: bom.supplier.modelId
+                        } : undefined
                     })) ?? [];
                     break;
                 default:

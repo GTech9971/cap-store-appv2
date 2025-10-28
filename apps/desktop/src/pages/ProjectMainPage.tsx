@@ -123,7 +123,8 @@ export const ProjectMainPage = () => {
                     quantity: Number(bom.quantity) || 0,
                     footPrintName: bom.footPrintName?.trim() || undefined,
                     remarks: bom.remarks?.trim() || undefined,
-                    refName: bom.refName?.trim() || undefined
+                    refName: bom.refName?.trim() || undefined,
+                    supplier: bom.supplier || undefined
                 };
             })
             .filter((bom) => bom.componentId.length > 0 && bom.quantity > 0);
