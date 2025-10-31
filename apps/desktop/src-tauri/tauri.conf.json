@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "cap-store-app[]",
+        "title": "cap-store-app[] 0.2.1",
         "width": 1000,
         "height": 600
       }

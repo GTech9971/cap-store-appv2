@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, InventoriesApi, MakersApi, ProjectsApi, UpdateComponentRequest, UpdateComponentResponse, UpdateProjectRequest, UpdateProjectResponse } from "cap-store-api-def";
+import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, InventoriesApi, MakersApi, ProjectsApi, ProjectsHistoryApi, UpdateComponentRequest, UpdateComponentResponse, UpdateProjectRequest, UpdateProjectResponse } from "cap-store-api-def";
 import { useCallback, useMemo } from "react";
 import { env } from "@/config/env";
 import { useOktaAuth } from "@okta/okta-react";
@@ -37,6 +37,7 @@ export const useApiClint = () => {
     const inventoryApi: InventoriesApi = useMemo(() => { return new InventoriesApi(config) }, [config]);
     const akizukiCatalogApi: AkizukiCatalogsApi = useMemo(() => { return new AkizukiCatalogsApi(config) }, [config]);
     const projectApi: ProjectsApi = useMemo(() => { return new ProjectsApi(config) }, [config]);
+    const projectHistoryApi: ProjectsHistoryApi = useMemo(() => { return new ProjectsHistoryApi(config) }, [config]);
 
     /**
      * 電子部品更新API
@@ -138,6 +139,7 @@ export const useApiClint = () => {
         inventoryApi,
         akizukiCatalogApi,
         projectApi,
+        projectHistoryApi,
         updateProjectApi,
         downloadProjectPdf
     };

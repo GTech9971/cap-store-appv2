@@ -11,11 +11,13 @@ import {
     IonItem,
     IonLabel,
     IonList,
+    IonMenu,
     IonNote,
     IonRow,
     IonSelect,
     IonSelectOption,
     IonSpinner,
+    IonSplitPane,
     IonText,
     IonTextarea,
     IonTitle,
@@ -33,11 +35,13 @@ import ImageLinkCarouselSelectModal from "ui/components/image-carousels/ImageLin
 import { Editable } from "ui/components/editable/Editable";
 import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
+import { ProjectHistoryList } from "ui/components/projects/histories/ProjectHistoryList"
 import { Bom, Project, ProjectExternalLink, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
-import { createOutline, pricetagOutline, timeOutline, downloadOutline } from "ionicons/icons";
+import { gitBranchOutline, createOutline, pricetagOutline, timeOutline, downloadOutline } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
 import { useAuthState } from "@/hooks/useAuthState";
+import { AuthFooter } from "@/components/AuthFooter";
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
     { value: "planning", label: "計画中" },
@@ -79,7 +83,11 @@ const mapProjectToForm = (project: Project): ProjectFormState => ({
 });
 
 export const ProjectMainPage = () => {
-    const { projectApi, componentApi, updateProjectApi, downloadProjectPdf } = useApiClint();
+
+    // メニュー
+    const [hiddenMenu, setHiddenMenu] = useState<boolean>(true);
+
+    const { projectApi, projectHistoryApi, componentApi, updateProjectApi, downloadProjectPdf } = useApiClint();
     const [handleConfirm] = useConfirmUtils();
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
@@ -397,202 +405,240 @@ export const ProjectMainPage = () => {
     const { isAuthenticated } = useAuthState();
 
     return (
-        <>
-            <IonHeader>
-                <IonToolbar>
-                    <IonButtons slot="start">
-                        <IonBackButton defaultHref="/"></IonBackButton>
-                    </IonButtons>
-                    <IonTitle>{headerTitle}</IonTitle>
-                    <IonButtons slot="end">
-                        <IonButton
-                            fill="clear"
-                            onClick={async () => { await handleDownloadPdf(); }}
-                            disabled={isPdfDownloading || isLoading || !project}
-                        >
-                            {isPdfDownloading ? <IonSpinner name="dots" /> : <IonIcon icon={downloadOutline} />}
-                        </IonButton>
-                        <IonButton
-                            fill="clear"
-                            color="danger"
-                            onClick={async () => { await handleDelete(); }}
-                            disabled={isDeleting || isUpdating || isLoading || !project || !isAuthenticated}
-                        >
-                            削除
-                        </IonButton>
-                        <IonButton
-                            fill="clear"
-                            onClick={async () => { await handleUpdate(); }}
-                            disabled={isUpdating || isDeleting || isLoading || !form || !isAuthenticated}
-                        >
-                            更新
-                        </IonButton>
-                    </IonButtons>
-                </IonToolbar>
-            </IonHeader>
+        <IonSplitPane when="xs" contentId="main" disabled={hiddenMenu}>
+            <IonMenu contentId="main">
 
-            <IonContent fullscreen color="light">
-                {isLoading && (
-                    <IonGrid>
-                        <IonRow>
-                            <IonCol className="ion-text-center" style={{ paddingTop: "40px" }}>
-                                <IonSpinner />
-                            </IonCol>
-                        </IonRow>
-                    </IonGrid>
-                )}
+                <IonHeader>
+                    <IonToolbar>
+                        <IonButtons slot="start">
+                            <IonBackButton defaultHref="/"></IonBackButton>
+                        </IonButtons>
+                    </IonToolbar>
+                </IonHeader>
 
-                {!isLoading && loadError && (
-                    <IonGrid>
-                        <IonRow>
-                            <IonCol>
-                                <IonNote color="danger">{loadError}</IonNote>
-                            </IonCol>
-                        </IonRow>
-                    </IonGrid>
-                )}
+                <IonContent className="ion-padding" color='light'>
 
-                {!isLoading && !loadError && form && project && (
-                    <IonGrid>
-                        {submitError && (
+                    <ProjectHistoryList
+                        projectId={projectId ?? ''}
+                        historyApi={projectHistoryApi}
+                    />
+
+                </IonContent>
+
+                <AuthFooter />
+
+            </IonMenu>
+
+            <div className="ion-page" id="main">
+
+                <IonHeader>
+                    <IonToolbar>
+                        <IonButtons slot="start">
+
+                            {hiddenMenu
+                                &&
+                                <IonBackButton defaultHref="/"></IonBackButton>
+                            }
+
+                            <IonButton slot="icon" onClick={() => setHiddenMenu(!hiddenMenu)}>
+                                <IonIcon icon={gitBranchOutline} />
+                            </IonButton>
+                        </IonButtons>
+
+                        <IonTitle>{headerTitle}</IonTitle>
+
+                        <IonButtons slot="end">
+                            <IonButton
+                                fill="clear"
+                                onClick={async () => { await handleDownloadPdf(); }}
+                                disabled={isPdfDownloading || isLoading || !project}
+                            >
+                                {isPdfDownloading ? <IonSpinner name="dots" /> : <IonIcon icon={downloadOutline} />}
+                            </IonButton>
+                            <IonButton
+                                fill="clear"
+                                color="danger"
+                                onClick={async () => { await handleDelete(); }}
+                                disabled={isDeleting || isUpdating || isLoading || !project || !isAuthenticated}
+                            >
+                                削除
+                            </IonButton>
+                            <IonButton
+                                fill="clear"
+                                onClick={async () => { await handleUpdate(); }}
+                                disabled={isUpdating || isDeleting || isLoading || !form || !isAuthenticated}
+                            >
+                                更新
+                            </IonButton>
+                        </IonButtons>
+                    </IonToolbar>
+                </IonHeader>
+
+                <IonContent fullscreen color="light">
+                    {isLoading && (
+                        <IonGrid>
                             <IonRow>
-                                <IonCol>
-                                    <IonNote color="danger">{submitError}</IonNote>
+                                <IonCol className="ion-text-center" style={{ paddingTop: "40px" }}>
+                                    <IonSpinner />
                                 </IonCol>
                             </IonRow>
-                        )}
+                        </IonGrid>
+                    )}
 
-                        <IonRow>
-                            <IonCol size="4">
-                                <IonList inset lines="none" color="light">
-                                    <IonItem>
-                                        <IonLabel position="stacked">プロジェクト名</IonLabel>
-                                        <Editable text={form.name} defaultText="タイトル" onCommit={(value) => handleFormChange("name", value)}>
-                                            <h2 />
-                                        </Editable>
-                                    </IonItem>
+                    {!isLoading && loadError && (
+                        <IonGrid>
+                            <IonRow>
+                                <IonCol>
+                                    <IonNote color="danger">{loadError}</IonNote>
+                                </IonCol>
+                            </IonRow>
+                        </IonGrid>
+                    )}
 
-                                    <ImageLinkCarousel
-                                        images={form.imgUrls}
-                                        onDelete={(index) => {
-                                            const next = form.imgUrls.filter((_, idx) => idx !== index);
-                                            handleFormChange("imgUrls", next);
-                                        }}
-                                    />
+                    {!isLoading && !loadError && form && project && (
+                        <IonGrid>
+                            {submitError && (
+                                <IonRow>
+                                    <IonCol>
+                                        <IonNote color="danger">{submitError}</IonNote>
+                                    </IonCol>
+                                </IonRow>
+                            )}
 
-                                    <IonItem>
-                                        <IonButton slot="end" fill="clear" onClick={() => setIsImageModalOpen(true)}>
-                                            画像編集
-                                        </IonButton>
-                                    </IonItem>
-                                </IonList>
-
-                                <ImageLinkCarouselSelectModal
-                                    images={form.imgUrls}
-                                    isOpen={isImageModalOpen}
-                                    onChange={(images) => handleFormChange("imgUrls", images)}
-                                    onDismiss={() => setIsImageModalOpen(false)}
-                                />
-                            </IonCol>
-
-                            <IonCol>
-                                <IonList inset>
-                                    <IonItem>
-                                        <IonLabel position="stacked">概要</IonLabel>
-                                        <Editable text={form.summary} defaultText="サマリー" onCommit={(value) => handleFormChange("summary", value)}>
-                                            <h3 />
-                                        </Editable>
-                                    </IonItem>
-
-                                    <IonItem>
-                                        <IonTextarea
-                                            label="説明・備考"
-                                            labelPlacement="stacked"
-                                            rows={12}
-                                            value={form.description ?? ""}
-                                            onIonInput={(e) => handleFormChange("description", e.detail.value ?? undefined)}
-                                        />
-                                    </IonItem>
-                                </IonList>
-                            </IonCol>
-
-                            <IonCol size="3">
-                                <IonList inset color="light">
-                                    <IonItem lines="none">
-                                        <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                            <IonIcon icon={createOutline} />
-                                            {project.createdAt.toLocaleString("ja-JP")}
-                                        </IonNote>
-                                    </IonItem>
-                                    <IonItem lines="none">
-                                        <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                            <IonIcon icon={timeOutline} />
-                                            {project.lastModified.toLocaleString("ja-JP")}
-                                        </IonNote>
-                                    </IonItem>
-
-                                    <IonItem>
-                                        <IonLabel>ステータス</IonLabel>
-                                        <IonSelect
-                                            interface="popover"
-                                            value={form.status}
-                                            onIonChange={(e) => handleFormChange("status", e.detail.value as string)}
-                                        >
-                                            {STATUS_OPTIONS.map((option) => (
-                                                <IonSelectOption key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </IonSelectOption>
-                                            ))}
-                                        </IonSelect>
-                                    </IonItem>
-
-                                    <IonItem>
-                                        <IonBadge>{statusLabel}</IonBadge>
-
-                                        <IonBadge slot="end" color="light" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                            <IonIcon icon={pricetagOutline} />
-                                            <Editable text={form.tag ?? "タグなし"} defaultText="タグなし" onCommit={(value) => handleFormChange("tag", value.trim() || undefined)}>
-                                                <IonText />
+                            <IonRow>
+                                <IonCol size="4">
+                                    <IonList inset lines="none" color="light">
+                                        <IonItem>
+                                            <IonLabel position="stacked">プロジェクト名</IonLabel>
+                                            <Editable text={form.name} defaultText="タイトル" onCommit={(value) => handleFormChange("name", value)}>
+                                                <h2 />
                                             </Editable>
-                                        </IonBadge>
-                                    </IonItem>
+                                        </IonItem>
 
-                                </IonList>
-                            </IonCol>
-                        </IonRow>
+                                        <ImageLinkCarousel
+                                            images={form.imgUrls}
+                                            onDelete={(index) => {
+                                                const next = form.imgUrls.filter((_, idx) => idx !== index);
+                                                handleFormChange("imgUrls", next);
+                                            }}
+                                        />
 
-                        <IonRow>
-                            <IonCol size="auto">
-                                <AddExternalLinkCard onClick={handleExternalLinkAdd} />
-                            </IonCol>
+                                        <IonItem>
+                                            <IonButton slot="end" fill="clear" onClick={() => setIsImageModalOpen(true)}>
+                                                画像編集
+                                            </IonButton>
+                                        </IonItem>
+                                    </IonList>
 
-                            {(form.externalLinks ?? []).map((link, index) => (
-                                <IonCol size="auto" key={`${link.link}-${index}`}>
-                                    <ExternalLinkCard
-                                        {...link}
-                                        onEditedLink={(value) => handleExternalLinkChange(index, { link: value.trim() })}
-                                        onEditedTitle={(value) => handleExternalLinkChange(index, { title: value.trim() || undefined })}
-                                        onEditedTag={(value) => handleExternalLinkChange(index, { tag: value.trim() || undefined })}
-                                        onDelete={() => handleExternalLinkDelete(index)}
+                                    <ImageLinkCarouselSelectModal
+                                        images={form.imgUrls}
+                                        isOpen={isImageModalOpen}
+                                        onChange={(images) => handleFormChange("imgUrls", images)}
+                                        onDismiss={() => setIsImageModalOpen(false)}
                                     />
                                 </IonCol>
-                            ))}
-                        </IonRow>
 
-                        <IonRow>
-                            <IonCol>
-                                <ProjectBomList
-                                    componentApi={componentApi}
-                                    bomList={form.bomList}
-                                    onAdd={handleBomAdd}
-                                    onChange={handleBomChange}
-                                    onDelete={handleBomDelete}
-                                />
-                            </IonCol>
-                        </IonRow>
-                    </IonGrid>
-                )}
-            </IonContent>
-        </>
+                                <IonCol>
+                                    <IonList inset>
+                                        <IonItem>
+                                            <IonLabel position="stacked">概要</IonLabel>
+                                            <Editable text={form.summary} defaultText="サマリー" onCommit={(value) => handleFormChange("summary", value)}>
+                                                <h3 />
+                                            </Editable>
+                                        </IonItem>
+
+                                        <IonItem>
+                                            <IonTextarea
+                                                label="説明・備考"
+                                                labelPlacement="stacked"
+                                                rows={12}
+                                                value={form.description ?? ""}
+                                                onIonInput={(e) => handleFormChange("description", e.detail.value ?? undefined)}
+                                            />
+                                        </IonItem>
+                                    </IonList>
+                                </IonCol>
+
+                                <IonCol size="3">
+                                    <IonList inset color="light">
+                                        <IonItem lines="none">
+                                            <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                <IonIcon icon={createOutline} />
+                                                {project.createdAt.toLocaleString("ja-JP")}
+                                            </IonNote>
+                                        </IonItem>
+                                        <IonItem lines="none">
+                                            <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                <IonIcon icon={timeOutline} />
+                                                {project.lastModified.toLocaleString("ja-JP")}
+                                            </IonNote>
+                                        </IonItem>
+
+                                        <IonItem>
+                                            <IonLabel>ステータス</IonLabel>
+                                            <IonSelect
+                                                interface="popover"
+                                                value={form.status}
+                                                onIonChange={(e) => handleFormChange("status", e.detail.value as string)}
+                                            >
+                                                {STATUS_OPTIONS.map((option) => (
+                                                    <IonSelectOption key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </IonSelectOption>
+                                                ))}
+                                            </IonSelect>
+                                        </IonItem>
+
+                                        <IonItem>
+                                            <IonBadge>{statusLabel}</IonBadge>
+
+                                            <IonBadge slot="end" color="light" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                                <IonIcon icon={pricetagOutline} />
+                                                <Editable text={form.tag ?? "タグなし"} defaultText="タグなし" onCommit={(value) => handleFormChange("tag", value.trim() || undefined)}>
+                                                    <IonText />
+                                                </Editable>
+                                            </IonBadge>
+                                        </IonItem>
+
+                                    </IonList>
+                                </IonCol>
+                            </IonRow>
+
+                            <IonRow>
+                                <IonCol size="auto">
+                                    <AddExternalLinkCard onClick={handleExternalLinkAdd} />
+                                </IonCol>
+
+                                {(form.externalLinks ?? []).map((link, index) => (
+                                    <IonCol size="auto" key={`${link.link}-${index}`}>
+                                        <ExternalLinkCard
+                                            {...link}
+                                            onEditedLink={(value) => handleExternalLinkChange(index, { link: value.trim() })}
+                                            onEditedTitle={(value) => handleExternalLinkChange(index, { title: value.trim() || undefined })}
+                                            onEditedTag={(value) => handleExternalLinkChange(index, { tag: value.trim() || undefined })}
+                                            onDelete={() => handleExternalLinkDelete(index)}
+                                        />
+                                    </IonCol>
+                                ))}
+                            </IonRow>
+
+                            <IonRow>
+                                <IonCol>
+                                    <ProjectBomList
+                                        componentApi={componentApi}
+                                        bomList={form.bomList}
+                                        onAdd={handleBomAdd}
+                                        onChange={handleBomChange}
+                                        onDelete={handleBomDelete}
+                                    />
+                                </IonCol>
+                            </IonRow>
+                        </IonGrid>
+                    )}
+                </IonContent>
+
+            </div>
+
+        </IonSplitPane>
     );
 };

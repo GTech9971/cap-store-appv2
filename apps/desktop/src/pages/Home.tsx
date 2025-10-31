@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  IonAvatar,
   IonBadge,
   IonButton,
   IonButtons,
   IonCard,
-  IonChip,
   IonCol,
   IonContent,
   IonFab,
   IonFabButton,
-  IonFooter,
   IonGrid,
   IonHeader,
   IonIcon,
@@ -44,8 +41,8 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { Invoice } from "@/types/invoices/invoice";
 import { useInvoice } from "@/hooks/useInvoice";
 import { AkizukiInvoiceModal } from "@/modals/AkizukiInvoiceModal";
-import { useOktaAuth } from "@okta/okta-react";
 import { ErrorNote } from "ui/components/ErrorNote";
+import { AuthFooter } from "@/components/AuthFooter";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -147,20 +144,7 @@ function Home() {
     }
   }, [parseInvoice, presentAlert]);
 
-  // okta系
-  const { authState, oktaAuth } = useOktaAuth();
-  // ユーザー名取得用 state
-  const [userName, setUserName] = useState<string>('');
 
-  // 認証状態変化時にユーザー情報を取得
-  useEffect(() => {
-    (async () => {
-      if (authState?.isAuthenticated) {
-        const user = await oktaAuth.getUser();
-        setUserName(user.name || '');
-      }
-    })();
-  }, [authState, oktaAuth]);
 
 
   return (
@@ -191,31 +175,7 @@ function Home() {
         </IonContent>
 
         {/* フッター アカウント系 */}
-        <IonFooter translucent className="ion-no-border">
-          <IonList inset>
-            <IonItem>
-              {
-                authState?.isAuthenticated ? (
-                  <>
-                    <IonChip>
-                      <IonAvatar>
-                        <img alt="" src="https://ionicframework.com/docs/img/demos/avatar.svg" />
-                      </IonAvatar>
-                      <IonLabel>{userName}</IonLabel>
-                    </IonChip>
-
-                    <IonButton slot="end" fill="clear" onClick={() => oktaAuth.signOut()}>ログアウト</IonButton>
-                  </>
-
-                ) : (
-                  <IonLabel color='primary'>
-                    <IonButton fill="clear" onClick={() => oktaAuth.signInWithRedirect()}>ログイン</IonButton>
-                  </IonLabel>
-                )
-              }
-            </IonItem>
-          </IonList>
-        </IonFooter>
+        <AuthFooter />
 
       </IonMenu>
       <div className="ion-page" id="main">
