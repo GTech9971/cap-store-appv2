@@ -63,7 +63,7 @@ export const ProjectList: React.FC<Prop> = ({
                     <IonNote color="danger">{apiError}</IonNote>
                 </IonItem>
             ) : projects.length === 0 ? (
-                <IonItem>
+                <IonItem lines="none">
                     <IonNote>プロジェクト登録なし</IonNote>
                 </IonItem>
             ) : (
@@ -76,7 +76,7 @@ export const ProjectList: React.FC<Prop> = ({
                     >
                         <IonLabel>
                             <IonText>{project.name}</IonText>
-                            <IonNote style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{project.summary ?? '-'}</IonNote>
+                            <p style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{project.summary ?? '-'}</p>
                         </IonLabel>
                         <IonBadge slot="end">{getProjectStatusLabel(project.status)}</IonBadge>
                     </IonItem>

@@ -167,11 +167,6 @@ function Home() {
 
     <IonSplitPane when="xs" contentId="main" disabled={hiddenMenu}>
       <IonMenu contentId="main">
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>CapStoreApp</IonTitle>
-          </IonToolbar>
-        </IonHeader>
         <IonContent className="ion-padding" color="light">
 
           <CategoryList
@@ -187,7 +182,7 @@ function Home() {
             <IonListHeader>
               納品書
             </IonListHeader>
-            <IonItem button detail={false} onClick={openInvoiceFile}>
+            <IonItem lines="none" button detail={false} onClick={openInvoiceFile}>
               <IonIcon slot="start" icon={documentOutline} />
               <IonLabel>アップロード</IonLabel>
             </IonItem>
@@ -232,7 +227,7 @@ function Home() {
               </IonButton>
             </IonButtons>
 
-            <IonTitle>{categoryId ? `「${categoryId}」の部品一覧` : `カテゴリーの取得失敗`}</IonTitle>
+            <IonTitle>{categoryId ? `「${categoryId}」の部品一覧` : `カテゴリー未選択`}</IonTitle>
           </IonToolbar>
 
           <IonToolbar>
