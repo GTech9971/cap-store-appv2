@@ -26,12 +26,12 @@ let projectStore: MockProject[] = [
         tag: 'IoT',
         imgUrls: [
             {
-                url: 'https://example.com/projects/iot-monitor/dashboard.png',
+                url: 'https://akizukidenshi.com/img/goods/S/131350.jpg',
                 title: 'ダッシュボード',
                 tag: 'UI'
             },
             {
-                url: 'https://example.com/projects/iot-monitor/hardware.jpg',
+                url: 'https://akizukidenshi.com/img/goods/S/131293.jpg',
                 title: 'センサーノード',
                 tag: 'Hardware'
             }

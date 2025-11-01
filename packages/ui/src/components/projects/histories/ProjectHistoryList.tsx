@@ -8,11 +8,13 @@ import { ProjectHistoryItem } from "./ProjectHistoryItem";
 export interface Prop {
     projectId: string,
     historyApi: ProjectsHistoryApi,
+    onClickRestore?: (historyId: string) => void
 }
 
 export const ProjectHistoryList: React.FC<Prop> = ({
     projectId,
     historyApi,
+    onClickRestore,
 }) => {
 
     const [histories, setHistories] = useState<ProjectHistory[]>([]);
@@ -49,7 +51,10 @@ export const ProjectHistoryList: React.FC<Prop> = ({
 
             {
                 histories.map((history, index) => (
-                    <ProjectHistoryItem key={index} {...history} />
+                    <ProjectHistoryItem
+                        key={index}
+                        history={history}
+                        onClickRestore={onClickRestore} />
                 ))
             }
 

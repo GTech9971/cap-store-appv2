@@ -1,26 +1,15 @@
-.metadata-end-wrapper {
-    position: absolute;
-
-    top: 10px;
-    inset-inline-end: 10px;
-
-    font-size: 0.8rem;
-
-    display: flex;
-    align-items: center;
-}
-
-ion-button {
-    margin-top: 20px;
-}
-
-ion-label strong {
+.change-message {
     display: block;
-    max-width: calc(100% - 60px);
-    overflow: hidden;
     text-overflow: ellipsis;
+    max-width: calc(100%-60px);
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-ion-label ion-note {
-    font-size: 0.9rem;
+.change-fields {
+    display: block;
+    text-overflow: ellipsis;
+    max-width: calc(100%-60px);
+    overflow: hidden;
+    white-space: nowrap;
 }

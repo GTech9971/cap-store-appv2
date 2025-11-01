@@ -4,7 +4,15 @@ import "./ProjectHistoryItem.css";
 import { useMemo } from "react";
 import type { Color } from "@ionic/core";
 
-export const ProjectHistoryItem = (history: ProjectHistory) => {
+export interface Prop {
+    history: ProjectHistory,
+    onClickRestore?: (historyId: string) => void
+}
+
+export const ProjectHistoryItem: React.FC<Prop> = ({
+    history,
+    onClickRestore,
+}) => {
 
     const labels: Array<{ value: ProjectHistoryChangeType, label: string, color: Color }> = useMemo(() => {
         return [
@@ -22,21 +30,22 @@ export const ProjectHistoryItem = (history: ProjectHistory) => {
     return (
         <IonItem>
             <IonLabel>
-                <strong>{history.createdAt.toLocaleString()}</strong>
 
-                <IonText>
-
+                <span>
                     <IonText color={label?.color}>
                         [{label?.label ?? ''}]
                     </IonText>
 
-                    {history.changedFields && history.changedFields.length > 0 &&
-                        <> - </>
-                    }
-                    {history.changedFields?.join(',')}
-                </IonText>
+                    <strong style={{ marginLeft: '5px' }}>{history.createdAt.toLocaleString()}</strong>
+                </span>
 
-                <br />
+                <IonNote color="medium" className="change-message">
+                    {history.message}
+                </IonNote>
+
+                <IonNote color='medium' className="change-fields">
+                    {history.changedFields?.join(',')}
+                </IonNote>
 
                 <IonNote color='medium' className="ion-text-wrap">
                     {history.historyId}
@@ -44,15 +53,10 @@ export const ProjectHistoryItem = (history: ProjectHistory) => {
 
             </IonLabel>
 
-            <div className="metadata-end-wrapper" slot="end">
-                <IonNote color="medium">
-                    {history.message}
-                </IonNote>
-            </div>
 
             {showRestoreButton
                 &&
-                <IonButton color='secondary' fill="outline" slot="end">
+                <IonButton color='secondary' fill="outline" slot="end" onClick={() => onClickRestore?.(history.historyId)}>
                     復元
                 </IonButton>
             }
