@@ -8,14 +8,17 @@ import { ProjectHistoryItem } from "./ProjectHistoryItem";
 export interface Prop {
     projectId: string,
     historyApi: ProjectsHistoryApi,
-    onClickRestore?: (historyId: string) => void
+    onClickRestore?: (historyId: string) => void,
+    refreshKey?: number,
 }
 
 export const ProjectHistoryList: React.FC<Prop> = ({
     projectId,
     historyApi,
     onClickRestore,
+    refreshKey
 }) => {
+
 
     const [histories, setHistories] = useState<ProjectHistory[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export const ProjectHistoryList: React.FC<Prop> = ({
 
     useEffect(() => {
         fetchProjectHistories();
-    }, [fetchProjectHistories]);
+    }, [fetchProjectHistories, refreshKey]);
 
     return (
         <IonList inset>

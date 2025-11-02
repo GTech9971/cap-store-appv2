@@ -263,6 +263,8 @@ export const ProjectMainPage = () => {
         setSubmitError(null);
     }, []);
 
+    // 履歴再取得よう
+    const [refreshKey, setRefreshKey] = useState<number>(0);
     // 更新処理
     const handleUpdate = useCallback(async () => {
         if (!project || !form || !projectId) return;
@@ -342,6 +344,7 @@ export const ProjectMainPage = () => {
                 setProject(updated);
                 setForm(mapProjectToForm(updated));
                 await presentAlert("プロジェクトを更新しました");
+                setRefreshKey(prev => prev + 1);
             }
         } catch (err) {
             const { message, status } = await parseApiError(err);
@@ -421,6 +424,7 @@ export const ProjectMainPage = () => {
                     <ProjectHistoryList
                         projectId={projectId ?? ''}
                         historyApi={projectHistoryApi}
+                        refreshKey={refreshKey}
                     />
 
                 </IonContent>
