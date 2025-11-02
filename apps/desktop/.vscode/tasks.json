@@ -28,7 +28,7 @@
             "command": "echo ${input:terminate}",
         },
         {
-            "label": "ui:stg:start",
+            "label": "ui:stg-debug:start",
             "type": "shell",
             "isBackground": true,
             "command": "npm",
@@ -37,7 +37,7 @@
                 "dev",
                 "--",
                 "--mode",
-                "staging"
+                "staging-debug"
             ],
             "problemMatcher": {
                 "owner": "custom",
@@ -52,7 +52,7 @@
             }
         },
         {
-            "label": "ui:stg:stop",
+            "label": "ui:stg-debug:stop",
             "type": "shell",
             "command": "echo ${input:terminate-stg}",
         },

@@ -40,11 +40,11 @@
                 ]
             },
             "env": {
-                "TAURI_CONFIG": "src-tauri/tauri.conf.stg.json"
+                "TAURI_CONFIG": "src-tauri/tauri.conf.stg-debug.json"
             },
-            "envFile": "${workspaceFolder}/.env.staging",
-            "preLaunchTask": "ui:stg:start",
-            "postDebugTask": "ui:stg:stop"
+            "envFile": "${workspaceFolder}/.env.staging-debug",
+            "preLaunchTask": "ui:stg-debug:start",
+            "postDebugTask": "ui:stg-debug:stop"
         },
     ]
 }
