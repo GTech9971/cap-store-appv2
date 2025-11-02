@@ -8,6 +8,7 @@ import { ProjectHistoryItem } from "./ProjectHistoryItem";
 export interface Prop {
     projectId: string,
     historyApi: ProjectsHistoryApi,
+    onClick?: (history: ProjectHistory | undefined) => void,
     onClickRestore?: (historyId: string) => void,
     refreshKey?: number,
 }
@@ -15,6 +16,7 @@ export interface Prop {
 export const ProjectHistoryList: React.FC<Prop> = ({
     projectId,
     historyApi,
+    onClick,
     onClickRestore,
     refreshKey
 }) => {
@@ -22,6 +24,7 @@ export const ProjectHistoryList: React.FC<Prop> = ({
 
     const [histories, setHistories] = useState<ProjectHistory[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
+    const [selectedHistory, setSelectedHistory] = useState<ProjectHistory | undefined>(undefined);
 
     const fetchProjectHistories = useCallback(async () => {
         setApiError(null);
@@ -40,6 +43,19 @@ export const ProjectHistoryList: React.FC<Prop> = ({
         fetchProjectHistories();
     }, [fetchProjectHistories, refreshKey]);
 
+    const onClickItemHandler = useCallback((history: ProjectHistory) => {
+        // 同じやつを選択したら選択解除
+        setSelectedHistory(prev => {
+            const result = prev?.historyId === history.historyId
+                ?
+                undefined
+                : history
+            onClick?.(result);
+
+            return result;
+        });
+    }, [onClick]);
+
     return (
         <IonList inset>
             <IonListHeader>
@@ -56,7 +72,9 @@ export const ProjectHistoryList: React.FC<Prop> = ({
                 histories.map((history, index) => (
                     <ProjectHistoryItem
                         key={index}
+                        isSelect={selectedHistory?.historyId === history.historyId}
                         history={history}
+                        onClick={() => onClickItemHandler(history)}
                         onClickRestore={onClickRestore} />
                 ))
             }

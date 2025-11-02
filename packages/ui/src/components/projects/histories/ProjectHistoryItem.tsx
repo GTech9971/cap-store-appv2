@@ -6,11 +6,15 @@ import type { Color } from "@ionic/core";
 
 export interface Prop {
     history: ProjectHistory,
+    isSelect?: boolean,
+    onClick?: (history: ProjectHistory) => void,
     onClickRestore?: (historyId: string) => void
 }
 
 export const ProjectHistoryItem: React.FC<Prop> = ({
     history,
+    isSelect,
+    onClick,
     onClickRestore,
 }) => {
 
@@ -28,9 +32,13 @@ export const ProjectHistoryItem: React.FC<Prop> = ({
     const showRestoreButton: boolean = history.changeType === 'created' || history.changeType === 'updated';
 
     return (
-        <IonItem>
-            <IonLabel>
+        <IonItem
+            button
+            detail={false}
+            onClick={() => onClick?.(history)}
+            className={isSelect ? 'selected' : undefined}>
 
+            <IonLabel>
                 <span>
                     <IonText color={label?.color}>
                         [{label?.label ?? ''}]

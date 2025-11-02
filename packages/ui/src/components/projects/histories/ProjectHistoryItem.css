@@ -13,3 +13,9 @@
     overflow: hidden;
     white-space: nowrap;
 }
+
+.selected {
+    border: 0.8px;
+    border-style: dotted;
+    border-color: var(--ion-color-primary);
+}

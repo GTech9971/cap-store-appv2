@@ -18,6 +18,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     args: {
+        isSelect: false,
         history: {
             historyId: 'P-00001-H-000123',
             projectId: 'P-00001',
@@ -35,6 +36,7 @@ export const Default: Story = {
 
 export const Delete: Story = {
     args: {
+        isSelect: false,
         history: {
             historyId: 'P-00001-H-000123',
             projectId: 'P-0001',
@@ -48,6 +50,7 @@ export const Delete: Story = {
 
 export const Created: Story = {
     args: {
+        isSelect: false,
         history: {
             historyId: 'P-00001-H-000123',
             projectId: 'P-0001',
@@ -60,6 +63,7 @@ export const Created: Story = {
 
 export const Restore: Story = {
     args: {
+        isSelect: false,
         history: {
             historyId: 'P-00001-H-000123',
             projectId: 'P-0001',
