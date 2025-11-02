@@ -25,7 +25,7 @@ export const ProjectHistoryList: React.FC<Prop> = ({
         try {
             const request: FetchProjectHistoriesRequest = { projectId: projectId };
             const res = await historyApi.fetchProjectHistories(request);
-            setHistories(res?.data ?? []);
+            setHistories(res?.data?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) ?? []);
         } catch (err) {
             const { message, status } = await parseApiError(err);
             setApiError(`プロジェクト履歴一覧の取得に失敗しました。${message}${status ? `:${status}` : ''}`);
