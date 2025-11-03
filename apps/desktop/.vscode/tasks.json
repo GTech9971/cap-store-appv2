@@ -64,6 +64,15 @@
                 "run",
                 "build"
             ]
+        },
+        {
+            "label": "install latest api-def",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "install",
+                "cap-store-api-def@latest"
+            ]
         }
     ],
     "inputs": [

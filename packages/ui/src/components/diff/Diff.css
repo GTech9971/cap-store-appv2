@@ -1,5 +1,5 @@
 .is-edit {
-    width: fit-content;
+    width: auto;
     height: auto;
     border: 1px;
     border-color: var(--ion-color-warning);

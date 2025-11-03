@@ -1,6 +1,5 @@
 import {
     IonBackButton,
-    IonBadge,
     IonButton,
     IonButtons,
     IonCol,
@@ -14,11 +13,8 @@ import {
     IonMenu,
     IonNote,
     IonRow,
-    IonSelect,
-    IonSelectOption,
     IonSpinner,
     IonSplitPane,
-    IonText,
     IonTextarea,
     IonTitle,
     IonToolbar,
@@ -36,20 +32,15 @@ import { Editable } from "ui/components/editable/Editable";
 import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
 import { ProjectHistoryList } from "ui/components/projects/histories/ProjectHistoryList"
-import { Bom, Project, ProjectExternalLink, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
-import { gitBranchOutline, createOutline, pricetagOutline, timeOutline, downloadOutline } from "ionicons/icons";
+import { ProjectHistoryDiff } from "ui/components/projects/histories/ProjectHistoryDiff";
+import { Bom, Project, ProjectExternalLink, ProjectHistory, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
+import { gitBranchOutline, downloadOutline } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
 import { useAuthState } from "@/hooks/useAuthState";
 import { AuthFooter } from "@/components/AuthFooter";
+import { ProjectMetaDataPanel } from "./projects/ProjectMetaDataPanel";
 
-const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
-    { value: "planning", label: "計画中" },
-    { value: "processing", label: "進行中" },
-    { value: "pause", label: "一時停止" },
-    { value: "cancel", label: "中止" },
-    { value: "complete", label: "完了" }
-];
 
 type ProjectFormState = {
     name: string;
@@ -138,6 +129,38 @@ export const ProjectMainPage = () => {
             .filter((bom) => bom.componentId.length > 0 && bom.quantity > 0);
     }, []);
 
+    // プロジェクトの内容をFormに適用
+    const applyProjectToForm = useCallback((project: Project | undefined | null) => {
+        if (!project) {
+            setProject(null);
+            setForm(null);
+            setLoadError("表示できるプロジェクトがありません。");
+            return;
+        }
+        setProject(project);
+        setForm(mapProjectToForm(project));
+        setSubmitError(null);
+    }, []);
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /**
+     * PascalCase -> camelCaseに変換
+     * @param obj 
+     * @returns 
+     */
+    const keysToCamelCase = useCallback(<T,>(obj: any): T => {
+        if (Array.isArray(obj)) {
+            return obj.map(v => keysToCamelCase(v)) as unknown as T;
+        } else if (obj !== null && obj.constructor === Object) {
+            return Object.entries(obj).reduce((acc, [key, value]) => {
+                const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+                (acc as any)[camelKey] = keysToCamelCase(value);
+                return acc;
+            }, {} as any) as T;
+        }
+        return obj;
+    }, []);
+
     // プロジェクト取得
     const fetchProject = useCallback(async () => {
         if (!projectId) { return; }
@@ -148,17 +171,7 @@ export const ProjectMainPage = () => {
         try {
             const response = await projectApi.fetchProject({ projectId: projectId });
             const fetched: Project | undefined = response.data ? normalizeProject(response.data) : undefined;
-
-            if (!fetched) {
-                setProject(null);
-                setForm(null);
-                setLoadError("表示できるプロジェクトがありません。");
-                return;
-            }
-
-            setProject(fetched);
-            setForm(mapProjectToForm(fetched));
-            setSubmitError(null);
+            applyProjectToForm(fetched);
         } catch (err) {
             const { message, status } = await parseApiError(err);
             setLoadError(`プロジェクトの取得に失敗しました。${message}${status ? `:${status}` : ""}`);
@@ -168,11 +181,11 @@ export const ProjectMainPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [projectApi, projectId]);
+    }, [projectApi, projectId, applyProjectToForm]);
 
     useEffect(() => {
         fetchProject();
-    }, [fetchProject, projectId]);
+    }, [fetchProject]);
 
     // Form変更
     const handleFormChange = useCallback(<K extends keyof ProjectFormState>(field: K, value: ProjectFormState[K]) => {
@@ -395,10 +408,6 @@ export const ProjectMainPage = () => {
         }
     }, [projectId, project, downloadProjectPdf, presentToast]);
 
-    const statusLabel = useMemo(() => {
-        if (!form) return "";
-        return STATUS_OPTIONS.find((opt) => opt.value === form.status)?.label ?? form.status;
-    }, [form]);
 
     const headerTitle = useMemo(() => {
         if (project && form) return `${form.name} ${project.id}`;
@@ -406,6 +415,23 @@ export const ProjectMainPage = () => {
     }, [project, form]);
 
     const { isAuthenticated } = useAuthState();
+
+    // 履歴系
+    const [history, setHistory] = useState<ProjectHistory | undefined>(undefined);
+    // 選択履歴変更イベント
+    const handleChangeSelectHistory = useCallback((history: ProjectHistory | undefined) => {
+        setHistory(history);
+        // 選択解除時は最新の内容に戻す
+        if (!history) {
+            applyProjectToForm(project);
+            return;
+        }
+        if (!history.snapshotJson) { throw new Error("スナップショットjsonが存在しません"); }
+
+        const restoreProject: Project = keysToCamelCase<Project>(JSON.parse(history.snapshotJson));
+        applyProjectToForm(restoreProject);
+    }, [project, keysToCamelCase, applyProjectToForm]);
+
 
     return (
         <IonSplitPane when="xs" contentId="main" disabled={hiddenMenu}>
@@ -424,6 +450,7 @@ export const ProjectMainPage = () => {
                     <ProjectHistoryList
                         projectId={projectId ?? ''}
                         historyApi={projectHistoryApi}
+                        onClick={handleChangeSelectHistory}
                         refreshKey={refreshKey}
                     />
 
@@ -510,22 +537,27 @@ export const ProjectMainPage = () => {
                             )}
 
                             <IonRow>
+                                {/* １列 */}
                                 <IonCol size="4">
                                     <IonList inset lines="none" color="light">
                                         <IonItem>
                                             <IonLabel position="stacked">プロジェクト名</IonLabel>
-                                            <Editable text={form.name} defaultText="タイトル" onCommit={(value) => handleFormChange("name", value)}>
-                                                <h2 />
-                                            </Editable>
+
+                                            <ProjectHistoryDiff history={history} field="name">
+                                                <Editable text={form.name} defaultText="タイトル" onCommit={(value) => handleFormChange("name", value)}>
+                                                    <h2 />
+                                                </Editable>
+                                            </ProjectHistoryDiff>
                                         </IonItem>
 
-                                        <ImageLinkCarousel
-                                            images={form.imgUrls}
-                                            onDelete={(index) => {
-                                                const next = form.imgUrls.filter((_, idx) => idx !== index);
-                                                handleFormChange("imgUrls", next);
-                                            }}
-                                        />
+                                        <ProjectHistoryDiff history={history} field="imgUrls">
+                                            <ImageLinkCarousel
+                                                images={form.imgUrls}
+                                                onDelete={(index) => {
+                                                    const next = form.imgUrls.filter((_, idx) => idx !== index);
+                                                    handleFormChange("imgUrls", next);
+                                                }} />
+                                        </ProjectHistoryDiff>
 
                                         <IonItem>
                                             <IonButton slot="end" fill="clear" onClick={() => setIsImageModalOpen(true)}>
@@ -538,79 +570,54 @@ export const ProjectMainPage = () => {
                                         images={form.imgUrls}
                                         isOpen={isImageModalOpen}
                                         onChange={(images) => handleFormChange("imgUrls", images)}
-                                        onDismiss={() => setIsImageModalOpen(false)}
-                                    />
+                                        onDismiss={() => setIsImageModalOpen(false)} />
                                 </IonCol>
 
+                                {/* 中列 */}
                                 <IonCol>
                                     <IonList inset>
                                         <IonItem>
                                             <IonLabel position="stacked">概要</IonLabel>
-                                            <Editable text={form.summary} defaultText="サマリー" onCommit={(value) => handleFormChange("summary", value)}>
-                                                <h3 />
-                                            </Editable>
+
+                                            <ProjectHistoryDiff history={history} field="summary">
+                                                <Editable text={form.summary} defaultText="サマリー" onCommit={(value) => handleFormChange("summary", value)}>
+                                                    <h3 />
+                                                </Editable>
+                                            </ProjectHistoryDiff>
                                         </IonItem>
 
                                         <IonItem>
-                                            <IonTextarea
-                                                label="説明・備考"
-                                                labelPlacement="stacked"
-                                                rows={12}
-                                                value={form.description ?? ""}
-                                                onIonInput={(e) => handleFormChange("description", e.detail.value ?? undefined)}
-                                            />
+
+                                            <ProjectHistoryDiff history={history} field="description">
+                                                <IonTextarea
+                                                    label="説明・備考"
+                                                    labelPlacement="stacked"
+                                                    rows={12}
+                                                    value={form.description ?? ""}
+                                                    onIonInput={(e) => handleFormChange("description", e.detail.value ?? undefined)} />
+                                            </ProjectHistoryDiff>
+
                                         </IonItem>
                                     </IonList>
                                 </IonCol>
 
+                                {/* 3列 */}
                                 <IonCol size="3">
-                                    <IonList inset color="light">
-                                        <IonItem lines="none">
-                                            <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                                <IonIcon icon={createOutline} />
-                                                {project.createdAt.toLocaleString("ja-JP")}
-                                            </IonNote>
-                                        </IonItem>
-                                        <IonItem lines="none">
-                                            <IonNote style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                                <IonIcon icon={timeOutline} />
-                                                {project.lastModified.toLocaleString("ja-JP")}
-                                            </IonNote>
-                                        </IonItem>
-
-                                        <IonItem>
-                                            <IonLabel>ステータス</IonLabel>
-                                            <IonSelect
-                                                interface="popover"
-                                                value={form.status}
-                                                onIonChange={(e) => handleFormChange("status", e.detail.value as string)}
-                                            >
-                                                {STATUS_OPTIONS.map((option) => (
-                                                    <IonSelectOption key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </IonSelectOption>
-                                                ))}
-                                            </IonSelect>
-                                        </IonItem>
-
-                                        <IonItem>
-                                            <IonBadge>{statusLabel}</IonBadge>
-
-                                            <IonBadge slot="end" color="light" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                                <IonIcon icon={pricetagOutline} />
-                                                <Editable text={form.tag ?? "タグなし"} defaultText="タグなし" onCommit={(value) => handleFormChange("tag", value.trim() || undefined)}>
-                                                    <IonText />
-                                                </Editable>
-                                            </IonBadge>
-                                        </IonItem>
-
-                                    </IonList>
+                                    <ProjectMetaDataPanel
+                                        project={project}
+                                        status={form.status}
+                                        onChangeStatus={value => handleFormChange('status', value)}
+                                        tag={form.tag}
+                                        onChangeTag={value => handleFormChange('tag', value)}
+                                        history={history} />
                                 </IonCol>
                             </IonRow>
 
                             <IonRow>
                                 <IonCol size="auto">
-                                    <AddExternalLinkCard onClick={handleExternalLinkAdd} />
+                                    <ProjectHistoryDiff history={history} field='externalLinks'>
+                                        <AddExternalLinkCard onClick={handleExternalLinkAdd} />
+                                    </ProjectHistoryDiff>
                                 </IonCol>
 
                                 {(form.externalLinks ?? []).map((link, index) => (
@@ -620,8 +627,7 @@ export const ProjectMainPage = () => {
                                             onEditedLink={(value) => handleExternalLinkChange(index, { link: value.trim() })}
                                             onEditedTitle={(value) => handleExternalLinkChange(index, { title: value.trim() || undefined })}
                                             onEditedTag={(value) => handleExternalLinkChange(index, { tag: value.trim() || undefined })}
-                                            onDelete={() => handleExternalLinkDelete(index)}
-                                        />
+                                            onDelete={() => handleExternalLinkDelete(index)} />
                                     </IonCol>
                                 ))}
                             </IonRow>
@@ -634,7 +640,7 @@ export const ProjectMainPage = () => {
                                         onAdd={handleBomAdd}
                                         onChange={handleBomChange}
                                         onDelete={handleBomDelete}
-                                    />
+                                        history={history} />
                                 </IonCol>
                             </IonRow>
                         </IonGrid>

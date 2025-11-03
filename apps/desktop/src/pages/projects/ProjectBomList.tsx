@@ -16,10 +16,11 @@ import {
     IonThumbnail
 } from "@ionic/react";
 import { addOutline } from "ionicons/icons";
-import { Bom, ComponentsApi, FetchComponentsRequest, PartsComponent, Supplier } from "cap-store-api-def";
+import { Bom, ComponentsApi, FetchComponentsRequest, PartsComponent, ProjectHistory, Supplier } from "cap-store-api-def";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { parseApiError } from "ui/utils/parseApiError";
 import { BomSupplierInputAlert } from "ui/components/projects/BomSupplierInputAlert";
+import { ProjectHistoryDiff } from "ui/components/projects/histories/ProjectHistoryDiff";
 
 export type ProjectBomListProps = {
     componentApi: ComponentsApi,
@@ -27,6 +28,7 @@ export type ProjectBomListProps = {
     onAdd: () => void;
     onChange: (index: number, patch: Partial<Bom>) => void;
     onDelete: (index: number) => void;
+    history: ProjectHistory | undefined,
 };
 
 export const ProjectBomList: React.FC<ProjectBomListProps> = ({
@@ -34,7 +36,9 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
     bomList,
     onAdd,
     onChange,
-    onDelete }) => {
+    onDelete,
+    history
+}) => {
     const totalQuantity = useMemo(() => bomList.reduce((sum, bom) => sum + (bom.quantity ?? 0), 0), [bomList]);
 
     const [components, setComponents] = useState<PartsComponent[]>([]);
@@ -80,7 +84,10 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
             }
 
             <IonItem lines="full">
-                <IonLabel>BOM</IonLabel>
+                <ProjectHistoryDiff history={history} field='bomList'>
+                    <IonLabel>BOM</IonLabel>
+                </ProjectHistoryDiff>
+
                 <IonButton slot="end" fill="clear" onClick={onAdd}>
                     <IonIcon slot="icon-only" icon={addOutline} />
                 </IonButton>
