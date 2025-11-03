@@ -1,0 +1,8 @@
+.is-edit {
+    width: fit-content;
+    height: auto;
+    border: 1px;
+    border-color: var(--ion-color-warning);
+    border-style: dotted;
+    border-radius: 5%;
+}
