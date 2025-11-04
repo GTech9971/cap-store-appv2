@@ -41,7 +41,7 @@ export const ProjectHistoryItem: React.FC<Prop> = ({
             <IonLabel>
                 <span>
                     <IonText color={label?.color}>
-                        [{label?.label ?? ''}]
+                        [{label?.label ?? ''}] {label?.value === 'restored' && history.restoredHistoryId}
                     </IonText>
 
                     <strong style={{ marginLeft: '5px' }}>{history.createdAt.toLocaleString()}</strong>
@@ -64,7 +64,10 @@ export const ProjectHistoryItem: React.FC<Prop> = ({
 
             {showRestoreButton
                 &&
-                <IonButton color='secondary' fill="outline" slot="end" onClick={() => onClickRestore?.(history.historyId)}>
+                <IonButton color='secondary' fill="outline" slot="end" onClick={(e) => {
+                    e.stopPropagation(); //ion-itemの履歴選択イベントが発生してしまい、選択解除になってしまうのを防ぐ
+                    onClickRestore?.(history.historyId)
+                }}>
                     復元
                 </IonButton>
             }

@@ -33,7 +33,7 @@ import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
 import { ProjectHistoryList } from "ui/components/projects/histories/ProjectHistoryList"
 import { ProjectHistoryDiff } from "ui/components/projects/histories/ProjectHistoryDiff";
-import { Bom, Project, ProjectExternalLink, ProjectHistory, ProjectImg, UpdateProjectRequest } from "cap-store-api-def";
+import { Bom, Project, ProjectExternalLink, ProjectHistory, ProjectImg, RevertProjectResponse, RevertProjectToHistoryRequest, UpdateProjectRequest } from "cap-store-api-def";
 import { gitBranchOutline, downloadOutline } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
@@ -352,10 +352,9 @@ export const ProjectMainPage = () => {
             if (updateRequest.externalLinks === undefined) { updateRequest.externalLinks = []; }
 
             const response = await updateProjectApi(projectId, updateRequest, fieldMask);
-            const updated = response.data ? normalizeProject(response.data) : null;
+            const updated: Project | null = response.data ? normalizeProject(response.data) : null;
             if (updated) {
-                setProject(updated);
-                setForm(mapProjectToForm(updated));
+                applyProjectToForm(updated);
                 await presentAlert("プロジェクトを更新しました");
                 setRefreshKey(prev => prev + 1);
             }
@@ -365,7 +364,7 @@ export const ProjectMainPage = () => {
         } finally {
             setIsUpdating(false);
         }
-    }, [project, form, projectId, normalizeImages, normalizeLinks, normalizeBoms, handleConfirm, updateProjectApi, presentAlert]);
+    }, [project, form, projectId, normalizeImages, normalizeLinks, normalizeBoms, handleConfirm, updateProjectApi, presentAlert, applyProjectToForm]);
 
 
     //削除処理
@@ -432,6 +431,31 @@ export const ProjectMainPage = () => {
         applyProjectToForm(restoreProject);
     }, [project, keysToCamelCase, applyProjectToForm]);
 
+    // 履歴から復元
+    const handleRevertProjectHistory = useCallback(async (historyId: string) => {
+        if (!projectId) { return; }
+        if (history?.historyId !== historyId) {
+            await presentAlert({ header: '警告', message: '復元する履歴を選択し、復元内容を確認してから復元操作を実行してください。' });
+            return;
+        }
+
+        if (await handleConfirm('現在選択している内容で復元して本当によろしいですか') === false) { return; }
+
+        const request: RevertProjectToHistoryRequest = { projectId: projectId, historyId: historyId };
+        try {
+            const response: RevertProjectResponse = await projectHistoryApi.revertProjectToHistory(request);
+            const revert: Project | null = response.data ? normalizeProject(response.data) : null;
+            if (revert) {
+                applyProjectToForm(revert);
+                await presentAlert({ header: '復元成功', message: 'プロジェクトを復元しました' });
+                setRefreshKey(prev => prev + 1);
+            }
+        } catch (error) {
+            const { message, status } = await parseApiError(error);
+            await presentAlert({ header: 'エラー', subHeader: status?.toString(), message: `履歴復元操作失敗。${message}` });
+        }
+    }, [history, presentAlert, projectHistoryApi, projectId, applyProjectToForm, handleConfirm]);
+
 
     return (
         <IonSplitPane when="xs" contentId="main" disabled={hiddenMenu}>
@@ -451,6 +475,7 @@ export const ProjectMainPage = () => {
                         projectId={projectId ?? ''}
                         historyApi={projectHistoryApi}
                         onClick={handleChangeSelectHistory}
+                        onClickRestore={handleRevertProjectHistory}
                         refreshKey={refreshKey}
                     />
 
