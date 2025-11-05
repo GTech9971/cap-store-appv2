@@ -4,6 +4,7 @@ import { createOutline, pricetagOutline, timeOutline } from "ionicons/icons"
 import { useMemo } from "react"
 import { Editable } from "ui/components/editable/Editable"
 import { ProjectHistoryDiff } from "ui/components/projects/histories/ProjectHistoryDiff"
+import { ProjectStatusBadge } from "ui/components/projects/ProjectStatusBadge";
 
 export interface Prop {
     project: Project,
@@ -34,9 +35,7 @@ export const ProjectMetaDataPanel: React.FC<Prop> = ({
         ];
     }, []);
 
-    const statusLabel = useMemo(() => {
-        return STATUS_OPTIONS.find((opt) => opt.value === status)?.label ?? status;
-    }, [STATUS_OPTIONS, status]);
+
 
     return (
         <IonList inset color="light">
@@ -72,7 +71,7 @@ export const ProjectMetaDataPanel: React.FC<Prop> = ({
 
             <IonItem>
                 <ProjectHistoryDiff history={history} field="status">
-                    <IonBadge>{statusLabel}</IonBadge>
+                    <ProjectStatusBadge status={status} />
                 </ProjectHistoryDiff>
 
                 <ProjectHistoryDiff history={history} field="tag">

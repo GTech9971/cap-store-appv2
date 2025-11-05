@@ -1,8 +1,7 @@
-import { IonButton, IonItem, IonLabel, IonNote, IonText } from "@ionic/react"
-import type { ProjectHistory, ProjectHistoryChangeType } from "cap-store-api-def"
+import { IonButton, IonItem, IonLabel, IonNote } from "@ionic/react"
+import type { ProjectHistory } from "cap-store-api-def"
 import "./ProjectHistoryItem.css";
-import { useMemo } from "react";
-import type { Color } from "@ionic/core";
+import { ProjectHistoryChangeTypeLabel } from "./ProjectHistoryChangeTypeLabel";
 
 export interface Prop {
     history: ProjectHistory,
@@ -18,17 +17,6 @@ export const ProjectHistoryItem: React.FC<Prop> = ({
     onClickRestore,
 }) => {
 
-    const labels: Array<{ value: ProjectHistoryChangeType, label: string, color: Color }> = useMemo(() => {
-        return [
-            { value: 'created', label: '新規登録', color: 'primary' },
-            { value: 'deleted', label: '削除', color: 'danger' },
-            { value: 'restored', label: '復元', color: 'secondary' },
-            { value: 'updated', label: '更新', color: 'success' }
-        ];
-    }, []);
-
-    const label = useMemo(() => labels.find(x => x.value === history.changeType), [labels, history.changeType]);
-
     const showRestoreButton: boolean = history.changeType === 'created' || history.changeType === 'updated';
 
     return (
@@ -40,9 +28,9 @@ export const ProjectHistoryItem: React.FC<Prop> = ({
 
             <IonLabel>
                 <span>
-                    <IonText color={label?.color}>
-                        [{label?.label ?? ''}] {label?.value === 'restored' && history.restoredHistoryId}
-                    </IonText>
+                    <ProjectHistoryChangeTypeLabel
+                        changeType={history.changeType}
+                        restoredHistoryId={history.restoredHistoryId} />
 
                     <strong style={{ marginLeft: '5px' }}>{history.createdAt.toLocaleString()}</strong>
                 </span>

@@ -34,6 +34,7 @@ import { useApiClint } from "@/api/useApiClient";
 import { parseApiError } from "@/utils/parseApiError";
 import { useNavigate } from "react-router-dom";
 import { useAuthState } from "@/hooks/useAuthState";
+import { ProjectStatusBadge } from "ui/components/projects/ProjectStatusBadge";
 
 export const NewProjectPage = () => {
 
@@ -298,7 +299,7 @@ export const NewProjectPage = () => {
                         <IonCol size="3">
                             <IonList inset color="light">
                                 <IonItem>
-                                    <IonBadge>計画中</IonBadge>
+                                    <ProjectStatusBadge status='planning' />
 
                                     <IonBadge slot="end" color='light' style={{ display: 'flex', alignItems: 'center' }}>
                                         <IonIcon icon={pricetagOutline} />

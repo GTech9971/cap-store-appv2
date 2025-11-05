@@ -1,7 +1,8 @@
-import { IonBadge, IonButton, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonText } from "@ionic/react";
+import { IonButton, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonText } from "@ionic/react";
 import { ProjectsApi, type Project } from "cap-store-api-def"
 import { useCallback, useEffect, useState } from "react";
 import { parseApiError } from "../../utils/parseApiError";
+import { ProjectStatusBadge } from "./ProjectStatusBadge";
 
 export interface Prop {
     projectApi: ProjectsApi,
@@ -34,24 +35,6 @@ export const ProjectList: React.FC<Prop> = ({
         fetchProject();
     }, [fetchProject]);
 
-    const getProjectStatusLabel = useCallback((status: string) => {
-        switch (status) {
-            case "planning":
-                return "計画中";
-            case "processing":
-                return "進行中";
-            case "pause":
-                return "一時停止";
-            case "cancel":
-                return "中止";
-            case "complete":
-                return "完了";
-            default:
-                return status;
-        }
-    }, []);
-
-
     return (
         <IonList inset>
             <IonListHeader>
@@ -78,7 +61,8 @@ export const ProjectList: React.FC<Prop> = ({
                             <IonText>{project.name}</IonText>
                             <p style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{project.summary ?? '-'}</p>
                         </IonLabel>
-                        <IonBadge slot="end">{getProjectStatusLabel(project.status)}</IonBadge>
+
+                        <ProjectStatusBadge slot="end" status={project.status} />
                     </IonItem>
                 ))
             )}
