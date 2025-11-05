@@ -646,7 +646,7 @@ export const ProjectMainPage = () => {
                                 </IonCol>
 
                                 {(form.externalLinks ?? []).map((link, index) => (
-                                    <IonCol size="auto" key={`${link.link}-${index}`}>
+                                    <IonCol size="auto" key={`${index}-${link.link}-${link.title ?? ''}-${link.tag ?? ''}`}>
                                         <ExternalLinkCard
                                             {...link}
                                             onEditedLink={(value) => handleExternalLinkChange(index, { link: value.trim() })}
