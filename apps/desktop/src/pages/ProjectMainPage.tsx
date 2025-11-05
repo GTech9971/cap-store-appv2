@@ -33,7 +33,16 @@ import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
 import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
 import { ProjectHistoryList } from "ui/components/projects/histories/ProjectHistoryList"
 import { ProjectHistoryDiff } from "ui/components/projects/histories/ProjectHistoryDiff";
-import { Bom, Project, ProjectExternalLink, ProjectHistory, ProjectImg, RevertProjectResponse, RevertProjectToHistoryRequest, UpdateProjectRequest } from "cap-store-api-def";
+import {
+    Bom,
+    Project,
+    ProjectExternalLink,
+    ProjectHistory,
+    ProjectImg,
+    RevertProjectResponse,
+    RevertProjectToHistoryRequest,
+    UpdateProjectRequest
+} from "cap-store-api-def";
 import { gitBranchOutline, downloadOutline } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
@@ -95,6 +104,9 @@ export const ProjectMainPage = () => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+
+    // 選択した履歴
+    const [history, setHistory] = useState<ProjectHistory | undefined>(undefined);
 
     const normalizeImages = useCallback((images: ProjectImg[] | undefined) => {
         return (images ?? []).map((img) => ({
@@ -187,14 +199,31 @@ export const ProjectMainPage = () => {
         fetchProject();
     }, [fetchProject]);
 
+    /**
+     * 履歴表示中は操作不可
+     */
+    const isDisabledByHistoryView = useCallback(async (): Promise<boolean> => {
+        if (history) {
+            await presentAlert({ header: '警告', message: '現在履歴内容が表示されています。現在のプロジェクト内容を確認した上で再度操作してください。' });
+            return true;
+        }
+        return false;
+    }, [history, presentAlert]);
+
     // Form変更
-    const handleFormChange = useCallback(<K extends keyof ProjectFormState>(field: K, value: ProjectFormState[K]) => {
+    const handleFormChange = useCallback(async <K extends keyof ProjectFormState>(field: K, value: ProjectFormState[K]) => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => (prev ? { ...prev, [field]: value } : prev));
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
     //外部リンク変更
-    const handleExternalLinkChange = useCallback((index: number, patch: Partial<ProjectExternalLink>) => {
+    const handleExternalLinkChange = useCallback(async (index: number, patch: Partial<ProjectExternalLink>) => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => {
             if (!prev) return prev;
             const next = [...prev.externalLinks];
@@ -202,20 +231,26 @@ export const ProjectMainPage = () => {
             return { ...prev, externalLinks: next };
         });
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
     // 外部リンク削除
-    const handleExternalLinkDelete = useCallback((index: number) => {
+    const handleExternalLinkDelete = useCallback(async (index: number) => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => {
             if (!prev) return prev;
             const next = prev.externalLinks.filter((_, idx) => idx !== index);
             return { ...prev, externalLinks: next };
         });
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
     //外部リンク追加
-    const handleExternalLinkAdd = useCallback(() => {
+    const handleExternalLinkAdd = useCallback(async () => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => {
             if (!prev) return prev;
             return {
@@ -231,10 +266,13 @@ export const ProjectMainPage = () => {
             };
         });
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
     // BOM変更
-    const handleBomChange = useCallback((index: number, patch: Partial<Bom>) => {
+    const handleBomChange = useCallback(async (index: number, patch: Partial<Bom>) => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => {
             if (!prev) return prev;
             const next = [...prev.bomList];
@@ -242,20 +280,26 @@ export const ProjectMainPage = () => {
             return { ...prev, bomList: next };
         });
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
     // BOM削除
-    const handleBomDelete = useCallback((index: number) => {
+    const handleBomDelete = useCallback(async (index: number) => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => {
             if (!prev) return prev;
             const next = prev.bomList.filter((_, idx) => idx !== index);
             return { ...prev, bomList: next };
         });
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
     // BOM追加
-    const handleBomAdd = useCallback(() => {
+    const handleBomAdd = useCallback(async () => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         setForm((prev) => {
             if (!prev) return prev;
             return {
@@ -274,12 +318,15 @@ export const ProjectMainPage = () => {
             };
         });
         setSubmitError(null);
-    }, []);
+    }, [isDisabledByHistoryView]);
 
-    // 履歴再取得よう
+    // 履歴再取得
     const [refreshKey, setRefreshKey] = useState<number>(0);
     // 更新処理
     const handleUpdate = useCallback(async () => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         if (!project || !form || !projectId) return;
 
         const trimmedName = form.name.trim();
@@ -364,12 +411,22 @@ export const ProjectMainPage = () => {
         } finally {
             setIsUpdating(false);
         }
-    }, [project, form, projectId, normalizeImages, normalizeLinks, normalizeBoms, handleConfirm, updateProjectApi, presentAlert, applyProjectToForm]);
+    }, [project, form, projectId, normalizeImages, normalizeLinks,
+        normalizeBoms, handleConfirm, updateProjectApi, presentAlert,
+        applyProjectToForm, isDisabledByHistoryView]);
 
 
     //削除処理
     const handleDelete = useCallback(async () => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
         if (!projectId) return;
+
+        if (history) {
+            await presentAlert({ header: '警告', message: '現在履歴内容が表示されています。現在のプロジェクト内容を確認した上で再度操作してください。' });
+            return;
+        }
 
         if (await handleConfirm("このプロジェクトを削除しますか？") === false) { return; }
 
@@ -384,11 +441,13 @@ export const ProjectMainPage = () => {
         } finally {
             setIsDeleting(false);
         }
-    }, [projectId, handleConfirm, projectApi, presentAlert, navigate]);
+    }, [projectId, handleConfirm, projectApi, presentAlert, navigate, history, isDisabledByHistoryView]);
 
     //pdfダウンロード
     const handleDownloadPdf = useCallback(async () => {
         if (!projectId || !project) return;
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
 
         try {
             setIsPdfDownloading(true);
@@ -405,18 +464,21 @@ export const ProjectMainPage = () => {
         } finally {
             setIsPdfDownloading(false);
         }
-    }, [projectId, project, downloadProjectPdf, presentToast]);
+    }, [projectId, project, downloadProjectPdf, presentToast, isDisabledByHistoryView]);
 
 
     const headerTitle = useMemo(() => {
+        if (!project) { return "プロジェクト詳細"; }
+
+        if (history) { return `[履歴] ${form?.name ?? 'プロジェクト名未定'} : ${history.historyId}`; }
         if (project && form) return `${form.name} ${project.id}`;
         return "プロジェクト詳細";
-    }, [project, form]);
+    }, [project, form, history]);
 
     const { isAuthenticated } = useAuthState();
 
+
     // 履歴系
-    const [history, setHistory] = useState<ProjectHistory | undefined>(undefined);
     // 選択履歴変更イベント
     const handleChangeSelectHistory = useCallback((history: ProjectHistory | undefined) => {
         setHistory(history);
