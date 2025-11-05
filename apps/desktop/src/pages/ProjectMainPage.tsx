@@ -49,6 +49,9 @@ import ProjectBomList from "./projects/ProjectBomList";
 import { useAuthState } from "@/hooks/useAuthState";
 import { AuthFooter } from "@/components/AuthFooter";
 import { ProjectMetaDataPanel } from "./projects/ProjectMetaDataPanel";
+import { EmptyExternalLink } from "ui/types/EmptyExternalLink";
+import { EmptyBom } from 'ui/types/EmptyBom'
+import { useProjectMainPageUtils } from "./useProjectMainPageUtils";
 
 
 type ProjectFormState = {
@@ -62,14 +65,6 @@ type ProjectFormState = {
     bomList: Bom[];
 };
 
-const normalizeProject = (project: Project): Project => ({
-    ...project,
-    createdAt: project.createdAt instanceof Date ? project.createdAt : new Date(project.createdAt),
-    lastModified: project.lastModified instanceof Date ? project.lastModified : new Date(project.lastModified),
-    imgUrls: project.imgUrls ?? [],
-    externalLinks: project.externalLinks ?? [],
-    bomList: project.bomList ?? []
-});
 
 const mapProjectToForm = (project: Project): ProjectFormState => ({
     name: project.name,
@@ -108,38 +103,8 @@ export const ProjectMainPage = () => {
     // 選択した履歴
     const [history, setHistory] = useState<ProjectHistory | undefined>(undefined);
 
-    const normalizeImages = useCallback((images: ProjectImg[] | undefined) => {
-        return (images ?? []).map((img) => ({
-            url: img.url.trim(),
-            title: img.title?.trim() || undefined,
-            tag: img.tag?.trim() || undefined
-        }));
-    }, []);
+    const { normalizeProject, normalizeImages, normalizeLinks, normalizeBoms, keysToCamelCase } = useProjectMainPageUtils();
 
-    const normalizeLinks = useCallback((links: ProjectExternalLink[] | undefined) => {
-        return (links ?? []).map((link) => ({
-            link: link.link.trim(),
-            title: link.title?.trim() || undefined,
-            tag: link.tag?.trim() || undefined
-        })).filter((link) => link.link.length > 0);
-    }, []);
-
-    const normalizeBoms = useCallback((bomList: Bom[] | undefined) => {
-        return (bomList ?? [])
-            .map((bom) => {
-                const trimmedComponentId = bom.componentId.trim();
-                return {
-                    id: (bom.id ?? "").trim() || undefined,
-                    componentId: trimmedComponentId,
-                    quantity: Number(bom.quantity) || 0,
-                    footPrintName: bom.footPrintName?.trim() || undefined,
-                    remarks: bom.remarks?.trim() || undefined,
-                    refName: bom.refName?.trim() || undefined,
-                    supplier: bom.supplier || undefined
-                };
-            })
-            .filter((bom) => bom.componentId.length > 0 && bom.quantity > 0);
-    }, []);
 
     // プロジェクトの内容をFormに適用
     const applyProjectToForm = useCallback((project: Project | undefined | null) => {
@@ -152,25 +117,6 @@ export const ProjectMainPage = () => {
         setProject(project);
         setForm(mapProjectToForm(project));
         setSubmitError(null);
-    }, []);
-
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    /**
-     * PascalCase -> camelCaseに変換
-     * @param obj 
-     * @returns 
-     */
-    const keysToCamelCase = useCallback(<T,>(obj: any): T => {
-        if (Array.isArray(obj)) {
-            return obj.map(v => keysToCamelCase(v)) as unknown as T;
-        } else if (obj !== null && obj.constructor === Object) {
-            return Object.entries(obj).reduce((acc, [key, value]) => {
-                const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
-                (acc as any)[camelKey] = keysToCamelCase(value);
-                return acc;
-            }, {} as any) as T;
-        }
-        return obj;
     }, []);
 
     // プロジェクト取得
@@ -193,7 +139,7 @@ export const ProjectMainPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [projectApi, projectId, applyProjectToForm]);
+    }, [normalizeProject, projectApi, projectId, applyProjectToForm]);
 
     useEffect(() => {
         fetchProject();
@@ -257,11 +203,7 @@ export const ProjectMainPage = () => {
                 ...prev,
                 externalLinks: [
                     ...prev.externalLinks,
-                    {
-                        link: "http://example.com",
-                        title: "タイトルなし",
-                        tag: "タグ無し"
-                    }
+                    EmptyExternalLink,
                 ]
             };
         });
@@ -306,14 +248,7 @@ export const ProjectMainPage = () => {
                 ...prev,
                 bomList: [
                     ...prev.bomList,
-                    {
-                        id: null!,
-                        componentId: "",
-                        quantity: 1,
-                        footPrintName: undefined,
-                        remarks: undefined,
-                        refName: undefined
-                    }
+                    EmptyBom,
                 ]
             };
         });
@@ -411,7 +346,7 @@ export const ProjectMainPage = () => {
         } finally {
             setIsUpdating(false);
         }
-    }, [project, form, projectId, normalizeImages, normalizeLinks,
+    }, [normalizeProject, project, form, projectId, normalizeImages, normalizeLinks,
         normalizeBoms, handleConfirm, updateProjectApi, presentAlert,
         applyProjectToForm, isDisabledByHistoryView]);
 
@@ -441,7 +376,8 @@ export const ProjectMainPage = () => {
         } finally {
             setIsDeleting(false);
         }
-    }, [projectId, handleConfirm, projectApi, presentAlert, navigate, history, isDisabledByHistoryView]);
+    }, [projectId, handleConfirm, projectApi, presentAlert,
+        navigate, history, isDisabledByHistoryView]);
 
     //pdfダウンロード
     const handleDownloadPdf = useCallback(async () => {
@@ -467,6 +403,7 @@ export const ProjectMainPage = () => {
     }, [projectId, project, downloadProjectPdf, presentToast, isDisabledByHistoryView]);
 
 
+    /** 画面タイトル */
     const headerTitle = useMemo(() => {
         if (!project) { return "プロジェクト詳細"; }
 
@@ -516,7 +453,8 @@ export const ProjectMainPage = () => {
             const { message, status } = await parseApiError(error);
             await presentAlert({ header: 'エラー', subHeader: status?.toString(), message: `履歴復元操作失敗。${message}` });
         }
-    }, [history, presentAlert, projectHistoryApi, projectId, applyProjectToForm, handleConfirm]);
+    }, [normalizeProject, history, presentAlert, projectHistoryApi,
+        projectId, applyProjectToForm, handleConfirm]);
 
 
     return (

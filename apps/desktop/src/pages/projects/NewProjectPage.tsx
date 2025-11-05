@@ -35,6 +35,7 @@ import { parseApiError } from "@/utils/parseApiError";
 import { useNavigate } from "react-router-dom";
 import { useAuthState } from "@/hooks/useAuthState";
 import { ProjectStatusBadge } from "ui/components/projects/ProjectStatusBadge";
+import { EmptyExternalLink } from "ui/types/EmptyExternalLink"
 
 export const NewProjectPage = () => {
 
@@ -324,12 +325,7 @@ export const NewProjectPage = () => {
                         <IonCol size="auto">
                             <AddExternalLinkCard
                                 onClick={() => {
-                                    const empty: ProjectExternalLink = {
-                                        link: 'http://localhost:1420',
-                                        tag: "タグ無し",
-                                        title: 'タイトルなし'
-                                    };
-                                    handleFormChange('externalLinks', [...form.externalLinks ?? [], empty]);
+                                    handleFormChange('externalLinks', [...form.externalLinks ?? [], EmptyExternalLink]);
                                 }}
                             />
                         </IonCol>
