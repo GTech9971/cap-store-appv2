@@ -102,7 +102,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
     const [apiError, setApiError] = useState<string | null>(null);
 
 
-    const [handleConfirm] = useConfirmUtils();
+    const { handleConfirm } = useConfirmUtils();
 
     // モーダルを閉じる前に入力をリセット
     const resetForm = useCallback(() => {

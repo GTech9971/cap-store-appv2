@@ -83,7 +83,7 @@ export const ProjectMainPage = () => {
     const [hiddenMenu, setHiddenMenu] = useState<boolean>(true);
 
     const { projectApi, projectHistoryApi, componentApi, updateProjectApi, downloadProjectPdf } = useApiClint();
-    const [handleConfirm] = useConfirmUtils();
+    const { handleConfirm, handleConfirmWithInput } = useConfirmUtils();
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
     const navigate = useNavigate();
@@ -322,7 +322,9 @@ export const ProjectMainPage = () => {
             return;
         }
 
-        if (await handleConfirm("この内容でプロジェクトを更新しますか？") === false) { return; }
+        const confirmResult = await handleConfirmWithInput("この内容でプロジェクトを更新しますか？", '更新メッセージ');
+        if (confirmResult.result === false) { return; }
+        updateRequest.updateMessage = confirmResult.input;
 
         try {
             setIsUpdating(true);
@@ -347,8 +349,8 @@ export const ProjectMainPage = () => {
             setIsUpdating(false);
         }
     }, [normalizeProject, project, form, projectId, normalizeImages, normalizeLinks,
-        normalizeBoms, handleConfirm, updateProjectApi, presentAlert,
-        applyProjectToForm, isDisabledByHistoryView]);
+        normalizeBoms, updateProjectApi, presentAlert,
+        applyProjectToForm, isDisabledByHistoryView, handleConfirmWithInput]);
 
 
     //削除処理
