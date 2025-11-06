@@ -26,7 +26,7 @@ export const ProjectList: React.FC<Prop> = ({
     const fetchProject = useCallback(async () => {
         setApiError(null);
         try {
-            const res = await projectApi.fetchProjects({ pageIndex: 1, pageSize: pageSize, includedDeleted: includeDeleted });
+            const res = await projectApi.fetchProjects({ pageIndex: 1, pageSize: pageSize, includeDeleted: includeDeleted });
             setProjects(res?.data ?? []);
         } catch (err) {
             const { message, status } = await parseApiError(err);

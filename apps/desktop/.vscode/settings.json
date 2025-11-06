@@ -4,6 +4,7 @@
         "Boms",
         "pricetag",
         "tauri",
+        "undelete",
         "unlisten"
     ],
     "taskExplorer.exclude": [

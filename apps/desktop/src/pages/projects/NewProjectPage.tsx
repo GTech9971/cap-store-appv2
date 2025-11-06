@@ -81,7 +81,7 @@ export const NewProjectPage = () => {
     const { projectApi } = useApiClint();
     const navigate = useNavigate();
     const [presentAlert] = useIonAlert();
-    const [handleConfirm] = useConfirmUtils();
+    const { handleConfirm } = useConfirmUtils();
 
     const handleFormChange = useCallback(<K extends keyof RegistryProjectRequest>(field: K, value: RegistryProjectRequest[K]) => {
         setForm(prev => ({ ...prev, [field]: value }));

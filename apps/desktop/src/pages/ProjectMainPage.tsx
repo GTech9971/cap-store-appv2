@@ -41,6 +41,7 @@ import {
     ProjectImg,
     RevertProjectResponse,
     RevertProjectToHistoryRequest,
+    UndeleteProjectRequest,
     UpdateProjectRequest
 } from "cap-store-api-def";
 import { gitBranchOutline, downloadOutline } from "ionicons/icons";
@@ -98,6 +99,7 @@ export const ProjectMainPage = () => {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isUnDeleting, setIsUnDeleting] = useState(false);
     const [isPdfDownloading, setIsPdfDownloading] = useState(false);
 
     // 選択した履歴
@@ -360,11 +362,6 @@ export const ProjectMainPage = () => {
 
         if (!projectId) return;
 
-        if (history) {
-            await presentAlert({ header: '警告', message: '現在履歴内容が表示されています。現在のプロジェクト内容を確認した上で再度操作してください。' });
-            return;
-        }
-
         if (await handleConfirm("このプロジェクトを削除しますか？") === false) { return; }
 
         try {
@@ -378,8 +375,35 @@ export const ProjectMainPage = () => {
         } finally {
             setIsDeleting(false);
         }
-    }, [projectId, handleConfirm, projectApi, presentAlert,
-        navigate, history, isDisabledByHistoryView]);
+    }, [projectId, handleConfirm, projectApi, presentAlert, navigate, isDisabledByHistoryView]);
+
+    // 削除取消
+    const handleUnDelete = useCallback(async () => {
+        // 履歴表示中は操作不可
+        if (await isDisabledByHistoryView()) { return; }
+
+        if (!projectId) return;
+
+        if (await handleConfirm("このプロジェクトを削除取消しますか？") === false) { return; }
+
+        try {
+            setIsUnDeleting(true);
+
+            const request: UndeleteProjectRequest = { projectId: projectId };
+            const response = await projectApi.undeleteProject(request);
+            const undeletedProject = response.data ?? null;
+
+            applyProjectToForm(undeletedProject);
+            await presentAlert("プロジェクトを削除取消しました");
+            setRefreshKey(prev => prev + 1);
+        } catch (err) {
+            const { message, status } = await parseApiError(err);
+            setSubmitError(`プロジェクトの削除取消に失敗しました。${message}${status ? `:${status}` : ""}`);
+        } finally {
+            setIsUnDeleting(false);
+        }
+    }, [isDisabledByHistoryView, projectId, handleConfirm, projectApi,
+        presentAlert, applyProjectToForm,]);
 
     //pdfダウンロード
     const handleDownloadPdf = useCallback(async () => {
@@ -505,27 +529,41 @@ export const ProjectMainPage = () => {
 
                         <IonTitle>{headerTitle}</IonTitle>
 
+                        {/* 操作ボタン */}
                         <IonButtons slot="end">
+                            {/* PDF */}
                             <IonButton
                                 fill="clear"
                                 onClick={async () => { await handleDownloadPdf(); }}
-                                disabled={isPdfDownloading || isLoading || !project}
-                            >
+                                disabled={isPdfDownloading || isLoading || !project} >
                                 {isPdfDownloading ? <IonSpinner name="dots" /> : <IonIcon icon={downloadOutline} />}
                             </IonButton>
-                            <IonButton
-                                fill="clear"
-                                color="danger"
-                                onClick={async () => { await handleDelete(); }}
-                                disabled={isDeleting || isUpdating || isLoading || !project || !isAuthenticated}
-                            >
-                                削除
-                            </IonButton>
+
+                            {
+                                project?.isDeleted
+                                    ?
+                                    <IonButton
+                                        fill="clear"
+                                        color='success'
+                                        onClick={async () => { await handleUnDelete(); }}
+                                        disabled={isDeleting || isUnDeleting || isUpdating || isLoading || !project || !isAuthenticated}>
+                                        削除取消
+                                    </IonButton>
+                                    :
+                                    <IonButton
+                                        fill="clear"
+                                        color="danger"
+                                        onClick={async () => { await handleDelete(); }}
+                                        disabled={isDeleting || isUnDeleting || isUpdating || isLoading || !project || !isAuthenticated}>
+                                        削除
+                                    </IonButton>
+                            }
+
+
                             <IonButton
                                 fill="clear"
                                 onClick={async () => { await handleUpdate(); }}
-                                disabled={isUpdating || isDeleting || isLoading || !form || !isAuthenticated}
-                            >
+                                disabled={isUpdating || isDeleting || isUnDeleting || isLoading || !form || !isAuthenticated}>
                                 更新
                             </IonButton>
                         </IonButtons>
