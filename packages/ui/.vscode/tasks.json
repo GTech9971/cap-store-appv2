@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "install latest api-def",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "install",
+                "cap-store-api-def@latest"
+            ]
+        }
+    ]
+}

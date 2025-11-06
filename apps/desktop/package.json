@@ -25,7 +25,7 @@
     "@tauri-apps/plugin-dialog": "^2.4.0",
     "@tauri-apps/plugin-opener": "^2",
     "axios": "^1.12.2",
-    "cap-store-api-def": "^1.0.24",
+    "cap-store-api-def": "^1.0.26",
     "ionicons": "^8.0.13",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

@@ -22,6 +22,7 @@ let projectStore: MockProject[] = [
         name: 'IoT 温湿度モニタ',
         summary: '倉庫内の温度と湿度を遠隔監視するプロジェクト。',
         status: 'planning',
+        isDeleted: false,
         description: 'BLE センサーノードとクラウドダッシュボードを組み合わせた監視システム。',
         tag: 'IoT',
         imgUrls: [
@@ -70,14 +71,33 @@ let projectStore: MockProject[] = [
                 supplier: undefined
             }
         ]
+    },
+    {
+        id: 'P-002',
+        name: 'DrinkMeter',
+        summary: '削除された概要',
+        status: 'planning',
+        isDeleted: true,
+        createdAt: new Date(initialProjectTimestamp),
+        lastModified: new Date(initialProjectTimestamp),
     }
 ];
 
 export const projectHandlers = [
-    http.get('/projects', () => {
+    http.get('/projects', ({ request }) => {
         const totalCount = projectStore.length;
+        let list: Project[] = [];
+        const url = new URL(request.url);
+        const includedDeleted = url.searchParams.get("includedDeleted");
+
+        if (includedDeleted === 'true') {
+            list = projectStore;
+        } else {
+            list = projectStore.filter(x => x.isDeleted === false);
+        }
+
         return HttpResponse.json<FetchProjectsResponse>({
-            data: projectStore,
+            data: list,
             pageIndex: 1,
             pageSize: totalCount,
             totalPages: 1,
@@ -113,6 +133,7 @@ export const projectHandlers = [
             name: body.name,
             summary: body.summary,
             status: 'planning',
+            isDeleted: false,
             description: body.description,
             tag: body.tag,
             imgUrls: body.imgUrls?.map((img) => ({
