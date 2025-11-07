@@ -1,8 +1,8 @@
 [package]
 name = "cap-store-app"
-version = "0.3.1"
-description = "A Tauri App"
-authors = ["you"]
+version = "0.3.2"
+description = "電子部品・プロジェクト管理アプリ"
+authors = ["george"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
