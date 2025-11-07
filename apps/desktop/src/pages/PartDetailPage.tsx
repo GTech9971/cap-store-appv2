@@ -28,7 +28,6 @@ import {
     IonToolbar,
     useIonAlert
 } from "@ionic/react"
-import { useOktaAuth } from "@okta/okta-react"
 import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
 import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -117,7 +116,7 @@ export const PartDetailPage = () => {
 
 
     // ダイアログ系
-    const [handleConfirm] = useConfirmUtils();
+    const { handleConfirm } = useConfirmUtils();
     const [presentAlert] = useIonAlert();
 
     const handleSave = useCallback(async () => {

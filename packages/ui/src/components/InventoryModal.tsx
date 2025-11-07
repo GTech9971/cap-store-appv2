@@ -61,7 +61,7 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
     }, [fetchInventoryData])
 
     // 確認ダイアログ
-    const [handleConfirm] = useConfirmUtils();
+    const { handleConfirm } = useConfirmUtils();
 
 
     /**
