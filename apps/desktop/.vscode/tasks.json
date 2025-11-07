@@ -39,6 +39,16 @@
                 "--mode",
                 "staging-debug"
             ],
+            "windows": {
+                "args": [
+                    "run",
+                    "dev",
+                    "--",
+                    "--",
+                    "--mode",
+                    "staging-debug"
+                ]
+            },
             "problemMatcher": {
                 "owner": "custom",
                 "pattern": {
