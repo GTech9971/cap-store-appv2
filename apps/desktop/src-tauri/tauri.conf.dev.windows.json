@@ -20,11 +20,11 @@
         "security": {
             "csp": {
                 "default-src": "'self' asset: customprotocol:",
-                "connect-src": "'self' https://dev-75695150.okta.com http://localhost:1420 ipc: http://ipc.localhost",
+                "connect-src": "'self' https://integrator-3843898.okta.com http://localhost:1420 ipc: http://ipc.localhost",
                 "img-src": "'self' https://ionicframework.com  https://akizukidenshi.com https://www.etechnophiles.com https://mm.digikey.com https://eleshop.jp",
                 "script-src": "'self'",
                 "style-src": "'unsafe-inline' 'self'",
-                "frame-src": "'self' https://dev-75695150.okta.com"
+                "frame-src": "'self' https://integrator-3843898.okta.com"
             }
         }
     },
