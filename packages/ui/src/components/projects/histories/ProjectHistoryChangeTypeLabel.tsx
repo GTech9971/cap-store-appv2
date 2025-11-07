@@ -22,6 +22,7 @@ export const ProjectHistoryChangeTypeLabel: React.FC<Prop> = ({
         return [
             { value: 'created', label: '新規登録', color: 'primary' },
             { value: 'deleted', label: '削除', color: 'danger' },
+            { value: 'undeleted', label: '削除取消', color: 'success' },
             { value: 'restored', label: '復元', color: 'secondary' },
             { value: 'updated', label: '更新', color: 'success' }
         ];
