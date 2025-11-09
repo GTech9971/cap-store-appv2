@@ -22,7 +22,7 @@ import ImageCarousel from "../../components/image-carousels/ImageCarousel"
 import { Editable } from "../../components/editable/Editable"
 
 import { timeOutline, createOutline, pricetagOutline } from "ionicons/icons"
-import { ExternalLinkCard } from "../../components/external-link/ExternalLinkCard"
+import { ExternalLinkItem } from "../../components/external-link/ExternalLinkItem"
 
 export const ProjectMainPage = () => {
     return (
@@ -116,7 +116,7 @@ export const ProjectMainPage = () => {
                             <IonRow style={{ marginTop: '10px' }}>
                                 <IonList style={{ overflow: 'scroll', height: '20vh' }}>
 
-                                    <ExternalLinkCard
+                                    <ExternalLinkItem
                                         link="http://localhost:6006/?path=/story/components-externallinkcard--default"
                                         title="ストーリーブック"
                                         onEditedLink={() => { }}
@@ -125,7 +125,7 @@ export const ProjectMainPage = () => {
                                         onEditedTag={() => { }}
                                     />
 
-                                    <ExternalLinkCard
+                                    <ExternalLinkItem
                                         link="http://localhost:6006/?path=/story/components-externallinkcard--default"
                                         title="ストーリーブック"
                                         onEditedLink={() => { }}
@@ -134,7 +134,7 @@ export const ProjectMainPage = () => {
                                         onEditedTag={() => { }}
                                     />
 
-                                    <ExternalLinkCard
+                                    <ExternalLinkItem
                                         link="http://localhost:6006/?path=/story/components-externallinkcard--default"
                                         title="ストーリーブック"
                                         onEditedLink={() => { }}

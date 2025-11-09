@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ExternalLinkCard } from './ExternalLinkCard';
+import { ExternalLinkItem } from './ExternalLinkItem';
 
 
-const meta: Meta<typeof ExternalLinkCard> = {
-    title: 'Components/ExternalLinkCard',
-    component: ExternalLinkCard,
+const meta: Meta<typeof ExternalLinkItem> = {
+    title: 'Components/ExternalLinks/Item',
+    component: ExternalLinkItem,
     parameters: {
         layout: 'centered',
     },
     tags: ['autodocs'],
 
-} satisfies Meta<typeof ExternalLinkCard>;
+} satisfies Meta<typeof ExternalLinkItem>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

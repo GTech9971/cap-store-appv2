@@ -22,8 +22,6 @@ import {
 } from "@ionic/react"
 import { pricetagOutline } from "ionicons/icons"
 import { Editable } from "ui/components/editable/Editable"
-import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard"
-import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
 import ImageLinkCarousel from "ui/components/image-carousels/ImageLinkCarousel";
 import ImageLinkCarouselSelectModal from "ui/components/image-carousels/ImageLinkCarouselSelectModal";
 import { ProjectExternalLink, RegistryProjectRequest } from "cap-store-api-def";
@@ -36,6 +34,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthState } from "@/hooks/useAuthState";
 import { ProjectStatusBadge } from "ui/components/projects/ProjectStatusBadge";
 import { EmptyExternalLink } from "ui/types/EmptyExternalLink"
+import { ExternalLinkList } from "ui/components/external-link/ExternalLinkList";
 
 export const NewProjectPage = () => {
 
@@ -126,6 +125,21 @@ export const NewProjectPage = () => {
             const next = { ...prev };
             delete next.externalLinks;
             return next;
+        });
+        setSubmitError(null);
+    }, []);
+
+    //外部リンク追加
+    const handleExternalLinkAdd = useCallback(async () => {
+        setForm((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                externalLinks: [
+                    ...prev.externalLinks ?? [],
+                    EmptyExternalLink,
+                ]
+            };
         });
         setSubmitError(null);
     }, []);
@@ -227,7 +241,7 @@ export const NewProjectPage = () => {
                     )}
 
                     <IonRow>
-                        <IonCol size="4">
+                        <IonCol size="3">
                             <IonList lines="none" inset color="light">
                                 <IonItem>
                                     <IonInput
@@ -297,7 +311,7 @@ export const NewProjectPage = () => {
                             </IonList>
                         </IonCol>
 
-                        <IonCol size="3">
+                        <IonCol size="4">
                             <IonList inset color="light">
                                 <IonItem>
                                     <ProjectStatusBadge status='planning' />
@@ -311,36 +325,16 @@ export const NewProjectPage = () => {
                                 </IonItem>
                             </IonList>
 
+                            <ExternalLinkList
+                                links={form.externalLinks ?? []}
+                                onEditedLink={(index, value) => handleExternalLinkChange(index, { link: value.trim() })}
+                                onEditedTitle={(index, value) => handleExternalLinkChange(index, { title: value?.trim() })}
+                                onEditedTag={(index, value) => handleExternalLinkChange(index, { tag: value?.trim() })}
+                                onAddEmptyLink={handleExternalLinkAdd}
+                                onDelete={handleExternalLinkDelete} />
+
                         </IonCol>
 
-                    </IonRow>
-
-                    <IonRow>
-                        {errors.externalLinks && (
-                            <IonCol size="12">
-                                <IonNote color='danger' style={errorText}>{errors.externalLinks}</IonNote>
-                            </IonCol>
-                        )}
-
-                        <IonCol size="auto">
-                            <AddExternalLinkCard
-                                onClick={() => {
-                                    handleFormChange('externalLinks', [...form.externalLinks ?? [], EmptyExternalLink]);
-                                }}
-                            />
-                        </IonCol>
-
-                        {(form.externalLinks ?? []).map((link, index) => (
-                            <IonCol size="auto" key={`${link.link}-${index}`}>
-                                <ExternalLinkCard
-                                    {...link}
-                                    onEditedLink={value => handleExternalLinkChange(index, { link: value.trim() })}
-                                    onEditedTag={value => handleExternalLinkChange(index, { tag: value.trim() || undefined })}
-                                    onEditedTitle={value => handleExternalLinkChange(index, { title: value.trim() || undefined })}
-                                    onDelete={() => handleExternalLinkDelete(index)}
-                                />
-                            </IonCol>
-                        ))}
                     </IonRow>
 
                 </IonGrid>

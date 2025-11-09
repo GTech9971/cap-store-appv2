@@ -1,7 +1,7 @@
 .change-message {
     display: block;
     text-overflow: ellipsis;
-    max-width: calc(100%-60px);
+    max-width: calc(100% - 60px);
     overflow: hidden;
     white-space: nowrap;
 }
@@ -9,7 +9,7 @@
 .change-fields {
     display: block;
     text-overflow: ellipsis;
-    max-width: calc(100%-60px);
+    max-width: calc(100% - 60px);
     overflow: hidden;
     white-space: nowrap;
 }

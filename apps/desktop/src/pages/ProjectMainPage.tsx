@@ -29,8 +29,6 @@ import { useConfirmUtils } from "ui/utils/alertUtils";
 import ImageLinkCarousel from "ui/components/image-carousels/ImageLinkCarousel";
 import ImageLinkCarouselSelectModal from "ui/components/image-carousels/ImageLinkCarouselSelectModal";
 import { Editable } from "ui/components/editable/Editable";
-import { ExternalLinkCard } from "ui/components/external-link/ExternalLinkCard";
-import { AddExternalLinkCard } from "ui/components/external-link/AddExternalLinkCard";
 import { ProjectHistoryList } from "ui/components/projects/histories/ProjectHistoryList"
 import { ProjectHistoryDiff } from "ui/components/projects/histories/ProjectHistoryDiff";
 import {
@@ -54,6 +52,7 @@ import { EmptyExternalLink } from "ui/types/EmptyExternalLink";
 import { EmptyBom } from 'ui/types/EmptyBom'
 import { useProjectMainPageUtils } from "./useProjectMainPageUtils";
 import './ProjectMainPage.css';
+import { ExternalLinkList } from "ui/components/external-link/ExternalLinkList";
 
 
 type ProjectFormState = {
@@ -604,7 +603,7 @@ export const ProjectMainPage = () => {
 
                             <IonRow>
                                 {/* １列 */}
-                                <IonCol size="4">
+                                <IonCol size="3">
                                     <IonList inset lines="none" color="light">
                                         <IonItem>
                                             <IonLabel position="stacked">プロジェクト名</IonLabel>
@@ -668,7 +667,7 @@ export const ProjectMainPage = () => {
                                 </IonCol>
 
                                 {/* 3列 */}
-                                <IonCol size="3">
+                                <IonCol size="4">
                                     <ProjectMetaDataPanel
                                         project={project}
                                         status={form.status}
@@ -676,26 +675,16 @@ export const ProjectMainPage = () => {
                                         tag={form.tag}
                                         onChangeTag={value => handleFormChange('tag', value)}
                                         history={history} />
-                                </IonCol>
-                            </IonRow>
 
-                            <IonRow>
-                                <IonCol size="auto">
-                                    <ProjectHistoryDiff history={history} field='externalLinks'>
-                                        <AddExternalLinkCard onClick={handleExternalLinkAdd} />
-                                    </ProjectHistoryDiff>
-                                </IonCol>
+                                    <ExternalLinkList
+                                        links={form.externalLinks}
+                                        onEditedLink={(index, value) => handleExternalLinkChange(index, { link: value.trim() })}
+                                        onEditedTitle={(index, value) => handleExternalLinkChange(index, { title: value?.trim() })}
+                                        onEditedTag={(index, value) => handleExternalLinkChange(index, { tag: value?.trim() })}
+                                        onAddEmptyLink={handleExternalLinkAdd}
+                                        onDelete={handleExternalLinkDelete} />
 
-                                {(form.externalLinks ?? []).map((link, index) => (
-                                    <IonCol size="auto" key={`${index}-${link.link}-${link.title ?? ''}-${link.tag ?? ''}`}>
-                                        <ExternalLinkCard
-                                            {...link}
-                                            onEditedLink={(value) => handleExternalLinkChange(index, { link: value.trim() })}
-                                            onEditedTitle={(value) => handleExternalLinkChange(index, { title: value.trim() || undefined })}
-                                            onEditedTag={(value) => handleExternalLinkChange(index, { tag: value.trim() || undefined })}
-                                            onDelete={() => handleExternalLinkDelete(index)} />
-                                    </IonCol>
-                                ))}
+                                </IonCol>
                             </IonRow>
 
                             <IonRow>
