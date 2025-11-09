@@ -83,6 +83,20 @@
                 "install",
                 "cap-store-api-def@latest"
             ]
+        },
+        {
+            "label": "version:set",
+            "detail": "package.json,tauri.conf.json,cargo.tomlのバージョンを置き換える",
+            "type": "shell",
+            "command": "node",
+            "args": [
+                "./scripts/set-version.mjs",
+                "${input:version}"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
         }
     ],
     "inputs": [
@@ -97,6 +111,12 @@
             "type": "command",
             "command": "workbench.action.tasks.terminate",
             "args": "ui:stg:start"
+        },
+        {
+            "id": "version",
+            "type": "promptString",
+            "description": "新しいバージョン (例: 0.3.2 または v0.3.2)",
+            "default": "0.0.0"
         }
     ],
 }
