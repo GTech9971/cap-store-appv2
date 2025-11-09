@@ -42,7 +42,6 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
     const totalQuantity = useMemo(() => bomList.reduce((sum, bom) => sum + (bom.quantity ?? 0), 0), [bomList]);
 
     const [components, setComponents] = useState<PartsComponent[]>([]);
-    const [componentIdList, setComponentIdList] = useState<string[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
 
     const fetchComponents = useCallback(async () => {
@@ -54,8 +53,7 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
             };
             const response = await componentApi.fetchComponents(request);
             if (response?.data) {
-                setComponents(response.data);
-                setComponentIdList(response.data.map(x => x.id));
+              setComponents(response.data);
             }
         } catch (error) {
             const { message, status } = await parseApiError(error);
@@ -122,9 +120,9 @@ export const ProjectBomList: React.FC<ProjectBomListProps> = ({
                                         value={bom.componentId}
                                         onIonChange={(e) => onChange(index, { componentId: e.detail.value })}
                                         placeholder="選択してください">
-                                        {componentIdList.map(id => (
-                                            <IonSelectOption key={id} value={id}>
-                                                {id}
+                                        {components.map(c => (
+                                            <IonSelectOption key={c.id} value={c.id}>
+                                                {c.name}
                                             </IonSelectOption>
                                         ))}
                                     </IonSelect>
