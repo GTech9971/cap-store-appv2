@@ -1,6 +1,6 @@
 [package]
 name = "cap-store-app"
-version = "0.3.2"
+version = "0.3.3"
 description = "電子部品・プロジェクト管理アプリ"
 authors = ["george"]
 edition = "2021"
