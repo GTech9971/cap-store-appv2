@@ -33,7 +33,8 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    "../../packages/ui/src"
   ],
   "references": [
     {

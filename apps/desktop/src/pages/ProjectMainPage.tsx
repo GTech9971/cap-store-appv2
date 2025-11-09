@@ -53,6 +53,7 @@ import { ProjectMetaDataPanel } from "./projects/ProjectMetaDataPanel";
 import { EmptyExternalLink } from "ui/types/EmptyExternalLink";
 import { EmptyBom } from 'ui/types/EmptyBom'
 import { useProjectMainPageUtils } from "./useProjectMainPageUtils";
+import './ProjectMainPage.css';
 
 
 type ProjectFormState = {
@@ -83,7 +84,7 @@ export const ProjectMainPage = () => {
     // メニュー
     const [hiddenMenu, setHiddenMenu] = useState<boolean>(true);
 
-    const { projectApi, projectHistoryApi, componentApi, updateProjectApi, downloadProjectPdf } = useApiClint();
+    const { projectApi, projectHistoryApi, componentApi, categoryApi, updateProjectApi, downloadProjectPdf } = useApiClint();
     const { handleConfirm, handleConfirmWithInput } = useConfirmUtils();
     const [presentAlert] = useIonAlert();
     const [presentToast] = useIonToast();
@@ -484,7 +485,7 @@ export const ProjectMainPage = () => {
 
 
     return (
-        <IonSplitPane when="xs" contentId="main" disabled={hiddenMenu}>
+        <IonSplitPane className="history-pane" when="xs" contentId="main" disabled={hiddenMenu}>
             <IonMenu contentId="main">
 
                 <IonHeader>
@@ -701,6 +702,7 @@ export const ProjectMainPage = () => {
                                 <IonCol>
                                     <ProjectBomList
                                         componentApi={componentApi}
+                                        categoryApi={categoryApi}
                                         bomList={form.bomList}
                                         onAdd={handleBomAdd}
                                         onChange={handleBomChange}
