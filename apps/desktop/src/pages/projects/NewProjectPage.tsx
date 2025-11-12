@@ -29,12 +29,12 @@ import { CSSProperties, useCallback, useMemo, useState } from "react";
 import z from "zod";
 import { useConfirmUtils } from "ui/utils/alertUtils";
 import { useApiClint } from "@/api/useApiClient";
-import { parseApiError } from "@/utils/parseApiError";
 import { useNavigate } from "react-router-dom";
 import { useAuthState } from "@/hooks/useAuthState";
 import { ProjectStatusBadge } from "ui/components/projects/ProjectStatusBadge";
 import { EmptyExternalLink } from "ui/types/EmptyExternalLink"
 import { ExternalLinkList } from "ui/components/external-link/ExternalLinkList";
+import { parseApiError } from "ui/utils/parseApiError";
 
 export const NewProjectPage = () => {
 

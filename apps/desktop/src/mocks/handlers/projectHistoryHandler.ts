@@ -1,10 +1,8 @@
 import { http, HttpResponse } from 'msw';
 import type {
-    FetchProjectDiffResponse,
     FetchProjectHistoriesResponse,
     FetchProjectHistoryResponse,
     Project,
-    ProjectDiff,
     ProjectHistory,
     ProjectHistoryChangeType,
     RevertProjectResponse
@@ -36,6 +34,7 @@ const createProjectSnapshot = (projectId: string): MockProjectSnapshot => ({
     name: 'IoT 温湿度モニタ',
     summary: '倉庫内の温度と湿度を遠隔監視するプロジェクト。',
     status: 'processing',
+    isDeleted: false,
     description: 'BLE センサーノードとクラウドダッシュボードを組み合わせた監視システム。',
     tag: 'IoT',
     imgUrls: [
@@ -126,42 +125,6 @@ const getHistories = (projectId: string): MockProjectHistory[] =>
     historyStore[projectId]?.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) ?? [];
 const findHistory = (projectId: string, historyId: string): MockProjectHistory | undefined =>
     historyStore[projectId]?.find((history) => history.historyId === historyId);
-const buildDiff = (projectId: string, historyId: string): ProjectDiff | undefined => {
-    const timeline = historyStore[projectId];
-    if (!timeline) {
-        return undefined;
-    }
-    const orderedTimeline = [...timeline].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-    const index = orderedTimeline.findIndex((history) => history.historyId === historyId);
-    if (index === -1) {
-        return undefined;
-    }
-    const base = orderedTimeline[index];
-    const previous = index > 0 ? orderedTimeline[index - 1] : undefined;
-    const changedFields = base.changedFields ?? [];
-    const op: 'add' | 'remove' | 'replace' =
-        base.changeType === 'created'
-            ? 'add'
-            : base.changeType === 'deleted'
-                ? 'remove'
-                : 'replace';
-    const patch = changedFields.map((field) => ({
-        op,
-        path: `/${field}`,
-        value: op === 'remove' ? undefined : `mock-${field}-value`,
-    }));
-    return {
-        baseHistoryId: base.historyId,
-        previousHistoryId: previous?.historyId,
-        patch: patch.length > 0 ? patch : undefined,
-        summary: {
-            totalChanges: changedFields.length,
-            added: op === 'add' ? changedFields.length : 0,
-            removed: op === 'remove' ? changedFields.length : 0,
-            replaced: op === 'replace' ? changedFields.length : 0,
-        },
-    };
-};
 const buildRevertedProject = (projectId: string, history: MockProjectHistory): Project => {
     const baseSnapshot = projectSnapshots[projectId] ?? createProjectSnapshot(projectId);
     return {
@@ -209,21 +172,6 @@ export const projectHistoryHandlers = [
         }
         return HttpResponse.json<FetchProjectHistoryResponse>({
             data: cloneHistory(history),
-            errors: [],
-        }, { status: 200 });
-    }),
-    http.get('/projects/:projectId/histories/:historyId\\:diff', ({ params }) => {
-        const projectId = params.projectId as string;
-        const historyId = params.historyId as string;
-        const diff = buildDiff(projectId, historyId);
-        if (!diff) {
-            return HttpResponse.json<FetchProjectDiffResponse>({
-                data: undefined,
-                errors: [],
-            }, { status: 404 });
-        }
-        return HttpResponse.json<FetchProjectDiffResponse>({
-            data: diff,
             errors: [],
         }, { status: 200 });
     }),

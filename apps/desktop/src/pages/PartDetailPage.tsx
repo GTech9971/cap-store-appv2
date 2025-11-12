@@ -1,6 +1,5 @@
 import { useApiClint } from "@/api/useApiClient"
 import { useAuthState } from "@/hooks/useAuthState"
-import { parseApiError } from "@/utils/parseApiError"
 import {
     IonBackButton,
     IonButton,
@@ -37,6 +36,7 @@ import ImageCarousel from "ui/components/image-carousels/ImageCarousel"
 import ImageCarouselSelectModal from "ui/components/image-carousels/ImageCarouselSelectModal"
 import { InventoryModal } from "ui/components/InventoryModal";
 import { useConfirmUtils } from "ui/utils/alertUtils"
+import { parseApiError } from "ui/utils/parseApiError"
 
 export const PartDetailPage = () => {
     // URL

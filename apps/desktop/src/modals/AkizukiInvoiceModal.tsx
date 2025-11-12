@@ -23,11 +23,11 @@ import { InvoiceItem } from "@/components/InvoiceItem";
 import { useApiClint } from "@/api/useApiClient";
 import { useCallback, useEffect, useState } from "react";
 import { FetchComponentByAkizukiCatalogIdData, FetchComponentByAkizukiCatalogIdRequest, Maker, RegistryComponentRequest } from "cap-store-api-def";
-import { parseApiError } from "@/utils/parseApiError";
 import { useConfirmUtils } from "ui/utils/alertUtils";
 import { clipboardOutline, checkmarkOutline } from 'ionicons/icons'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { Invoice } from "@/types/invoices/invoice";
+import { parseApiError } from "ui/utils/parseApiError";
 
 type CustomItem = Item & { isUnRegistry: boolean, data?: FetchComponentByAkizukiCatalogIdData };
 
@@ -50,7 +50,7 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
     const [makers, setMakers] = useState<Maker[]>([]);
 
     // ダイアログ系
-    const [handleConfirm] = useConfirmUtils();
+    const { handleConfirm } = useConfirmUtils();
     const [presentAlert] = useIonAlert();
 
     // クリップボード

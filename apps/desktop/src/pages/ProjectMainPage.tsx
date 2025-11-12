@@ -24,7 +24,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApiClint } from "@/api/useApiClient";
-import { parseApiError } from "@/utils/parseApiError";
 import { useConfirmUtils } from "ui/utils/alertUtils";
 import ImageLinkCarousel from "ui/components/image-carousels/ImageLinkCarousel";
 import ImageLinkCarouselSelectModal from "ui/components/image-carousels/ImageLinkCarouselSelectModal";
@@ -53,6 +52,7 @@ import { EmptyBom } from 'ui/types/EmptyBom'
 import { useProjectMainPageUtils } from "./useProjectMainPageUtils";
 import './ProjectMainPage.css';
 import { ExternalLinkList } from "ui/components/external-link/ExternalLinkList";
+import { parseApiError } from "ui/utils/parseApiError";
 
 
 type ProjectFormState = {

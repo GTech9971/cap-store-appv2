@@ -22,6 +22,7 @@ let projectStore: MockProject[] = [
         name: 'IoT 温湿度モニタ',
         summary: '倉庫内の温度と湿度を遠隔監視するプロジェクト。',
         status: 'planning',
+        isDeleted: false,
         description: 'BLE センサーノードとクラウドダッシュボードを組み合わせた監視システム。',
         tag: 'IoT',
         imgUrls: [
@@ -117,6 +118,7 @@ export const projectHandlers = [
             name: body.name,
             summary: body.summary,
             status: 'planning',
+            isDeleted: false,
             description: body.description,
             tag: body.tag,
             imgUrls: body.imgUrls?.map((img) => ({

@@ -33,7 +33,6 @@ export const Default: Story = {
     render: (args) => wrapper(<IonBadge>10</IonBadge>, args),
     args: {
         showDiff: true,
-        diffContext: '8'
     },
 };
 
@@ -41,6 +40,5 @@ export const IonCardTitleStory: Story = {
     render: (args) => wrapper(<IonCardTitle>Sample</IonCardTitle>, args),
     args: {
         showDiff: true,
-        diffContext: 'Github',
     }
 }

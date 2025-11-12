@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { IonApp } from '@ionic/react';
 
 import { RemoveInventoryForm } from './RemoveInventoryForm';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const RemoveInventoryFormWrapper = (args: any) => {
   return (
     <IonApp>

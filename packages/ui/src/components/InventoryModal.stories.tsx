@@ -1,10 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { IonButton, IonApp, IonPage } from '@ionic/react';
 
 import { InventoryModal } from './InventoryModal';
+import { Configuration, InventoriesApi } from 'cap-store-api-def';
 
 // Wrapper component to handle modal state
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const InventoryModalWrapper = (args: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,6 +43,11 @@ const meta: Meta<typeof InventoryModal> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const config: Configuration = new Configuration({
+  basePath: 'http://localhost:6006'
+});
+const inventoryApi: InventoriesApi = new InventoriesApi(config);
+
 export const Default: Story = {
   args: {
     componentId: 'C-000001',
@@ -56,30 +63,7 @@ export const WithDifferentComponent: Story = {
 export const WithManyInventoryItems: Story = {
   args: {
     componentId: 'C-000003',
-    currentStock: 1250,
-    historyData: Array.from({ length: 50 }, (_, i) => ({
-      id: i + 1,
-      changeType: Math.random() > 0.5 ? 'add' : 'remove',
-      quantity: Math.floor(Math.random() * 100) + 1,
-      remarks: [
-        '初期在庫',
-        '追加発注',
-        '製品A使用',
-        '製品B使用',
-        '在庫調整',
-        '返品処理',
-        '不良品廃棄',
-        '棚卸し調整',
-        'プロジェクトX使用',
-        'メンテナンス用',
-        '試作品製造',
-        '品質検査用',
-        '緊急発注',
-        'バックアップ在庫'
-      ][Math.floor(Math.random() * 14)],
-      executeAt: new Date(2024, 0, 1 + Math.floor(Math.random() * 365))
-    })).sort((a, b) => b.executeAt.getTime() - a.executeAt.getTime()),
-    onAddSubmit: (data) => console.log('Add submitted:', data),
-    onRemoveSubmit: (data) => console.log('Remove submitted:', data),
+    inventoryApi: inventoryApi,
+    onDidDismiss: () => { }
   },
 };
