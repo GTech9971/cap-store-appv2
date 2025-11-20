@@ -1,5 +1,8 @@
 import { type ThreeEvent } from '@react-three/fiber'
 import type { FC } from 'react'
+import { LabelOverlay } from '../LabelOverlay'
+import type { StorageByPosition } from '../../../api/locations/useFetchStoragesApi'
+
 
 const LEFT_X = -1.6
 const FW_LEFT = 2.0
@@ -12,6 +15,8 @@ const LEFT_Z_SHIFT = FD_RIGHT / 2 - FD_LEFT / 2
 type Props = {
     highlight: number | null
     onSelectShelf: (index: number) => void
+    locationName?: string | null
+    storageByPosition?: StorageByPosition
 }
 
 type FrameSegment = {
@@ -45,7 +50,10 @@ const Frame: FC = () => {
 
 export const Desk: FC<Props> = ({
     highlight,
-    onSelectShelf }) => {
+    onSelectShelf,
+    locationName,
+    storageByPosition,
+}) => {
 
     const shelfPositions = [-1.0, 1.0]
 
@@ -57,19 +65,34 @@ export const Desk: FC<Props> = ({
     return (
         <group>
             <Frame />
+            {locationName && (
+                <LabelOverlay position={[LEFT_X, FH / 2 + 0.6, LEFT_Z_SHIFT]}>
+                    {locationName}
+                </LabelOverlay>
+            )}
             {shelfPositions.map((position, idx) => {
                 const index = idx + 1
                 const isHighlighted = highlight != null && index === highlight
                 const color = isHighlighted ? '#ffcc00' : '#bbbbbb'
+                const label = storageByPosition?.[index]
                 return (
-                    <mesh
-                        key={index}
-                        position={[LEFT_X, position, LEFT_Z_SHIFT]}
-                        onClick={(event) => handleShelfClick(event, index)}
-                    >
-                        <boxGeometry args={[1.9, 0.15, FD_LEFT - 0.1]} />
-                        <meshStandardMaterial color={color} />
-                    </mesh>
+                    <group key={index}>
+                        <mesh
+                            position={[LEFT_X, position, LEFT_Z_SHIFT]}
+                            onClick={(event) => handleShelfClick(event, index)}
+                        >
+                            <boxGeometry args={[1.9, 0.15, FD_LEFT - 0.1]} />
+                            <meshStandardMaterial color={color} />
+                        </mesh>
+                        {label && (
+                            <LabelOverlay
+                                position={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
+                                padding="4px 10px"
+                            >
+                                {label}
+                            </LabelOverlay>
+                        )}
+                    </group>
                 )
             })}
         </group>

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { Location, Storage } from 'cap-store-api-def';
 import { NorthRoom } from './NorthRoom';
 
 const meta: Meta<typeof NorthRoom> = {
@@ -13,7 +14,23 @@ const meta: Meta<typeof NorthRoom> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const cabinetLocation: Location = { id: 'loc-1', name: 'キャビネット' }
+const deskLocation: Location = { id: 'loc-2', name: 'デスク' }
+
+const cabinetStorages: Storage[] = [
+    { id: 's1', name: 'Cabinet 1段', locationId: 'loc-1', positionIndex: 1 },
+    { id: 's2', name: 'Cabinet 3段', locationId: 'loc-1', positionIndex: 3 },
+]
+
+const deskStorages: Storage[] = [
+    { id: 's3', name: 'Desk 上段', locationId: 'loc-2', positionIndex: 2 },
+]
+
 export const Default: Story = {
     args: {
+        cabinetLocation,
+        deskLocation,
+        cabinetStorages,
+        deskStorages,
     },
 };

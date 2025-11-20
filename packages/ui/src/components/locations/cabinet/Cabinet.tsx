@@ -1,5 +1,7 @@
 import { type ThreeEvent } from '@react-three/fiber'
 import type { FC } from 'react'
+import { LabelOverlay } from '../LabelOverlay'
+import type { StorageByPosition } from '../../../api/locations/useFetchStoragesApi';
 
 const DRAWER_COUNT = 5;
 
@@ -13,6 +15,8 @@ const DRAWER_GAP = 0.05
 type Props = {
     highlight: number | null
     onSelectDrawer: (index: number) => void
+    locationName?: string | null
+    storageByPosition?: StorageByPosition
 }
 
 type FrameSegment = {
@@ -63,7 +67,9 @@ const DrawerHandle: FC<{
 
 export const Cabinet: FC<Props> = ({
     highlight,
-    onSelectDrawer
+    onSelectDrawer,
+    locationName,
+    storageByPosition,
 }) => {
 
     const drawerHeight = (FH - DRAWER_GAP * (DRAWER_COUNT - 1)) / DRAWER_COUNT
@@ -78,6 +84,7 @@ export const Cabinet: FC<Props> = ({
             position: [RIGHT_X, y, 0.05] as [number, number, number],
             handlePosition: [RIGHT_X, y, 0.55] as [number, number, number],
             color,
+            label: storageByPosition?.[index],
         }
     })
 
@@ -89,6 +96,11 @@ export const Cabinet: FC<Props> = ({
     return (
         <group>
             <Frame />
+            {locationName && (
+                <LabelOverlay position={[RIGHT_X, FH / 2 + 0.6, 0]}>
+                    {locationName}
+                </LabelOverlay>
+            )}
             {drawers.map((drawer) => (
                 <group key={drawer.index}>
                     <mesh
@@ -98,6 +110,18 @@ export const Cabinet: FC<Props> = ({
                         <boxGeometry args={[1.3, drawerHeight, FD_RIGHT - 0.08]} />
                         <meshStandardMaterial color={drawer.color} />
                     </mesh>
+                    {drawer.label && (
+                        <LabelOverlay
+                            position={[
+                                drawer.position[0] + 1.5,
+                                drawer.position[1],
+                                drawer.position[2] + 0.6,
+                            ]}
+                            padding="4px 10px"
+                        >
+                            {drawer.label}
+                        </LabelOverlay>
+                    )}
                     <DrawerHandle
                         position={drawer.handlePosition}
                         onClick={() => onSelectDrawer(drawer.index)}
