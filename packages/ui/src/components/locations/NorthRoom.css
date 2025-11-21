@@ -9,3 +9,7 @@
     width: 100%;
     height: 100%;
 }
+
+ion-alert {
+    z-index: 999999999;
+}

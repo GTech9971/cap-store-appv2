@@ -1,7 +1,8 @@
 import { type ThreeEvent } from '@react-three/fiber'
-import type { FC } from 'react'
+import { useState, type FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import type { StorageByPosition } from '../../../api/locations/useFetchStoragesApi';
+import { StorageInputAlert } from '../StorageInputAlert';
 
 const DRAWER_COUNT = 5;
 
@@ -88,10 +89,20 @@ export const Cabinet: FC<Props> = ({
         }
     })
 
+    const [showLabel, setShowLabel] = useState<boolean>(true);
+
     const handleDrawerClick = (event: ThreeEvent<MouseEvent>, index: number) => {
         event.stopPropagation()
         onSelectDrawer(index)
     }
+
+    const [handlePresent] = StorageInputAlert();
+
+    const handleDrawerDbClick = async (event: ThreeEvent<MouseEvent>, index: number) => {
+        console.log(index);
+        setShowLabel(false);
+        await handlePresent(index, () => { setShowLabel(true) }, locationName);
+    };
 
     return (
         <group>
@@ -106,28 +117,32 @@ export const Cabinet: FC<Props> = ({
                     <mesh
                         position={drawer.position}
                         onClick={(event) => handleDrawerClick(event, drawer.index)}
+                        onDoubleClick={(event) => handleDrawerDbClick(event, drawer.index)}
                     >
                         <boxGeometry args={[1.3, drawerHeight, FD_RIGHT - 0.08]} />
                         <meshStandardMaterial color={drawer.color} />
                     </mesh>
-                    {drawer.label && (
-                        <LabelOverlay
-                            position={[
-                                drawer.position[0] + 1.5,
-                                drawer.position[1],
-                                drawer.position[2] + 0.6,
-                            ]}
-                            padding="4px 10px"
-                        >
-                            {drawer.label}
-                        </LabelOverlay>
-                    )}
-                    <DrawerHandle
+                    {
+                        (drawer.label && showLabel) && (
+                            <LabelOverlay
+                                position={[
+                                    drawer.position[0] + 1.5,
+                                    drawer.position[1],
+                                    drawer.position[2] + 0.6,
+                                ]}
+                                padding="4px 10px"
+                            >
+                                {drawer.label}
+                            </LabelOverlay>
+                        )
+                    }
+                    < DrawerHandle
                         position={drawer.handlePosition}
                         onClick={() => onSelectDrawer(drawer.index)}
                     />
                 </group>
-            ))}
-        </group>
+            ))
+            }
+        </group >
     )
 }
