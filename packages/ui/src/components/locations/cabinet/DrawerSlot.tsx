@@ -1,6 +1,5 @@
 import { type ThreeEvent } from '@react-three/fiber'
 import type { FC } from 'react'
-import type { Storage } from 'cap-store-api-def'
 import { LabelOverlay } from '../LabelOverlay'
 import type { UiStorage } from '../types'
 

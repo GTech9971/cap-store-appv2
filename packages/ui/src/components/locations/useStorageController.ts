@@ -7,20 +7,16 @@ export type SlotKind = 'cabinet' | 'desk'
 export type MoveEndpoint = {
     kind: SlotKind
     positionIndex: number
-    location: Location | null
+    location: Location
     storage?: UiStorage
 }
 
 type Args = {
-    cabinetLocation?: Location | null
-    deskLocation?: Location | null
+    cabinetLocation: Location
+    deskLocation: Location
     cabinetStorages?: UiStorage[]
     deskStorages?: UiStorage[]
-    onCabinetDrawerSelect?: (args: MoveEndpoint) => void
-    onDeskShelfSelect?: (args: MoveEndpoint) => void
-    onEmptyCabinetSlotDoubleClick?: (args: { positionIndex: number; location: Location | null }) => void
-    onEmptyDeskSlotDoubleClick?: (args: { positionIndex: number; location: Location | null }) => void
-    onStorageMove?: (args: { from: MoveEndpoint; to: MoveEndpoint }) => void
+    onStoragesChange?: (cabinet: UiStorage[], desk: UiStorage[]) => void
 }
 
 // ストレージ配列＋移動状態を管理する最小限のフック
@@ -29,11 +25,7 @@ export const useStorageController = ({
     deskLocation,
     cabinetStorages,
     deskStorages,
-    onCabinetDrawerSelect,
-    onDeskShelfSelect,
-    onEmptyCabinetSlotDoubleClick,
-    onEmptyDeskSlotDoubleClick,
-    onStorageMove,
+    onStoragesChange,
 }: Args) => {
     const [movingFrom, setMovingFrom] = useState<MoveEndpoint | null>(null)
     const [blinkPhase, setBlinkPhase] = useState(false)
@@ -54,6 +46,12 @@ export const useStorageController = ({
     const [cabinetHighlight, setCabinetHighlight] = useState<number | null>(null)
     const [deskHighlight, setDeskHighlight] = useState<number | null>(null)
 
+    const updateStorages = (nextCab: UiStorage[], nextDesk: UiStorage[]) => {
+        setCabinetList(nextCab)
+        setDeskList(nextDesk)
+        onStoragesChange?.(nextCab, nextDesk)
+    }
+
     const findStorage = (kind: SlotKind, index: number) =>
         (kind === 'cabinet' ? cabinetList : deskList).find((s) => s.positionIndex === index)
 
@@ -66,16 +64,14 @@ export const useStorageController = ({
                 positionIndex: to.positionIndex,
                 locationId: to.location?.id ?? movingStorage.locationId,
             }
-            setCabinetList((prev) => {
-                const filtered = prev.filter((s) => s.id !== movingStorage.id)
-                return to.kind === 'cabinet' ? [...filtered, updated] : filtered
-            })
-            setDeskList((prev) => {
-                const filtered = prev.filter((s) => s.id !== movingStorage.id)
-                return to.kind === 'desk' ? [...filtered, updated] : filtered
-            })
+            const nextCabinet = to.kind === 'cabinet'
+                ? [...cabinetList.filter((s) => s.id !== movingStorage.id), updated]
+                : cabinetList.filter((s) => s.id !== movingStorage.id)
+            const nextDesk = to.kind === 'desk'
+                ? [...deskList.filter((s) => s.id !== movingStorage.id), updated]
+                : deskList.filter((s) => s.id !== movingStorage.id)
+            updateStorages(nextCabinet, nextDesk)
         }
-        onStorageMove?.({ from: movingFrom, to })
         setMovingFrom(null)
         setCabinetHighlight(to.kind === 'cabinet' ? to.positionIndex : null)
         setDeskHighlight(to.kind === 'desk' ? to.positionIndex : null)
@@ -83,7 +79,7 @@ export const useStorageController = ({
 
     // スロット単位のクリック: 移動中ならドロップ、通常は選択イベント
     const handleSelect = (kind: SlotKind, index: number) => {
-        const location = kind === 'cabinet' ? cabinetLocation ?? null : deskLocation ?? null
+        const location = kind === 'cabinet' ? cabinetLocation : deskLocation
         const matchedStorage = findStorage(kind, index)
 
         if (movingFrom) {
@@ -94,17 +90,15 @@ export const useStorageController = ({
         if (kind === 'cabinet') {
             setCabinetHighlight(index)
             setDeskHighlight(null)
-            onCabinetDrawerSelect?.({ kind, positionIndex: index, location, storage: matchedStorage })
         } else {
             setDeskHighlight(index)
             setCabinetHighlight(null)
-            onDeskShelfSelect?.({ kind, positionIndex: index, location, storage: matchedStorage })
         }
     }
 
     // スロット単位のダブルクリック: 既存なら移動開始、空きなら新規登録イベント
     const handleDoubleClick = (kind: SlotKind, index: number) => {
-        const location = kind === 'cabinet' ? cabinetLocation ?? null : deskLocation ?? null
+        const location = kind === 'cabinet' ? cabinetLocation : deskLocation
         const matchedStorage = findStorage(kind, index)
         if (matchedStorage) {
             setMovingFrom({ kind, positionIndex: index, location, storage: matchedStorage })
@@ -118,10 +112,25 @@ export const useStorageController = ({
             return
         }
 
+        // 空スロットの登録は呼び出し側でハンドリング
+    }
+
+    const addStorage = (kind: SlotKind, index: number, name: string, location?: Location) => {
+        const targetLocation = location ?? (kind === 'cabinet' ? cabinetLocation : deskLocation)
+        const newStorage: UiStorage = {
+            id: null!,
+            name,
+            positionIndex: index,
+            locationId: targetLocation?.id,
+        }
         if (kind === 'cabinet') {
-            onEmptyCabinetSlotDoubleClick?.({ positionIndex: index, location })
+            updateStorages([...cabinetList.filter((s) => s.positionIndex !== index), newStorage], deskList)
+            setCabinetHighlight(index)
+            setDeskHighlight(null)
         } else {
-            onEmptyDeskSlotDoubleClick?.({ positionIndex: index, location })
+            updateStorages(cabinetList, [...deskList.filter((s) => s.positionIndex !== index), newStorage])
+            setDeskHighlight(index)
+            setCabinetHighlight(null)
         }
     }
 
@@ -146,5 +155,6 @@ export const useStorageController = ({
         blinkPhase,
         handleSelect,
         handleDoubleClick,
+        addStorage,
     }
 }

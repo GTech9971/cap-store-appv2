@@ -1,49 +1,19 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import type { Location, Storage } from 'cap-store-api-def'
-import type { FC } from 'react'
+import { useMemo, useState, type FC } from 'react'
 import { Cabinet } from './cabinet/Cabinet'
 import { Desk } from './desk/Desk'
 import { useStorageController } from './useStorageController'
+import { StorageCreateAlert } from './StorageCreateAlert'
 import './NorthRoom.css'
 
 type Props = {
-    cabinetLocation?: Location | null
-    deskLocation?: Location | null
+    cabinetLocation: Location
+    deskLocation: Location
     cabinetStorages?: Storage[]
     deskStorages?: Storage[]
-    onCabinetDrawerSelect?: (args: {
-        positionIndex: number
-        location: Location | null
-        storage?: Storage
-    }) => void
-    onDeskShelfSelect?: (args: {
-        positionIndex: number
-        location: Location | null
-        storage?: Storage
-    }) => void
-    onEmptyCabinetSlotDoubleClick?: (args: {
-        positionIndex: number
-        location: Location | null
-    }) => void
-    onEmptyDeskSlotDoubleClick?: (args: {
-        positionIndex: number
-        location: Location | null
-    }) => void
-    onStorageMove?: (args: {
-        from: {
-            kind: 'cabinet' | 'desk'
-            positionIndex: number
-            location: Location | null
-            storage?: Storage
-        },
-        to: {
-            kind: 'cabinet' | 'desk'
-            positionIndex: number
-            location: Location | null
-            storage?: Storage
-        },
-    }) => void
+    onStoragesChange?: (cabinet: Storage[], desk: Storage[]) => void
 }
 
 export const NorthRoom: FC<Props> = ({
@@ -51,12 +21,20 @@ export const NorthRoom: FC<Props> = ({
     deskLocation,
     cabinetStorages,
     deskStorages,
-    onCabinetDrawerSelect,
-    onDeskShelfSelect,
-    onEmptyCabinetSlotDoubleClick,
-    onEmptyDeskSlotDoubleClick,
-    onStorageMove,
+    onStoragesChange,
 }) => {
+    const [alertOpen, setAlertOpen] = useState(false)
+    const [pendingSlot, setPendingSlot] = useState<{ kind: 'cabinet' | 'desk'; index: number } | null>(null)
+
+    const handleCreateRequest = (kind: 'cabinet' | 'desk', index: number, hasStorage: boolean) => {
+        if (hasStorage) {
+            handleDoubleClick(kind, index)
+            return
+        }
+        setPendingSlot({ kind, index })
+        setAlertOpen(true)
+    }
+
     const {
         cabinetHighlight,
         deskHighlight,
@@ -66,28 +44,41 @@ export const NorthRoom: FC<Props> = ({
         movingFrom,
         handleSelect,
         handleDoubleClick,
+        addStorage,
     } = useStorageController({
         cabinetLocation,
         deskLocation,
         cabinetStorages,
         deskStorages,
-        onCabinetDrawerSelect: (args) => onCabinetDrawerSelect?.({
-            positionIndex: args.positionIndex,
-            location: args.location,
-            storage: args.storage,
-        }),
-        onDeskShelfSelect: (args) => onDeskShelfSelect?.({
-            positionIndex: args.positionIndex,
-            location: args.location,
-            storage: args.storage,
-        }),
-        onEmptyCabinetSlotDoubleClick,
-        onEmptyDeskSlotDoubleClick,
-        onStorageMove,
+        onStoragesChange,
     })
+
+    const handleCancelAlert = () => {
+        setPendingSlot(null)
+        setAlertOpen(false)
+    }
+
+    const hasStorageAt = useMemo(
+        () => ({
+            cabinet: (index: number) => cabinetStorageState.some((s) => s.positionIndex === index),
+            desk: (index: number) => deskStorageState.some((s) => s.positionIndex === index),
+        }),
+        [cabinetStorageState, deskStorageState],
+    )
 
     return (
         <div className="app">
+            <StorageCreateAlert
+                isOpen={alertOpen}
+                onConfirm={(name) => {
+                    if (!pendingSlot) return
+                    const location = pendingSlot.kind === 'cabinet' ? cabinetLocation : deskLocation
+                    addStorage(pendingSlot.kind, pendingSlot.index, name, location)
+                    setPendingSlot(null)
+                    setAlertOpen(false)
+                }}
+                onCancel={handleCancelAlert}
+            />
             <Canvas
                 className="canvas-container"
                 camera={{ fov: 60, position: [6, 4, 12] }}
@@ -100,17 +91,17 @@ export const NorthRoom: FC<Props> = ({
                 <Desk
                     highlight={deskHighlight}
                     onSelectShelf={(index) => handleSelect('desk', index)}
-                    onSlotDoubleClick={(index) => handleDoubleClick('desk', index)}
                     locationName={deskLocation?.name}
                     storages={deskStorageState}
                     movingFromKind={movingFrom?.kind ?? null}
                     movingFromIndex={movingFrom?.kind === 'desk' ? movingFrom.positionIndex : null}
                     blinkPhase={blinkPhase}
+                    onSlotDoubleClick={(index) => handleCreateRequest('desk', index, hasStorageAt.desk(index))}
                 />
                 <Cabinet
                     highlight={cabinetHighlight}
                     onSelectDrawer={(index) => handleSelect('cabinet', index)}
-                    onSlotDoubleClick={(index) => handleDoubleClick('cabinet', index)}
+                    onSlotDoubleClick={(index) => handleCreateRequest('cabinet', index, hasStorageAt.cabinet(index))}
                     locationName={cabinetLocation?.name}
                     storages={cabinetStorageState}
                     movingFromKind={movingFrom?.kind ?? null}

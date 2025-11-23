@@ -16,7 +16,7 @@ type Props = {
     highlight: number | null
     onSelectShelf: (index: number) => void
     onSlotDoubleClick?: (index: number) => void
-    locationName?: string | null
+    locationName: string
     storages?: UiStorage[]
     movingFromKind?: 'cabinet' | 'desk' | null
     movingFromIndex?: number | null
@@ -68,11 +68,10 @@ export const Desk: FC<Props> = ({
     return (
         <group>
             <Frame />
-            {locationName && (
-                <LabelOverlay position={[LEFT_X, FH / 2 + 0.6, LEFT_Z_SHIFT]}>
-                    {locationName}
-                </LabelOverlay>
-            )}
+            <LabelOverlay position={[LEFT_X, FH / 2 + 0.6, LEFT_Z_SHIFT]}>
+                {locationName}
+            </LabelOverlay>
+
             {shelfPositions.map((position, idx) => {
                 const index = idx + 1
                 const slotStorages = (storages ?? []).filter((s) => s.positionIndex === index)

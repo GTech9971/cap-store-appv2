@@ -16,7 +16,7 @@ type Props = {
     highlight: number | null
     onSelectDrawer: (index: number) => void
     onSlotDoubleClick?: (index: number) => void
-    locationName?: string | null
+    locationName: string
     storages?: UiStorage[]
     movingFromKind?: 'cabinet' | 'desk' | null
     movingFromIndex?: number | null
@@ -82,26 +82,26 @@ export const Cabinet: FC<Props> = ({
     return (
         <group>
             <Frame />
-            {locationName && (
-                <LabelOverlay position={[RIGHT_X, FH / 2 + 0.6, 0]}>
-                    {locationName}
-                </LabelOverlay>
-            )}
+
+            <LabelOverlay position={[RIGHT_X, FH / 2 + 0.6, 0]}>
+                {locationName}
+            </LabelOverlay>
+
             {drawers.map((drawer) => (
-            <DrawerSlot
-                key={drawer.index}
-                index={drawer.index}
-                position={drawer.position}
-                handlePosition={drawer.handlePosition}
-                drawerHeight={drawerHeight}
-                drawerDepth={FD_RIGHT - 0.08}
-                storages={drawer.storages}
-                isHighlighted={drawer.isHighlighted}
-                shouldBlink={movingFromKind === 'cabinet' && movingFromIndex === drawer.index}
-                blinkPhase={blinkPhase ?? false}
-                onClick={onSelectDrawer}
-                onDoubleClick={onSlotDoubleClick}
-            />
+                <DrawerSlot
+                    key={drawer.index}
+                    index={drawer.index}
+                    position={drawer.position}
+                    handlePosition={drawer.handlePosition}
+                    drawerHeight={drawerHeight}
+                    drawerDepth={FD_RIGHT - 0.08}
+                    storages={drawer.storages}
+                    isHighlighted={drawer.isHighlighted}
+                    shouldBlink={movingFromKind === 'cabinet' && movingFromIndex === drawer.index}
+                    blinkPhase={blinkPhase ?? false}
+                    onClick={onSelectDrawer}
+                    onDoubleClick={onSlotDoubleClick}
+                />
             ))}
         </group>
     )
