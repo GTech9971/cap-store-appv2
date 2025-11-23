@@ -96,10 +96,11 @@ export const useStorageController = ({
         }
     }
 
-    // スロット単位のダブルクリック: 既存なら移動開始、空きなら新規登録イベント
-    const handleDoubleClick = (kind: SlotKind, index: number) => {
+    const startMove = (kind: SlotKind, index: number, storageId?: string) => {
         const location = kind === 'cabinet' ? cabinetLocation : deskLocation
-        const matchedStorage = findStorage(kind, index)
+        const matchedStorage = storageId
+            ? (kind === 'cabinet' ? cabinetList : deskList).find((s) => s.id === storageId)
+            : findStorage(kind, index)
         if (matchedStorage) {
             setMovingFrom({ kind, positionIndex: index, location, storage: matchedStorage })
             if (kind === 'cabinet') {
@@ -113,6 +114,11 @@ export const useStorageController = ({
         }
 
         // 空スロットの登録は呼び出し側でハンドリング
+    }
+
+    // スロット単位のダブルクリック: 既存なら移動開始、空きなら新規登録イベント
+    const handleDoubleClick = (kind: SlotKind, index: number) => {
+        startMove(kind, index)
     }
 
     const addStorage = (kind: SlotKind, index: number, name: string, location?: Location) => {
@@ -164,6 +170,7 @@ export const useStorageController = ({
         blinkPhase,
         handleSelect,
         handleDoubleClick,
+        startMove,
         addStorage,
         updateStorageName,
     }

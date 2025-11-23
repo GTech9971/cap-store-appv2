@@ -15,13 +15,14 @@ const DRAWER_GAP = 0.05
 type Props = {
     highlight: number | null
     onSelectDrawer: (index: number) => void
-    onSlotDoubleClick?: (index: number) => void
+    onSlotDoubleClick?: (index: number, storages: UiStorage[]) => void
+    onEditStorage?: (storage: UiStorage) => void
+    onStartMove?: (index: number, storages: UiStorage[]) => void
     locationName: string
     storages?: UiStorage[]
     movingFromKind?: 'cabinet' | 'desk' | null
     movingFromIndex?: number | null
     blinkPhase?: boolean
-    onEditStorage?: (storage: UiStorage) => void
 }
 
 type FrameSegment = {
@@ -57,6 +58,7 @@ export const Cabinet: FC<Props> = ({
     highlight,
     onSelectDrawer,
     onSlotDoubleClick,
+    onStartMove,
     locationName,
     storages,
     movingFromKind,
@@ -103,7 +105,13 @@ export const Cabinet: FC<Props> = ({
                     blinkPhase={blinkPhase ?? false}
                     onEdit={onEditStorage}
                     onClick={onSelectDrawer}
-                    onDoubleClick={onSlotDoubleClick}
+                    onDoubleClick={(idx, slotStorages) => {
+                        if (onStartMove) {
+                            onStartMove(idx, slotStorages)
+                        } else {
+                            onSlotDoubleClick?.(idx, slotStorages)
+                        }
+                    }}
                 />
             ))}
         </group>

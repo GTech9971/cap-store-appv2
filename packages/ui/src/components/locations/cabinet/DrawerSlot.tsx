@@ -15,7 +15,7 @@ type Props = {
     blinkPhase: boolean
     onEdit?: (storage: UiStorage) => void
     onClick: (index: number) => void
-    onDoubleClick?: (index: number) => void
+    onDoubleClick?: (index: number, storages: UiStorage[]) => void
 }
 
 export const DrawerSlot: FC<Props> = ({
@@ -41,7 +41,7 @@ export const DrawerSlot: FC<Props> = ({
 
     const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
         event.stopPropagation()
-        onDoubleClick?.(index)
+        onDoubleClick?.(index, storages)
     }
 
     return (
@@ -54,19 +54,20 @@ export const DrawerSlot: FC<Props> = ({
                 <boxGeometry args={[1.3, drawerHeight, drawerDepth]} />
                 <meshStandardMaterial color={color} />
             </mesh>
-            {storages.length > 0 && (
+            {storages.map((storage, idx) => (
                 <LabelOverlay
+                    key={storage.id ?? `${index}-${idx}`}
                     position={[
                         position[0] + 1.5,
-                        position[1],
+                        position[1] + idx * 0.35,
                         position[2] + 0.6,
                     ]}
                     padding="4px 10px"
-                    onClick={() => onEdit?.(storages[0])}
+                    onClick={() => onEdit?.(storage)}
                 >
-                    {storages.map((storage) => storage.name).join('\n')}
+                    {storage.name}
                 </LabelOverlay>
-            )}
+            ))}
             <mesh
                 rotation={[0, 0, Math.PI / 2]}
                 position={handlePosition}

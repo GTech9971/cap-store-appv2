@@ -16,7 +16,7 @@ type Props = {
     highlight: number | null
     onSelectShelf: (index: number) => void
     onEditStorage?: (storage: UiStorage) => void
-    onSlotDoubleClick?: (index: number) => void
+    onSlotDoubleClick?: (index: number, storages: UiStorage[]) => void
     locationName: string
     storages?: UiStorage[]
     movingFromKind?: 'cabinet' | 'desk' | null
@@ -91,7 +91,7 @@ export const Desk: FC<Props> = ({
                         blinkPhase={blinkPhase ?? false}
                         onEdit={onEditStorage}
                         onClick={onSelectShelf}
-                        onDoubleClick={onSlotDoubleClick}
+                        onDoubleClick={(idx, slot) => onSlotDoubleClick?.(idx, slot)}
                     />
                 )
             })}
