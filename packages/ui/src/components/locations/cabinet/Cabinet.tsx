@@ -21,6 +21,7 @@ type Props = {
     movingFromKind?: 'cabinet' | 'desk' | null
     movingFromIndex?: number | null
     blinkPhase?: boolean
+    onEditStorage?: (storage: UiStorage) => void
 }
 
 type FrameSegment = {
@@ -61,6 +62,7 @@ export const Cabinet: FC<Props> = ({
     movingFromKind,
     movingFromIndex,
     blinkPhase = false,
+    onEditStorage,
 }) => {
 
     const drawerHeight = (FH - DRAWER_GAP * (DRAWER_COUNT - 1)) / DRAWER_COUNT
@@ -99,6 +101,7 @@ export const Cabinet: FC<Props> = ({
                     isHighlighted={drawer.isHighlighted}
                     shouldBlink={movingFromKind === 'cabinet' && movingFromIndex === drawer.index}
                     blinkPhase={blinkPhase ?? false}
+                    onEdit={onEditStorage}
                     onClick={onSelectDrawer}
                     onDoubleClick={onSlotDoubleClick}
                 />

@@ -134,6 +134,15 @@ export const useStorageController = ({
         }
     }
 
+    const updateStorageName = (kind: SlotKind, id: string, name: string) => {
+        const updater = (list: UiStorage[]) => list.map((s) => (s.id === id ? { ...s, name } : s))
+        if (kind === 'cabinet') {
+            updateStorages(updater(cabinetList), deskList)
+        } else {
+            updateStorages(cabinetList, updater(deskList))
+        }
+    }
+
     // 移動中のみ点滅フェーズをトグル
     useEffect(() => {
         if (!movingFrom) {
@@ -156,5 +165,6 @@ export const useStorageController = ({
         handleSelect,
         handleDoubleClick,
         addStorage,
+        updateStorageName,
     }
 }

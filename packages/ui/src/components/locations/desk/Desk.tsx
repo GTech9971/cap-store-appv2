@@ -15,6 +15,7 @@ const LEFT_Z_SHIFT = FD_RIGHT / 2 - FD_LEFT / 2
 type Props = {
     highlight: number | null
     onSelectShelf: (index: number) => void
+    onEditStorage?: (storage: UiStorage) => void
     onSlotDoubleClick?: (index: number) => void
     locationName: string
     storages?: UiStorage[]
@@ -56,6 +57,7 @@ export const Desk: FC<Props> = ({
     highlight,
     onSelectShelf,
     onSlotDoubleClick,
+    onEditStorage,
     locationName,
     storages,
     movingFromKind,
@@ -87,6 +89,7 @@ export const Desk: FC<Props> = ({
                         isHighlighted={isHighlighted}
                         shouldBlink={movingFromKind === 'desk' && movingFromIndex === index}
                         blinkPhase={blinkPhase ?? false}
+                        onEdit={onEditStorage}
                         onClick={onSelectShelf}
                         onDoubleClick={onSlotDoubleClick}
                     />

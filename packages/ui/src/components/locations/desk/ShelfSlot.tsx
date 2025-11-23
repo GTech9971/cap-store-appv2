@@ -12,6 +12,7 @@ type Props = {
     isHighlighted: boolean
     shouldBlink: boolean
     blinkPhase: boolean
+    onEdit?: (storage: UiStorage) => void
     onClick: (index: number) => void
     onDoubleClick?: (index: number) => void
 }
@@ -25,6 +26,7 @@ export const ShelfSlot: FC<Props> = ({
     isHighlighted,
     shouldBlink,
     blinkPhase,
+    onEdit,
     onClick,
     onDoubleClick,
 }) => {
@@ -54,6 +56,7 @@ export const ShelfSlot: FC<Props> = ({
                 <LabelOverlay
                     position={labelPosition}
                     padding="4px 10px"
+                    onClick={() => onEdit?.(storages[0])}
                 >
                     {storages.map((storage) => storage.name).join('\n')}
                 </LabelOverlay>

@@ -5,6 +5,7 @@ import { useMemo, useState, type FC } from 'react'
 import { Cabinet } from './cabinet/Cabinet'
 import { Desk } from './desk/Desk'
 import { useStorageController } from './useStorageController'
+import { StorageEditAlert } from './StorageEditAlert'
 import { StorageCreateAlert } from './StorageCreateAlert'
 import './NorthRoom.css'
 
@@ -25,6 +26,7 @@ export const NorthRoom: FC<Props> = ({
 }) => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [pendingSlot, setPendingSlot] = useState<{ kind: 'cabinet' | 'desk'; index: number } | null>(null)
+    const [editing, setEditing] = useState<{ kind: 'cabinet' | 'desk'; storage: Storage } | null>(null)
 
     const handleCreateRequest = (kind: 'cabinet' | 'desk', index: number, hasStorage: boolean) => {
         if (hasStorage) {
@@ -45,6 +47,7 @@ export const NorthRoom: FC<Props> = ({
         handleSelect,
         handleDoubleClick,
         addStorage,
+        updateStorageName,
     } = useStorageController({
         cabinetLocation,
         deskLocation,
@@ -79,6 +82,16 @@ export const NorthRoom: FC<Props> = ({
                 }}
                 onCancel={handleCancelAlert}
             />
+            <StorageEditAlert
+                isOpen={editing != null}
+                defaultName={editing?.storage.name ?? ''}
+                onConfirm={(name) => {
+                    if (!editing) return
+                    updateStorageName(editing.kind, editing.storage.id ?? '', name)
+                    setEditing(null)
+                }}
+                onCancel={() => setEditing(null)}
+            />
             <Canvas
                 className="canvas-container"
                 camera={{ fov: 60, position: [6, 4, 12] }}
@@ -97,6 +110,7 @@ export const NorthRoom: FC<Props> = ({
                     movingFromIndex={movingFrom?.kind === 'desk' ? movingFrom.positionIndex : null}
                     blinkPhase={blinkPhase}
                     onSlotDoubleClick={(index) => handleCreateRequest('desk', index, hasStorageAt.desk(index))}
+                    onEditStorage={(storage) => setEditing({ kind: 'desk', storage })}
                 />
                 <Cabinet
                     highlight={cabinetHighlight}
@@ -107,6 +121,7 @@ export const NorthRoom: FC<Props> = ({
                     movingFromKind={movingFrom?.kind ?? null}
                     movingFromIndex={movingFrom?.kind === 'cabinet' ? movingFrom.positionIndex : null}
                     blinkPhase={blinkPhase}
+                    onEditStorage={(storage) => setEditing({ kind: 'cabinet', storage })}
                 />
             </Canvas>
         </div>
