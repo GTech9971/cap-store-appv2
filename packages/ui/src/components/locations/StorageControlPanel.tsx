@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState, type FC } from 'react'
 import type { Storage } from 'cap-store-api-def'
 import type { SlotKind } from './types'
+import {
+    IonButton,
+    IonInput,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonNote,
+    IonSelect,
+    IonSelectOption,
+    IonText
+} from '@ionic/react'
+import './StorageControlPanel.css';
 
 type Props = {
     selected: { kind: SlotKind; positionIndex: number; storage: Storage | null; hasStorage: boolean } | null
@@ -22,9 +34,9 @@ export const StorageControlPanel: FC<Props> = ({
     onSave,
     onClear,
 }) => {
-    const [name, setName] = useState('')
-    const [kind, setKind] = useState<SlotKind>('cabinet')
-    const [position, setPosition] = useState(1)
+    const [name, setName] = useState<string>('');
+    const [kind, setKind] = useState<SlotKind>('cabinet');
+    const [position, setPosition] = useState<number>(1);
 
     // 選択変更時にフォームを同期
     useEffect(() => {
@@ -55,77 +67,102 @@ export const StorageControlPanel: FC<Props> = ({
 
     return (
         <div className="control-panel">
-            <div className="control-panel__header">選択中のストレージ</div>
+
+            <IonText color='light'>
+                選択中のストレージ
+            </IonText>
+
             {!selected ? (
-                <div className="control-panel__empty">棚/引き出しをクリックしてストレージを選択、または空き位置を選択して登録してください</div>
+                <>
+                    <br />
+                    <IonNote color='light' style={{ fontSize: 'small' }}>
+                        棚/引き出しをクリックしてストレージを選択、または空き位置を選択して登録してください
+                    </IonNote>
+                </>
             ) : (
                 <>
-                    <div className="control-panel__meta">
-                        <div>現在: {selected.storage?.name || '(名称未登録)'}</div>
+                    <div>
                         <div>
-                            ロケーション: {selected.kind === 'cabinet' ? cabinetName : deskName} /{' '}
-                            {selected.positionIndex ?? selected.storage?.positionIndex ?? '-'}段
+                            <IonLabel color='light'>
+                                現在: {selected.storage?.name || '(名称未登録)'}
+                            </IonLabel>
                         </div>
-                        {selected.hasStorage && !selected.storage ? (
-                            <div style={{ color: '#ffae42', fontSize: 12 }}>
-                                既存があります。編集はラベルクリックで行ってください。
-                            </div>
-                        ) : null}
+                        <div>
+                            <IonNote>
+                                ロケーション: {selected.kind === 'cabinet' ? cabinetName : deskName} /{' '}
+                                {selected.positionIndex ?? selected.storage?.positionIndex ?? '-'}段
+                            </IonNote>
+                        </div>
+
                     </div>
-                    <div className="control-panel__field">
-                        <label className="control-panel__label">名前</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="control-panel__input"
-                            placeholder="Storage name"
-                        />
-                    </div>
-                    <div className="control-panel__field">
-                        <label className="control-panel__label">ロケーション</label>
-                        <select
-                            value={kind}
-                            onChange={(e) => handleKindChange(e.target.value as SlotKind)}
-                            className="control-panel__select"
-                        >
-                            <option value="cabinet">{cabinetName || 'キャビネット'}</option>
-                            <option value="desk">{deskName || 'デスク'}</option>
-                        </select>
-                    </div>
-                    <div className="control-panel__field">
-                        <label className="control-panel__label">段</label>
-                        <select
-                            value={position}
-                            onChange={(e) => setPosition(Number(e.target.value))}
-                            className="control-panel__select"
-                        >
-                            {positionOptions.map((pos) => (
-                                <option key={pos} value={pos}>
-                                    {pos} 段
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+
+                    <IonList>
+                        <IonItem color='dark'>
+                            <IonInput
+                                label='名前'
+                                labelPlacement='stacked'
+                                type='text'
+                                value={name}
+                                onIonChange={(e) => setName(e.target.value as string)}
+                                placeholder="表面実装保管庫"
+                            />
+                        </IonItem>
+
+                        <IonItem color='dark'>
+                            <IonSelect
+                                label='ロケーション'
+                                labelPlacement='stacked'
+                                value={kind}
+                                onIonChange={(e) => handleKindChange(e.target.value as SlotKind)}>
+                                <IonSelectOption value='cabinet'>
+                                    {cabinetName || 'キャビネット'}
+                                </IonSelectOption>
+
+                                <IonSelectOption value='desk'>
+                                    {deskName || 'デスク'}
+                                </IonSelectOption>
+                            </IonSelect>
+                        </IonItem>
+
+                        <IonItem color='dark'>
+                            <IonSelect
+                                label='段数'
+                                labelPlacement='stacked'
+                                value={position}
+                                onIonChange={(e) => setPosition(Number(e.target.value))}>
+                                {positionOptions.map((pos) => (
+                                    <IonSelectOption key={pos} value={pos}>
+                                        {pos} 段
+                                    </IonSelectOption>
+                                ))}
+                            </IonSelect>
+                        </IonItem>
+
+                    </IonList>
+
+                    {(selected.hasStorage && !selected.storage) &&
+                        <IonText color='warning' style={{ fontSize: '10px' }}>
+                            既存データがあります。編集はラベルクリックで行ってください。
+                        </IonText>
+                    }
+
+
                     <div className="control-panel__actions">
-                        <button
-                            type="button"
-                            className="control-panel__button control-panel__button--primary"
+                        <IonButton size='small'
                             onClick={handleSave}
                             disabled={
                                 !name.trim() ||
-                                (selected?.storage == null && selected?.hasStorage)
-                            }
-                        >
+                                (selected?.storage == null && selected?.hasStorage)}>
                             保存
-                        </button>
-                        <button
-                            type="button"
-                            className="control-panel__button"
-                            onClick={onClear}
-                        >
+                        </IonButton>
+
+                        <IonButton
+                            color='medium'
+                            size='small'
+                            onClick={onClear}>
                             クリア
-                        </button>
+                        </IonButton>
+
                     </div>
                 </>
             )}
