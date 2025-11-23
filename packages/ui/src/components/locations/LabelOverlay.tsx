@@ -9,6 +9,7 @@ type Props = {
     onClick?: () => void
 }
 
+// ラベルを3D空間上に重ねて描画するシンプルなオーバーレイ
 export const LabelOverlay: FC<Props> = ({
     position,
     children,

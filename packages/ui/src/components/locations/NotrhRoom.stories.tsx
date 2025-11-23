@@ -7,6 +7,11 @@ const meta: Meta<typeof NorthRoom> = {
     component: NorthRoom,
     parameters: {
         layout: 'fullscreen',
+        docs: {
+            description: {
+                component: '空スロットはダブルクリックで追加。ラベルをクリックすると右上パネルから名前変更と移動先（キャビネット/デスクと段）を編集できます。',
+            },
+        },
     },
     tags: ['autodocs'],
 };

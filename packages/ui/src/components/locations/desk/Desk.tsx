@@ -14,14 +14,10 @@ const LEFT_Z_SHIFT = FD_RIGHT / 2 - FD_LEFT / 2
 
 type Props = {
     highlight: number | null
-    onSelectShelf: (index: number) => void
+    onSelectShelf: (index: number, storages: UiStorage[]) => void
     onEditStorage?: (storage: UiStorage) => void
-    onSlotDoubleClick?: (index: number, storages: UiStorage[]) => void
     locationName: string
     storages?: UiStorage[]
-    movingFromKind?: 'cabinet' | 'desk' | null
-    movingFromIndex?: number | null
-    blinkPhase?: boolean
 }
 
 type FrameSegment = {
@@ -56,13 +52,9 @@ const Frame: FC = () => {
 export const Desk: FC<Props> = ({
     highlight,
     onSelectShelf,
-    onSlotDoubleClick,
     onEditStorage,
     locationName,
     storages,
-    movingFromKind,
-    movingFromIndex,
-    blinkPhase = false,
 }) => {
 
     const shelfPositions = [-1.0, 1.0]
@@ -87,11 +79,8 @@ export const Desk: FC<Props> = ({
                         labelPosition={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
                         storages={slotStorages}
                         isHighlighted={isHighlighted}
-                        shouldBlink={movingFromKind === 'desk' && movingFromIndex === index}
-                        blinkPhase={blinkPhase ?? false}
                         onEdit={onEditStorage}
-                        onClick={onSelectShelf}
-                        onDoubleClick={(idx, slot) => onSlotDoubleClick?.(idx, slot)}
+                        onClick={(idx, slot) => onSelectShelf(idx, slot)}
                     />
                 )
             })}

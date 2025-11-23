@@ -11,11 +11,8 @@ type Props = {
     drawerDepth: number
     storages: UiStorage[]
     isHighlighted: boolean
-    shouldBlink: boolean
-    blinkPhase: boolean
     onEdit?: (storage: UiStorage) => void
-    onClick: (index: number) => void
-    onDoubleClick?: (index: number, storages: UiStorage[]) => void
+    onClick: (index: number, storages: UiStorage[]) => void
 }
 
 export const DrawerSlot: FC<Props> = ({
@@ -26,22 +23,15 @@ export const DrawerSlot: FC<Props> = ({
     drawerDepth,
     storages,
     isHighlighted,
-    shouldBlink,
-    blinkPhase,
     onEdit,
     onClick,
-    onDoubleClick,
 }) => {
-    const color = shouldBlink && blinkPhase ? '#2dd55b' : isHighlighted ? '#ffcc00' : '#777777'
+    const color = isHighlighted ? '#ffcc00' : '#777777'
 
+    // スロットクリックで選択や作成を親へ伝搬
     const handleClick = (event: ThreeEvent<MouseEvent>) => {
         event.stopPropagation()
-        onClick(index)
-    }
-
-    const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
-        event.stopPropagation()
-        onDoubleClick?.(index, storages)
+        onClick(index, storages)
     }
 
     return (
@@ -49,7 +39,6 @@ export const DrawerSlot: FC<Props> = ({
             <mesh
                 position={position}
                 onClick={handleClick}
-                onDoubleClick={handleDoubleClick}
             >
                 <boxGeometry args={[1.3, drawerHeight, drawerDepth]} />
                 <meshStandardMaterial color={color} />
@@ -72,7 +61,6 @@ export const DrawerSlot: FC<Props> = ({
                 rotation={[0, 0, Math.PI / 2]}
                 position={handlePosition}
                 onClick={handleClick}
-                onDoubleClick={handleDoubleClick}
             >
                 <cylinderGeometry args={[0.06, 0.06, 0.6, 16]} />
                 <meshStandardMaterial color="#dddddd" />

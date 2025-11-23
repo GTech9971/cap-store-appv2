@@ -10,11 +10,8 @@ type Props = {
     labelPosition: [number, number, number]
     storages: UiStorage[]
     isHighlighted: boolean
-    shouldBlink: boolean
-    blinkPhase: boolean
     onEdit?: (storage: UiStorage) => void
-    onClick: (index: number) => void
-    onDoubleClick?: (index: number, storages: UiStorage[]) => void
+    onClick: (index: number, storages: UiStorage[]) => void
 }
 
 export const ShelfSlot: FC<Props> = ({
@@ -24,22 +21,15 @@ export const ShelfSlot: FC<Props> = ({
     labelPosition,
     storages,
     isHighlighted,
-    shouldBlink,
-    blinkPhase,
     onEdit,
     onClick,
-    onDoubleClick,
 }) => {
-    const color = shouldBlink && blinkPhase ? '#ff6666' : isHighlighted ? '#ffcc00' : '#bbbbbb'
+    const color = isHighlighted ? '#ffcc00' : '#bbbbbb'
 
+    // スロットクリックで選択や作成を親へ伝搬
     const handleClick = (event: ThreeEvent<MouseEvent>) => {
         event.stopPropagation()
-        onClick(index)
-    }
-
-    const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
-        event.stopPropagation()
-        onDoubleClick?.(index, storages)
+        onClick(index, storages)
     }
 
     return (
@@ -47,7 +37,6 @@ export const ShelfSlot: FC<Props> = ({
             <mesh
                 position={position}
                 onClick={handleClick}
-                onDoubleClick={handleDoubleClick}
             >
                 <boxGeometry args={size} />
                 <meshStandardMaterial color={color} />
