@@ -1,7 +1,7 @@
-import { type ThreeEvent } from '@react-three/fiber'
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
-import type { StorageByPosition } from '../../../api/locations/useFetchStoragesApi'
+import { ShelfSlot } from './ShelfSlot'
+import type { UiStorage } from '../types'
 
 
 const LEFT_X = -1.6
@@ -15,8 +15,12 @@ const LEFT_Z_SHIFT = FD_RIGHT / 2 - FD_LEFT / 2
 type Props = {
     highlight: number | null
     onSelectShelf: (index: number) => void
+    onSlotDoubleClick?: (index: number) => void
     locationName?: string | null
-    storageByPosition?: StorageByPosition
+    storages?: UiStorage[]
+    movingFromKind?: 'cabinet' | 'desk' | null
+    movingFromIndex?: number | null
+    blinkPhase?: boolean
 }
 
 type FrameSegment = {
@@ -51,16 +55,15 @@ const Frame: FC = () => {
 export const Desk: FC<Props> = ({
     highlight,
     onSelectShelf,
+    onSlotDoubleClick,
     locationName,
-    storageByPosition,
+    storages,
+    movingFromKind,
+    movingFromIndex,
+    blinkPhase = false,
 }) => {
 
     const shelfPositions = [-1.0, 1.0]
-
-    const handleShelfClick = (event: ThreeEvent<MouseEvent>, index: number) => {
-        event.stopPropagation()
-        onSelectShelf(index)
-    }
 
     return (
         <group>
@@ -72,27 +75,22 @@ export const Desk: FC<Props> = ({
             )}
             {shelfPositions.map((position, idx) => {
                 const index = idx + 1
+                const slotStorages = (storages ?? []).filter((s) => s.positionIndex === index)
                 const isHighlighted = highlight != null && index === highlight
-                const color = isHighlighted ? '#ffcc00' : '#bbbbbb'
-                const label = storageByPosition?.[index]
                 return (
-                    <group key={index}>
-                        <mesh
-                            position={[LEFT_X, position, LEFT_Z_SHIFT]}
-                            onClick={(event) => handleShelfClick(event, index)}
-                        >
-                            <boxGeometry args={[1.9, 0.15, FD_LEFT - 0.1]} />
-                            <meshStandardMaterial color={color} />
-                        </mesh>
-                        {label && (
-                            <LabelOverlay
-                                position={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
-                                padding="4px 10px"
-                            >
-                                {label}
-                            </LabelOverlay>
-                        )}
-                    </group>
+                    <ShelfSlot
+                        key={index}
+                        index={index}
+                        position={[LEFT_X, position, LEFT_Z_SHIFT]}
+                        size={[1.9, 0.15, FD_LEFT - 0.1]}
+                        labelPosition={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
+                        storages={slotStorages}
+                        isHighlighted={isHighlighted}
+                        shouldBlink={movingFromKind === 'desk' && movingFromIndex === index}
+                        blinkPhase={blinkPhase ?? false}
+                        onClick={onSelectShelf}
+                        onDoubleClick={onSlotDoubleClick}
+                    />
                 )
             })}
         </group>
