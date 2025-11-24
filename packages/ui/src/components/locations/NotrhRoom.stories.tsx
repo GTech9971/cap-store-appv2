@@ -19,8 +19,6 @@ const meta: Meta<typeof NorthRoom> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const cabinetLocation: Location = { id: 'loc-1', name: 'キャビネット' }
-const deskLocation: Location = { id: 'loc-2', name: 'デスク' }
 
 const cabinetStorages: Storage[] = [
     { id: 's1', name: 'Cabinet 1段', locationId: 'loc-1', positionIndex: 1 },
@@ -31,11 +29,17 @@ const deskStorages: Storage[] = [
     { id: 's3', name: 'Desk 上段', locationId: 'loc-2', positionIndex: 2 },
 ]
 
+const cabinetLocation: Location = { id: 'loc-1', name: 'キャビネット', storages: cabinetStorages };
+const deskLocation: Location = { id: 'loc-2', name: 'デスク', storages: deskStorages };
+
 export const Default: Story = {
     args: {
         cabinetLocation,
         deskLocation,
-        cabinetStorages,
-        deskStorages,
+        onSave: async (mode, storage) => {
+            console.log(`${mode}`);
+            console.log(storage);
+            return mode === 'new' ? 'NEW-Storage' : storage.id;
+        }
     },
 };

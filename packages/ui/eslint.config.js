@@ -15,7 +15,7 @@ export default tseslint.config([
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
+      reactHooks.configs.flat['recommended-latest'],
       reactRefresh.configs.vite,
     ],
     languageOptions: {
@@ -23,6 +23,11 @@ export default tseslint.config([
       globals: globals.browser,
     },
     rules: {
+      ...reactHooks.configs.flat['recommended-latest'].rules,
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
       "@typescript-eslint/no-unused-vars": "warn"
     }
   },

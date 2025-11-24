@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FC } from 'react'
-import type { Storage } from 'cap-store-api-def'
-import type { SlotKind } from './types'
+import type { Location } from 'cap-store-api-def'
+import type { Selected, SlotKind } from './types'
 import {
     IonButton,
     IonInput,
@@ -15,13 +15,13 @@ import {
 import './StorageControlPanel.css';
 
 type Props = {
-    selected: { kind: SlotKind; positionIndex: number; storage: Storage | null; hasStorage: boolean } | null
-    cabinetSlots: number
-    deskSlots: number
-    cabinetName: string
-    deskName: string
-    onSave: (name: string, kind: SlotKind, positionIndex: number) => void
-    onClear: () => void
+    selected: Selected | null,
+    cabinetSlots: number,
+    deskSlots: number,
+    cabinet: Location,
+    desk: Location,
+    onSave: (locationId: string, name: string, kind: SlotKind, positionIndex: number) => void,
+    onClear: () => void,
 }
 
 // 選択中ストレージを表示し、名前と配置を編集する右上パネル
@@ -29,8 +29,8 @@ export const StorageControlPanel: FC<Props> = ({
     selected,
     cabinetSlots,
     deskSlots,
-    cabinetName,
-    deskName,
+    cabinet,
+    desk,
     onSave,
     onClear,
 }) => {
@@ -40,29 +40,35 @@ export const StorageControlPanel: FC<Props> = ({
 
     // 選択変更時にフォームを同期
     useEffect(() => {
-        if (!selected) return
-        setName(selected.storage?.name ?? '')
-        setKind(selected.kind)
-        setPosition(selected.positionIndex ?? selected.storage?.positionIndex ?? 1)
-    }, [selected])
+        if (!selected) return;
+
+        setName(selected.storage?.name ?? '');
+        setKind(selected.kind);
+        setPosition(selected.positionIndex ?? selected.storage?.positionIndex ?? 1);
+    }, [selected]);
 
     // ロケーションごとの段数を計算
-    const positionOptions = useMemo(() => {
-        const length = kind === 'cabinet' ? cabinetSlots : deskSlots
-        return Array.from({ length }, (_, idx) => idx + 1)
-    }, [cabinetSlots, deskSlots, kind])
+    const positionOptions: number[] = useMemo(() => {
+
+        const length: number = kind === 'cabinet'
+            ? cabinetSlots
+            : deskSlots;
+
+        return Array.from({ length }, (_, idx) => idx + 1).sort((a, b) => b - a);
+    }, [cabinetSlots, deskSlots, kind]);
 
     // 保存ボタンで編集結果を親へ通知
     const handleSave = () => {
-        const trimmed = name.trim()
-        if (!selected || !trimmed) return
-        onSave(trimmed, kind, position)
+        const trimmed = name.trim();
+        if (!selected || !trimmed) return;
+
+        onSave(selected.locationId, trimmed, kind, position);
     }
 
     // ロケーション変更時に段をリセット
     const handleKindChange = (nextKind: SlotKind) => {
-        setKind(nextKind)
-        setPosition(1)
+        setKind(nextKind);
+        setPosition(1);
     }
 
     return (
@@ -89,7 +95,7 @@ export const StorageControlPanel: FC<Props> = ({
                         </div>
                         <div>
                             <IonNote>
-                                ロケーション: {selected.kind === 'cabinet' ? cabinetName : deskName} /{' '}
+                                ロケーション: {selected.kind === 'cabinet' ? cabinet.name : desk.name} /{' '}
                                 {selected.positionIndex ?? selected.storage?.positionIndex ?? '-'}段
                             </IonNote>
                         </div>
@@ -115,11 +121,11 @@ export const StorageControlPanel: FC<Props> = ({
                                 value={kind}
                                 onIonChange={(e) => handleKindChange(e.target.value as SlotKind)}>
                                 <IonSelectOption value='cabinet'>
-                                    {cabinetName || 'キャビネット'}
+                                    {cabinet.name || 'キャビネット'}
                                 </IonSelectOption>
 
                                 <IonSelectOption value='desk'>
-                                    {deskName || 'デスク'}
+                                    {desk.name || 'デスク'}
                                 </IonSelectOption>
                             </IonSelect>
                         </IonItem>

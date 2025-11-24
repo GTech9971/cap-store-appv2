@@ -1,15 +1,15 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import type { Location, Storage } from 'cap-store-api-def'
-import { useEffect, useState, type FC } from 'react'
+import { useCallback, useState, type FC } from 'react'
 import { Cabinet } from './cabinet/Cabinet'
 import { Desk } from './desk/Desk'
 import { StorageControlPanel } from './StorageControlPanel'
-import type { SlotKind, UiStorage } from './types'
+import type { Selected, SlotKind, UiStorage } from './types'
 import './NorthRoom.css'
 
-const CABINET_SLOTS = 5
-const DESK_SLOTS = 2
+const CABINET_SLOTS = 5;
+const DESK_SLOTS = 2;
 
 /**
  * NorthRoom コンポーネント仕様
@@ -20,61 +20,54 @@ const DESK_SLOTS = 2
  * - カメラ操作はOrbitControlsで常時可能
  */
 type Props = {
-    cabinetLocation: Location
-    deskLocation: Location
-    cabinetStorages?: Storage[]
-    deskStorages?: Storage[]
-    onStoragesChange?: (cabinet: Storage[], desk: Storage[]) => void
+    cabinetLocation: Location,
+    deskLocation: Location,
+    /**
+     * 
+     * @param mode 
+     * @param storage 
+     * @returns storageId
+     */
+    onSave: (mode: 'new' | 'update', storage: Storage) => Promise<string>;
 }
 
 export const NorthRoom: FC<Props> = ({
     cabinetLocation,
     deskLocation,
-    cabinetStorages,
-    deskStorages,
-    onStoragesChange,
+    onSave,
 }) => {
     // キャビネット/デスクの表示用リスト
-    const [cabinetList, setCabinetList] = useState<UiStorage[]>(() => cabinetStorages ?? [])
-    const [deskList, setDeskList] = useState<UiStorage[]>(() => deskStorages ?? [])
+    const [cabinetList, setCabinetList] = useState<UiStorage[]>(() => cabinetLocation.storages ?? []);
+    const [deskList, setDeskList] = useState<UiStorage[]>(() => deskLocation.storages ?? []);
     // スロットのハイライト状態
-    const [cabinetHighlight, setCabinetHighlight] = useState<number | null>(null)
-    const [deskHighlight, setDeskHighlight] = useState<number | null>(null)
-    const [selected, setSelected] = useState<{ kind: 'cabinet' | 'desk'; positionIndex: number; storage: Storage | null; hasStorage: boolean } | null>(null)
-
-    useEffect(() => {
-        setCabinetList(cabinetStorages ?? [])
-    }, [cabinetStorages])
-
-    useEffect(() => {
-        setDeskList(deskStorages ?? [])
-    }, [deskStorages])
+    const [cabinetHighlight, setCabinetHighlight] = useState<number | null>(null);
+    const [deskHighlight, setDeskHighlight] = useState<number | null>(null);
+    const [selected, setSelected] = useState<Selected | null>(null);;
 
     // 親へ通知しつつローカル配列を更新
-    const updateStorages = (nextCab: UiStorage[], nextDesk: UiStorage[]) => {
-        setCabinetList(nextCab)
-        setDeskList(nextDesk)
-        onStoragesChange?.(nextCab, nextDesk)
-    }
+    const updateStorages = useCallback((nextCab: UiStorage[], nextDesk: UiStorage[]) => {
+        setCabinetList(nextCab);
+        setDeskList(nextDesk);
+    }, []);
 
     // スロット選択時にハイライトを切り替える
-    const handleSelect = (kind: SlotKind, index: number) => {
+    const handleSelect = useCallback((kind: SlotKind, index: number) => {
         if (kind === 'cabinet') {
-            setCabinetHighlight(index)
-            setDeskHighlight(null)
+            setCabinetHighlight(index);
+            setDeskHighlight(null);
         } else {
-            setDeskHighlight(index)
-            setCabinetHighlight(null)
+            setDeskHighlight(index);
+            setCabinetHighlight(null);
         }
-    }
+    }, []);
 
     // 指定したストレージを任意のロケーション・位置へ移動
-    const moveStorage = (storage: UiStorage, toKind: SlotKind, positionIndex: number) => {
-        const allStorages = [...cabinetList, ...deskList]
-        const target = allStorages.find((s) => s.id === storage.id) ?? allStorages.find((s) => s === storage)
-        if (!target) return
+    const moveStorage = useCallback((storage: UiStorage, toKind: SlotKind, positionIndex: number) => {
+        const allStorages: Storage[] = [...cabinetList, ...deskList];
+        const target: Storage | undefined = allStorages.find((s) => s.id === storage.id) ?? allStorages.find((s) => s === storage);
+        if (!target) return;
 
-        const targetLocationId = toKind === 'cabinet' ? cabinetLocation.id : deskLocation.id
+        const targetLocationId = toKind === 'cabinet' ? cabinetLocation.id : deskLocation.id;
         const updated: UiStorage = {
             ...target,
             ...storage,
@@ -82,105 +75,121 @@ export const NorthRoom: FC<Props> = ({
             locationId: targetLocationId ?? target.locationId,
         }
 
-        const removeFromList = (list: UiStorage[]) => list.filter((s) => s.id !== target.id && s !== target)
+        const removeFromList = (list: UiStorage[]) => list.filter((s) => s.id !== target.id && s !== target);
         const nextCabinet = toKind === 'cabinet'
             ? [...removeFromList(cabinetList), updated]
-            : removeFromList(cabinetList)
+            : removeFromList(cabinetList);
+
         const nextDesk = toKind === 'desk'
             ? [...removeFromList(deskList), updated]
-            : removeFromList(deskList)
+            : removeFromList(deskList);
 
-        updateStorages(nextCabinet, nextDesk)
-        setCabinetHighlight(toKind === 'cabinet' ? positionIndex : null)
-        setDeskHighlight(toKind === 'desk' ? positionIndex : null)
-    }
+        updateStorages(nextCabinet, nextDesk);
+        setCabinetHighlight(toKind === 'cabinet' ? positionIndex : null);
+        setDeskHighlight(toKind === 'desk' ? positionIndex : null);
+    }, [cabinetList, cabinetLocation.id, deskList, deskLocation.id, updateStorages]);
 
     // 選択ハイライトをクリア
-    const clearSelection = () => {
-        setCabinetHighlight(null)
-        setDeskHighlight(null)
-    }
+    const clearSelection = useCallback(() => {
+        setCabinetHighlight(null);
+        setDeskHighlight(null);
+    }, []);
 
     // 新規ストレージを空スロットへ追加
-    const addStorage = (kind: SlotKind, index: number, name: string, location?: Location) => {
-        const targetLocation = location ?? (kind === 'cabinet' ? cabinetLocation : deskLocation)
+    const addStorage = useCallback((kind: SlotKind, index: number, name: string, location?: Location) => {
+        const targetLocation = location ?? (kind === 'cabinet' ? cabinetLocation : deskLocation);
+
         const newStorage: UiStorage = {
             id: null!,
             name,
             positionIndex: index,
             locationId: targetLocation?.id,
-        }
+        };
+
         if (kind === 'cabinet') {
-            updateStorages([...cabinetList.filter((s) => s.positionIndex !== index), newStorage], deskList)
-            setCabinetHighlight(index)
-            setDeskHighlight(null)
+            updateStorages([...cabinetList.filter((s) => s.positionIndex !== index), newStorage], deskList);
+            setCabinetHighlight(index);
+            setDeskHighlight(null);
         } else {
-            updateStorages(cabinetList, [...deskList.filter((s) => s.positionIndex !== index), newStorage])
-            setDeskHighlight(index)
-            setCabinetHighlight(null)
+            updateStorages(cabinetList, [...deskList.filter((s) => s.positionIndex !== index), newStorage]);
+            setDeskHighlight(index);
+            setCabinetHighlight(null);
         }
-    }
+    }, [cabinetList, cabinetLocation, deskList, deskLocation, updateStorages]);
 
     // 空スロット/既存問わずクリックでパネル選択。ラベルクリックは名称変更用に温存。
-    const handleSlotAction = (kind: 'cabinet' | 'desk', index: number, slotStorages: Storage[]) => {
+    const handleSlotAction = useCallback((kind: SlotKind, locationId: string, index: number, slotStorages: Storage[]) => {
         const isSameEmpty =
             selected &&
             selected.kind === kind &&
             selected.storage == null &&
-            selected.positionIndex === index
+            selected.positionIndex === index;
 
         if (isSameEmpty) {
-            setSelected(null)
-            clearSelection()
-            return
+            setSelected(null);
+            clearSelection();
+            return;
         }
 
-        handleSelect(kind, index)
-        setSelected({ kind, positionIndex: index, storage: null, hasStorage: slotStorages.length > 0 })
-    }
+        handleSelect(kind, index);
+        setSelected({ kind, locationId, positionIndex: index, storage: null, hasStorage: slotStorages.length > 0 })
+    }, [selected, clearSelection, handleSelect,]);
 
     // ラベルクリックで選択を確定し、フォームへ反映（名称編集用途）
-    const handleSelectStorage = (kind: 'cabinet' | 'desk', storage: Storage) => {
-        const isSame =
+    const handleSelectStorage = useCallback((kind: SlotKind, locationId: string, storage: Storage) => {
+        const isSame: boolean =
             selected?.kind === kind &&
             selected.storage != null &&
             ((selected.storage.id && selected.storage.id === storage.id) ||
                 (!selected.storage.id &&
                     !storage.id &&
                     selected.storage.positionIndex === storage.positionIndex &&
-                    selected.storage.name === storage.name))
+                    selected.storage.name === storage.name));
 
         if (isSame) {
-            setSelected(null)
-            clearSelection()
+            setSelected(null);
+            clearSelection();
             return
         }
 
-        setSelected({ kind, storage, positionIndex: storage.positionIndex ?? 1, hasStorage: true })
-        handleSelect(kind, storage.positionIndex ?? 1)
-    }
+        setSelected({ kind, locationId: locationId, storage, positionIndex: storage.positionIndex ?? 1, hasStorage: true });
+        handleSelect(kind, storage.positionIndex ?? 1);
+    }, [selected, clearSelection, handleSelect]);
 
     // パネルからの保存で移動と名称変更を反映
-    const handleSaveStorage = (name: string, kind: 'cabinet' | 'desk', positionIndex: number) => {
-        if (!selected) return
+    const handleSaveStorage = useCallback(async (locationId: string, name: string, kind: SlotKind, positionIndex: number) => {
+        if (!selected) return;
+
+        // 更新
         if (selected.storage) {
-            const nextStorage = { ...selected.storage, name }
-            moveStorage(nextStorage, kind, positionIndex)
-            setSelected({ kind, positionIndex, storage: { ...nextStorage, positionIndex }, hasStorage: true })
-            return
+            const nextStorage = { ...selected.storage, name, positionIndex: positionIndex };
+            moveStorage(nextStorage, kind, positionIndex);
+            setSelected({ kind, locationId, positionIndex, storage: nextStorage, hasStorage: true });
+
+            await onSave('update', nextStorage);
+            return;
         }
-        if (selected.hasStorage) {
-            return
-        }
-        const location = kind === 'cabinet' ? cabinetLocation : deskLocation
-        addStorage(kind, positionIndex, name, location)
-        setSelected({ kind, positionIndex, storage: { id: null!, name, positionIndex, locationId: location?.id }, hasStorage: true })
-    }
+
+
+        if (selected.hasStorage) { return; }
+        // 新規
+        const location: Location = kind === 'cabinet'
+            ? cabinetLocation
+            : deskLocation;
+
+        const newStorage: Storage = { id: null!, name, positionIndex, locationId: location.id, };
+
+        const newStorageId: string = await onSave('new', newStorage);
+        newStorage.id = newStorageId;
+
+        addStorage(kind, positionIndex, name, location);
+        setSelected({ kind, locationId, positionIndex, storage: newStorage, hasStorage: true });
+    }, [addStorage, cabinetLocation, deskLocation, moveStorage, selected, onSave]);
 
     // 選択解除
-    const handleClearSelection = () => {
-        setSelected(null)
-    }
+    const handleClearSelection = useCallback(() => {
+        setSelected(null);
+    }, []);
 
     return (
         <div className="app">
@@ -188,8 +197,8 @@ export const NorthRoom: FC<Props> = ({
                 selected={selected}
                 cabinetSlots={CABINET_SLOTS}
                 deskSlots={DESK_SLOTS}
-                cabinetName={cabinetLocation?.name ?? 'キャビネット'}
-                deskName={deskLocation?.name ?? 'デスク'}
+                cabinet={cabinetLocation}
+                desk={deskLocation}
                 onSave={handleSaveStorage}
                 onClear={handleClearSelection}
             />
@@ -204,17 +213,17 @@ export const NorthRoom: FC<Props> = ({
                 <OrbitControls makeDefault enableDamping target={[0, 0, 0]} />
                 <Desk
                     highlight={deskHighlight}
-                    onSelectShelf={(index, slotStorages) => handleSlotAction('desk', index, slotStorages)}
-                    locationName={deskLocation?.name}
+                    onSelectShelf={(index, slotStorages) => handleSlotAction('desk', deskLocation.id, index, slotStorages)}
+                    locationName={deskLocation.name}
                     storages={deskList}
-                    onEditStorage={(storage) => handleSelectStorage('desk', storage)}
+                    onEditStorage={(storage) => handleSelectStorage('desk', deskLocation.id, storage)}
                 />
                 <Cabinet
                     highlight={cabinetHighlight}
-                    onSelectDrawer={(index, slotStorages) => handleSlotAction('cabinet', index, slotStorages)}
-                    locationName={cabinetLocation?.name}
+                    onSelectDrawer={(index, slotStorages) => handleSlotAction('cabinet', cabinetLocation.id, index, slotStorages)}
+                    locationName={cabinetLocation.name}
                     storages={cabinetList}
-                    onEditStorage={(storage) => handleSelectStorage('cabinet', storage)}
+                    onEditStorage={(storage) => handleSelectStorage('cabinet', cabinetLocation.id, storage)}
                 />
             </Canvas>
         </div>
