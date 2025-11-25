@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FC } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FC } from 'react'
 import type { Location } from 'cap-store-api-def'
 import type { Selected, SlotKind } from './types'
 import {
@@ -20,7 +20,7 @@ type Props = {
     deskSlots: number,
     cabinet: Location,
     desk: Location,
-    onSave: (locationId: string, name: string, kind: SlotKind, positionIndex: number) => void,
+    onSave: (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => void,
     onClear: () => void,
 }
 
@@ -37,6 +37,7 @@ export const StorageControlPanel: FC<Props> = ({
     const [name, setName] = useState<string>('');
     const [kind, setKind] = useState<SlotKind>('cabinet');
     const [position, setPosition] = useState<number>(1);
+    const [useableFreeSpace, setUseableFreeSpace] = useState<number>(100);
 
     // 選択変更時にフォームを同期
     useEffect(() => {
@@ -45,11 +46,11 @@ export const StorageControlPanel: FC<Props> = ({
         setName(selected.storage?.name ?? '');
         setKind(selected.kind);
         setPosition(selected.positionIndex ?? selected.storage?.positionIndex ?? 1);
+        setUseableFreeSpace(selected.storage?.useableFreeSpace ?? 100);
     }, [selected]);
 
     // ロケーションごとの段数を計算
     const positionOptions: number[] = useMemo(() => {
-
         const length: number = kind === 'cabinet'
             ? cabinetSlots
             : deskSlots;
@@ -58,18 +59,18 @@ export const StorageControlPanel: FC<Props> = ({
     }, [cabinetSlots, deskSlots, kind]);
 
     // 保存ボタンで編集結果を親へ通知
-    const handleSave = () => {
+    const handleSave = useCallback(() => {
         const trimmed = name.trim();
         if (!selected || !trimmed) return;
 
-        onSave(selected.locationId, trimmed, kind, position);
-    }
+        onSave(selected.locationId, trimmed, kind, position, useableFreeSpace);
+    }, [name, kind, position, useableFreeSpace, selected, onSave]);
 
     // ロケーション変更時に段をリセット
-    const handleKindChange = (nextKind: SlotKind) => {
+    const handleKindChange = useCallback((nextKind: SlotKind) => {
         setKind(nextKind);
         setPosition(1);
-    }
+    }, []);
 
     return (
         <div className="control-panel">
@@ -89,9 +90,18 @@ export const StorageControlPanel: FC<Props> = ({
                 <>
                     <div>
                         <div>
-                            <IonLabel color='light'>
-                                現在: {selected.storage?.name || '(名称未登録)'}
-                            </IonLabel>
+                            <>
+                                <IonLabel color='light'>
+                                    現在: {selected.storage?.name || '(名称未登録)'}
+                                </IonLabel>
+
+                                {selected.storage?.id &&
+                                    <IonNote>
+                                        [{selected.storage?.id}]
+                                    </IonNote>
+                                }
+                            </>
+
                         </div>
                         <div>
                             <IonNote>
@@ -110,7 +120,7 @@ export const StorageControlPanel: FC<Props> = ({
                                 type='text'
                                 value={name}
                                 onIonChange={(e) => setName(e.target.value as string)}
-                                placeholder="表面実装保管庫"
+                                placeholder="保管庫A"
                             />
                         </IonItem>
 
@@ -142,6 +152,18 @@ export const StorageControlPanel: FC<Props> = ({
                                     </IonSelectOption>
                                 ))}
                             </IonSelect>
+                        </IonItem>
+
+                        <IonItem color='dark'>
+                            <IonInput
+                                label='使用可能スペース'
+                                labelPlacement='stacked'
+                                placeholder='0~100'
+                                type='number'
+                                min={0}
+                                max={100}
+                                value={useableFreeSpace}
+                                onIonChange={(e) => setUseableFreeSpace(Number(e.target.value))} />
                         </IonItem>
 
                     </IonList>

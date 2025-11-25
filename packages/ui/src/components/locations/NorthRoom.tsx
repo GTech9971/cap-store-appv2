@@ -157,12 +157,12 @@ export const NorthRoom: FC<Props> = ({
     }, [selected, clearSelection, handleSelect]);
 
     // パネルからの保存で移動と名称変更を反映
-    const handleSaveStorage = useCallback(async (locationId: string, name: string, kind: SlotKind, positionIndex: number) => {
+    const handleSaveStorage = useCallback(async (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => {
         if (!selected) return;
 
         // 更新
         if (selected.storage) {
-            const nextStorage = { ...selected.storage, name, positionIndex: positionIndex };
+            const nextStorage = { ...selected.storage, name, positionIndex: positionIndex, useableFreeSpace: useableFreeSpace };
             moveStorage(nextStorage, kind, positionIndex);
             setSelected({ kind, locationId, positionIndex, storage: nextStorage, hasStorage: true });
 
@@ -177,7 +177,7 @@ export const NorthRoom: FC<Props> = ({
             ? cabinetLocation
             : deskLocation;
 
-        const newStorage: Storage = { id: null!, name, positionIndex, locationId: location.id, };
+        const newStorage: Storage = { id: null!, name, positionIndex, locationId: location.id, useableFreeSpace: useableFreeSpace };
 
         const newStorageId: string = await onSave('new', newStorage);
         newStorage.id = newStorageId;

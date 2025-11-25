@@ -2,16 +2,16 @@ import { FetchLocationResponse, FetchLocationsResponse, Location, Storage } from
 import { http, HttpResponse } from "msw";
 
 const cabinetStorages: Storage[] = [
-    { id: 's1', name: 'Cabinet 1段', locationId: 'loc-1', positionIndex: 1 },
-    { id: 's2', name: 'Cabinet 3段', locationId: 'loc-1', positionIndex: 3 },
+    { id: 'S-000001', name: 'Cabinet 1段', locationId: 'L-000001', positionIndex: 1 },
+    { id: 'S-000002', name: 'Cabinet 3段', locationId: 'L-000001', positionIndex: 3 },
 ]
 
 const deskStorages: Storage[] = [
-    { id: 's3', name: 'Desk 上段', locationId: 'loc-2', positionIndex: 2 },
+    { id: 'S-000003', name: 'Desk 上段', locationId: 'L-000002', positionIndex: 2 },
 ]
 
-const cabinetLocation: Location = { id: 'loc-1', name: 'キャビネット', storages: cabinetStorages };
-const deskLocation: Location = { id: 'loc-2', name: 'デスク', storages: deskStorages };
+const cabinetLocation: Location = { id: 'L-000001', name: 'キャビネット', storages: cabinetStorages };
+const deskLocation: Location = { id: 'L-000002', name: 'デスク', storages: deskStorages };
 
 const list: Location[] = [
     cabinetLocation,
@@ -31,8 +31,9 @@ export const locationHandler = [
         const id = params.id as string;
 
         return HttpResponse.json<FetchLocationResponse>({
-            data: id === 'L-000001'
-                ? cabinetLocation : deskLocation,
+            data: id === 'L-000002'
+                ? cabinetLocation
+                : deskLocation,
             errors: []
         }, { status: 200 })
     }),
