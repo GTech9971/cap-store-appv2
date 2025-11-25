@@ -12,7 +12,8 @@ export default defineConfig(async () => ({
       // ui のソースを直接参照
       'ui': path.resolve(__dirname, '../../packages/ui/src/'),
       '@': path.resolve(__dirname, "./src"),
-    }
+    },
+    dedupe: ['react', 'react-dom'], // React の多重読み込みを防ぎ、フックエラーを回避
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

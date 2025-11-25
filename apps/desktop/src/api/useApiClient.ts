@@ -1,5 +1,22 @@
 import axios, { AxiosInstance } from "axios";
-import { AkizukiCatalogsApi, CategoriesApi, ComponentsApi, Configuration, InventoriesApi, MakersApi, ProjectsApi, ProjectsHistoryApi, UpdateComponentRequest, UpdateComponentResponse, UpdateProjectRequest, UpdateProjectResponse } from "cap-store-api-def";
+import {
+    AkizukiCatalogsApi,
+    CategoriesApi,
+    ComponentsApi,
+    Configuration,
+    InventoriesApi,
+    LocationsApi,
+    MakersApi,
+    ProjectsApi,
+    ProjectsHistoryApi,
+    StoragesApi,
+    UpdateComponentRequest,
+    UpdateComponentResponse,
+    UpdateProjectRequest,
+    UpdateProjectResponse,
+    UpdateStorageRequest,
+    UpdateStorageResponse
+} from "cap-store-api-def";
 import { useCallback, useMemo } from "react";
 import { env } from "@/config/env";
 import { useOktaAuth } from "@okta/okta-react";
@@ -38,6 +55,8 @@ export const useApiClint = () => {
     const akizukiCatalogApi: AkizukiCatalogsApi = useMemo(() => { return new AkizukiCatalogsApi(config) }, [config]);
     const projectApi: ProjectsApi = useMemo(() => { return new ProjectsApi(config) }, [config]);
     const projectHistoryApi: ProjectsHistoryApi = useMemo(() => { return new ProjectsHistoryApi(config) }, [config]);
+    const locationApi: LocationsApi = useMemo(() => { return new LocationsApi(config) }, [config]);
+    const storageApi: StoragesApi = useMemo(() => new StoragesApi(config), [config]);
 
     /**
      * 電子部品更新API
@@ -47,6 +66,17 @@ export const useApiClint = () => {
         const query: string = maskFields.map(m => `fieldMask=${encodeURIComponent(m)}`).join("&");
         const url = `/components/${componentId}?${query}`;
         return (await axiosClient.patch<UpdateComponentResponse>(url, updateRequest)).data;
+    }, [axiosClient]);
+
+
+    /**
+     * ストレージ更新
+     */
+    const updateStorageApi = useCallback(async (updateRequest: UpdateStorageRequest, maskFields: string[], storageId: string): Promise<UpdateStorageResponse> => {
+        // 複数の fieldMask を繰り返しパラメータとして渡す
+        const query: string = maskFields.map(m => `fieldMask=${encodeURIComponent(m)}`).join("&");
+        const url = `/storages/${storageId}?${query}`;
+        return (await axiosClient.patch<UpdateStorageResponse>(url, updateRequest)).data;
     }, [axiosClient]);
 
     /**
@@ -140,6 +170,9 @@ export const useApiClint = () => {
         akizukiCatalogApi,
         projectApi,
         projectHistoryApi,
+        locationApi,
+        storageApi,
+        updateStorageApi,
         updateProjectApi,
         downloadProjectPdf
     };

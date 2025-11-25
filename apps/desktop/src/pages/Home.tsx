@@ -43,6 +43,7 @@ import { useInvoice } from "@/hooks/useInvoice";
 import { AkizukiInvoiceModal } from "@/modals/AkizukiInvoiceModal";
 import { ErrorNote } from "ui/components/ErrorNote";
 import { AuthFooter } from "@/components/AuthFooter";
+import { LocationList } from "ui/components/locations/LocationList";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -156,6 +157,9 @@ function Home() {
           <CategoryList
             onClick={handleCategorySelect}
             categoryApi={categoryApi} />
+
+          <LocationList
+            onClickNorthRoom={() => navigate("/locations/north-room")} />
 
           <ProjectList
             projectApi={projectApi}
