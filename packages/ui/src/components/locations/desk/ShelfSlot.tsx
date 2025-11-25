@@ -1,15 +1,17 @@
 import { type ThreeEvent } from '@react-three/fiber'
-import type { FC } from 'react'
+import { useCallback, type FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import type { UiStorage } from '../types'
+import type { Storage } from 'cap-store-api-def'
 
 type Props = {
     index: number
     position: [number, number, number]
     size: [number, number, number]
     labelPosition: [number, number, number]
-    storages: UiStorage[]
-    isHighlighted: boolean
+    storages: UiStorage[],
+    isHighlighted: boolean,
+    selectedStorages?: UiStorage[],
     onEdit?: (storage: UiStorage) => void
     onClick: (index: number, storages: UiStorage[]) => void
 }
@@ -21,6 +23,7 @@ export const ShelfSlot: FC<Props> = ({
     labelPosition,
     storages,
     isHighlighted,
+    selectedStorages,
     onEdit,
     onClick,
 }) => {
@@ -31,6 +34,11 @@ export const ShelfSlot: FC<Props> = ({
         event.stopPropagation()
         onClick(index, storages)
     }
+
+    const isSelected = useCallback((storage: Storage): boolean => {
+        if (!selectedStorages) { return false; }
+        return selectedStorages.includes(x => x.id === storage.id);
+    }, []);
 
     return (
         <group>
@@ -46,6 +54,7 @@ export const ShelfSlot: FC<Props> = ({
                     key={storage.id ?? `${index}-${idx}`}
                     position={[labelPosition[0], labelPosition[1] + idx * 0.35, labelPosition[2]]}
                     padding="4px 10px"
+                    isSelected={selectedStorages?.includes(x => )}
                     onClick={() => onEdit?.(storage)}
                 >
                     {storage.name}

@@ -3,8 +3,9 @@ import { Html } from '@react-three/drei'
 import type { FC, ReactNode } from 'react'
 
 type Props = {
-    position: [number, number, number]
-    children: ReactNode
+    position: [number, number, number],
+    children: ReactNode,
+    isSelected?: boolean,
     padding?: string
     onClick?: () => void
 }
@@ -13,6 +14,7 @@ type Props = {
 export const LabelOverlay: FC<Props> = ({
     position,
     children,
+    isSelected = false,
     padding = '6px 10px',
     onClick,
 }) => (
@@ -26,6 +28,7 @@ export const LabelOverlay: FC<Props> = ({
                 borderRadius: 8,
                 pointerEvents: onClick ? 'auto' : 'none',
                 cursor: onClick ? 'pointer' : 'default',
+                border: isSelected ? '1px springgreen solid' : 'none'
             }}
         >
             <IonText color='light'>{children}</IonText>

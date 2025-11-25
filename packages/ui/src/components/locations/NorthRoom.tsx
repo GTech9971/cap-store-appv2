@@ -7,9 +7,30 @@ import { Desk } from './desk/Desk'
 import { StorageControlPanel } from './StorageControlPanel'
 import type { Selected, SlotKind, UiStorage } from './types'
 import './NorthRoom.css'
+import { StorageSelectPanel } from './StorageSelectPanel'
 
 const CABINET_SLOTS = 5;
 const DESK_SLOTS = 2;
+
+type Props = {
+    cabinetLocation: Location,
+    deskLocation: Location,
+
+    /**
+     * ストレージ保存・更新
+     * @param mode 
+     * @param storage 
+     * @returns storageId
+     */
+    onSave?: (mode: 'new' | 'update', storage: Storage) => Promise<string>,
+
+    /**
+     * ストレージ選択
+     * @param selectedStorages 
+     * @returns 
+     */
+    onSelect?: (selectedStorages: Storage[]) => void,
+}
 
 /**
  * NorthRoom コンポーネント仕様
@@ -19,22 +40,11 @@ const DESK_SLOTS = 2;
  * - ラベルクリック: 右上パネルで名前変更＋移動先（ロケーション/段）を編集
  * - カメラ操作はOrbitControlsで常時可能
  */
-type Props = {
-    cabinetLocation: Location,
-    deskLocation: Location,
-    /**
-     * 
-     * @param mode 
-     * @param storage 
-     * @returns storageId
-     */
-    onSave: (mode: 'new' | 'update', storage: Storage) => Promise<string>;
-}
-
 export const NorthRoom: FC<Props> = ({
     cabinetLocation,
     deskLocation,
     onSave,
+    onSelect,
 }) => {
     // キャビネット/デスクの表示用リスト
     const [cabinetList, setCabinetList] = useState<UiStorage[]>(() => cabinetLocation.storages ?? []);
@@ -42,7 +52,9 @@ export const NorthRoom: FC<Props> = ({
     // スロットのハイライト状態
     const [cabinetHighlight, setCabinetHighlight] = useState<number | null>(null);
     const [deskHighlight, setDeskHighlight] = useState<number | null>(null);
-    const [selected, setSelected] = useState<Selected | null>(null);;
+    const [selected, setSelected] = useState<Selected | null>(null);
+
+    const [selectedStorages, setSelectedStorages] = useState<UiStorage[]>([]);
 
     // 親へ通知しつつローカル配列を更新
     const updateStorages = useCallback((nextCab: UiStorage[], nextDesk: UiStorage[]) => {
@@ -158,7 +170,7 @@ export const NorthRoom: FC<Props> = ({
 
     // パネルからの保存で移動と名称変更を反映
     const handleSaveStorage = useCallback(async (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => {
-        if (!selected) return;
+        if (!selected || !onSave) return;
 
         // 更新
         if (selected.storage) {
@@ -193,15 +205,30 @@ export const NorthRoom: FC<Props> = ({
 
     return (
         <div className="app">
-            <StorageControlPanel
-                selected={selected}
-                cabinetSlots={CABINET_SLOTS}
-                deskSlots={DESK_SLOTS}
-                cabinet={cabinetLocation}
-                desk={deskLocation}
-                onSave={handleSaveStorage}
-                onClear={handleClearSelection}
-            />
+            {onSave &&
+                <StorageControlPanel
+                    selected={selected}
+                    cabinetSlots={CABINET_SLOTS}
+                    deskSlots={DESK_SLOTS}
+                    cabinet={cabinetLocation}
+                    desk={deskLocation}
+                    onSave={handleSaveStorage}
+                    onClear={handleClearSelection}
+                />
+            }
+
+            {onSelect &&
+                <StorageSelectPanel
+                    selected={selected}
+                    selectedStorages={selectedStorages}
+                    cabinetSlots={CABINET_SLOTS}
+                    deskSlots={DESK_SLOTS}
+                    cabinet={cabinetLocation}
+                    desk={deskLocation}
+                    onSelect={() => { }}
+                />
+            }
+
             <Canvas
                 className="canvas-container"
                 camera={{ fov: 60, position: [6, 4, 12] }}
@@ -216,6 +243,7 @@ export const NorthRoom: FC<Props> = ({
                     onSelectShelf={(index, slotStorages) => handleSlotAction('desk', deskLocation.id, index, slotStorages)}
                     locationName={deskLocation.name}
                     storages={deskList}
+                    selectedStorages={selectedStorages}
                     onEditStorage={(storage) => handleSelectStorage('desk', deskLocation.id, storage)}
                 />
                 <Cabinet

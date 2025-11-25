@@ -17,7 +17,8 @@ type Props = {
     onSelectShelf: (index: number, storages: UiStorage[]) => void
     onEditStorage?: (storage: UiStorage) => void
     locationName: string
-    storages?: UiStorage[]
+    storages?: UiStorage[],
+    selectedStorages?: UiStorage[],
 }
 
 type FrameSegment = {
@@ -55,6 +56,7 @@ export const Desk: FC<Props> = ({
     onEditStorage,
     locationName,
     storages,
+    selectedStorages,
 }) => {
 
     const shelfPositions = [-1.0, 1.0]

@@ -43,3 +43,13 @@ export const Default: Story = {
         }
     },
 };
+
+export const Select: Story = {
+    args: {
+        cabinetLocation,
+        deskLocation,
+        onSelect: async (storages) => {
+
+        }
+    },
+};
