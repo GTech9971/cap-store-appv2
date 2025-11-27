@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import { DrawerSlot } from './DrawerSlot'
-import type { UiStorage } from '../types'
+import { useNorthRoomHighlightContext, useNorthRoomStorageContext } from '../NorthRoomContext'
 
 const DRAWER_COUNT = 5;
 
@@ -12,19 +12,14 @@ const FD_RIGHT = 1.0
 const FT = 0.12
 const DRAWER_GAP = 0.05
 
-type Props = {
-    highlight: number | null
-    onSelectDrawer: (index: number, storages: UiStorage[]) => void
-    onEditStorage?: (storage: UiStorage) => void
-    locationName: string
-    storages?: UiStorage[]
-}
+type Props = Record<string, never>;
 
 type FrameSegment = {
     position: [number, number, number]
     size: [number, number, number]
 }
 
+// キャビネットの枠を構築するヘルパーコンポーネント
 const Frame: FC = () => {
     const segments: FrameSegment[] = [
         { position: [0, FH / 2, 0], size: [FW_RIGHT, FT, FD_RIGHT] },
@@ -49,20 +44,24 @@ const Frame: FC = () => {
     )
 }
 
-export const Cabinet: FC<Props> = ({
-    highlight,
-    onSelectDrawer,
-    locationName,
-    storages,
-    onEditStorage,
-}) => {
+// キャビネットの引き出しを描画するコンポーネント
+export const Cabinet: FC<Props> = () => {
+    const {
+        cabinetHighlight,
+        handleSlotAction,
+        handleSelectStorage,
+    } = useNorthRoomHighlightContext();
+    const {
+        cabinetList,
+        cabinetLocation,
+    } = useNorthRoomStorageContext();
 
     const drawerHeight = (FH - DRAWER_GAP * (DRAWER_COUNT - 1)) / DRAWER_COUNT
     const drawers = Array.from({ length: DRAWER_COUNT }, (_, i) => {
         const index = i + 1
         const y = -FH / 2 + drawerHeight / 2 + i * (drawerHeight + DRAWER_GAP)
-        const slotStorages = (storages ?? []).filter((storage) => storage.positionIndex === index)
-        const isHighlighted = highlight != null && index === highlight
+        const slotStorages = (cabinetList ?? []).filter((storage) => storage.positionIndex === index)
+        const isHighlighted = cabinetHighlight != null && index === cabinetHighlight
 
         return {
             index,
@@ -78,7 +77,7 @@ export const Cabinet: FC<Props> = ({
             <Frame />
 
             <LabelOverlay position={[RIGHT_X, FH / 2 + 0.6, 0]}>
-                {locationName}
+                {cabinetLocation.name}
             </LabelOverlay>
 
             {drawers.map((drawer) => (
@@ -91,8 +90,8 @@ export const Cabinet: FC<Props> = ({
                     drawerDepth={FD_RIGHT - 0.08}
                     storages={drawer.storages}
                     isHighlighted={drawer.isHighlighted}
-                    onEdit={onEditStorage}
-                    onClick={(idx, slotStorages) => onSelectDrawer(idx, slotStorages)}
+                    onEdit={(storage) => handleSelectStorage('cabinet', cabinetLocation.id, storage)}
+                    onClick={(idx, slotStorages) => handleSlotAction('cabinet', cabinetLocation.id, idx, slotStorages)}
                 />
             ))}
         </group>

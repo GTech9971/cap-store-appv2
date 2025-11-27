@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react'
-import type { Location } from 'cap-store-api-def'
-import type { Selected, SlotKind } from './types'
+import { useNorthRoomHighlightContext, useNorthRoomStorageContext } from './NorthRoomContext'
+import type { SlotKind } from './types'
 import {
     IonButton,
     IonInput,
@@ -14,26 +14,19 @@ import {
 } from '@ionic/react'
 import './StorageControlPanel.css';
 
-type Props = {
-    selected: Selected | null,
-    cabinetSlots: number,
-    deskSlots: number,
-    cabinet: Location,
-    desk: Location,
-    onSave: (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => void,
-    onClear: () => void,
-}
-
 // 選択中ストレージを表示し、名前と配置を編集する右上パネル
-export const StorageControlPanel: FC<Props> = ({
-    selected,
-    cabinetSlots,
-    deskSlots,
-    cabinet,
-    desk,
-    onSave,
-    onClear,
-}) => {
+export const StorageControlPanel: FC = () => {
+    const {
+        selected,
+        handleClearSelection,
+    } = useNorthRoomHighlightContext();
+    const {
+        cabinetSlots,
+        deskSlots,
+        cabinetLocation,
+        deskLocation,
+        handleSaveStorage,
+    } = useNorthRoomStorageContext();
     const [name, setName] = useState<string>('');
     const [kind, setKind] = useState<SlotKind>('cabinet');
     const [position, setPosition] = useState<number>(1);
@@ -63,8 +56,8 @@ export const StorageControlPanel: FC<Props> = ({
         const trimmed = name.trim();
         if (!selected || !trimmed) return;
 
-        onSave(selected.locationId, trimmed, kind, position, useableFreeSpace);
-    }, [name, kind, position, useableFreeSpace, selected, onSave]);
+        handleSaveStorage(selected.locationId, trimmed, kind, position, useableFreeSpace);
+    }, [name, kind, position, useableFreeSpace, selected, handleSaveStorage]);
 
     // ロケーション変更時に段をリセット
     const handleKindChange = useCallback((nextKind: SlotKind) => {
@@ -105,7 +98,7 @@ export const StorageControlPanel: FC<Props> = ({
                         </div>
                         <div>
                             <IonNote>
-                                ロケーション: {selected.kind === 'cabinet' ? cabinet.name : desk.name} /{' '}
+                                ロケーション: {selected.kind === 'cabinet' ? cabinetLocation.name : deskLocation.name} /{' '}
                                 {selected.positionIndex ?? selected.storage?.positionIndex ?? '-'}段
                             </IonNote>
                         </div>
@@ -131,11 +124,11 @@ export const StorageControlPanel: FC<Props> = ({
                                 value={kind}
                                 onIonChange={(e) => handleKindChange(e.target.value as SlotKind)}>
                                 <IonSelectOption value='cabinet'>
-                                    {cabinet.name || 'キャビネット'}
+                                    {cabinetLocation.name || 'キャビネット'}
                                 </IonSelectOption>
 
                                 <IonSelectOption value='desk'>
-                                    {desk.name || 'デスク'}
+                                    {deskLocation.name || 'デスク'}
                                 </IonSelectOption>
                             </IonSelect>
                         </IonItem>
@@ -187,7 +180,7 @@ export const StorageControlPanel: FC<Props> = ({
                         <IonButton
                             color='medium'
                             size='small'
-                            onClick={onClear}>
+                            onClick={handleClearSelection}>
                             クリア
                         </IonButton>
 
