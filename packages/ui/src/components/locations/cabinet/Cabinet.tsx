@@ -1,7 +1,6 @@
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import { DrawerSlot } from './DrawerSlot'
-import { useNorthRoomHighlightContext } from '../NorthRoomHighlightProvider'
 import { useNorthRoomStorageContext } from '../NorthRoomStorageProvider'
 
 const DRAWER_COUNT = 5;
@@ -47,10 +46,7 @@ const Frame: FC = () => {
 
 // キャビネットの引き出しを描画するコンポーネント
 export const Cabinet: FC<Props> = () => {
-    const {
-        cabinetHighlight,
-        dispatchHighlight,
-    } = useNorthRoomHighlightContext();
+
     const {
         cabinetList,
         cabinetLocation,
@@ -61,13 +57,11 @@ export const Cabinet: FC<Props> = () => {
         const index = i + 1
         const y = -FH / 2 + drawerHeight / 2 + i * (drawerHeight + DRAWER_GAP)
         const slotStorages = (cabinetList ?? []).filter((storage) => storage.positionIndex === index)
-        const isHighlighted = cabinetHighlight != null && index === cabinetHighlight
 
         return {
             index,
             position: [RIGHT_X, y, 0.05] as [number, number, number],
             handlePosition: [RIGHT_X, y, 0.55] as [number, number, number],
-            isHighlighted,
             storages: slotStorages,
         }
     })
@@ -89,9 +83,7 @@ export const Cabinet: FC<Props> = () => {
                     drawerHeight={drawerHeight}
                     drawerDepth={FD_RIGHT - 0.08}
                     storages={drawer.storages}
-                    isHighlighted={drawer.isHighlighted}
-                    onClickLabel={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, storage })}
-                    onClick={(idx, slotStorages) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, positionIndex: idx, occupied: slotStorages.length > 0 })}
+                    locationId={cabinetLocation.id}
                 />
             ))}
         </group>

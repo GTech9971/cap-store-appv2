@@ -1,7 +1,8 @@
-import { type ThreeEvent } from '@react-three/fiber'
-import type { FC } from 'react'
+import { useCallback, useMemo, type FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import type { UiStorage } from '../types'
+import { useNorthRoomHighlightContext } from '../NorthRoomHighlightProvider'
+import type { Storage, } from 'cap-store-api-def'
 
 type Props = {
     index: number
@@ -9,10 +10,8 @@ type Props = {
     handlePosition: [number, number, number]
     drawerHeight: number
     drawerDepth: number
+    locationId: string,
     storages: UiStorage[]
-    isHighlighted: boolean
-    onClickLabel?: (storage: UiStorage) => void
-    onClick: (index: number, storages: UiStorage[]) => void
 }
 
 export const DrawerSlot: FC<Props> = ({
@@ -21,47 +20,82 @@ export const DrawerSlot: FC<Props> = ({
     handlePosition,
     drawerHeight,
     drawerDepth,
+    locationId,
     storages,
-    isHighlighted,
-    onClickLabel,
-    onClick,
 }) => {
-    const color = isHighlighted ? '#ffcc00' : '#777777'
 
-    // スロットクリックで選択や作成を親へ伝搬
-    const handleClick = (event: ThreeEvent<MouseEvent>) => {
-        event.stopPropagation()
-        onClick(index, storages)
-    }
+    const {
+        cabinetHighlight,
+        selected,
+        dispatchHighlight,
+    } = useNorthRoomHighlightContext();
+
+
+    const color = useMemo(() => {
+        return cabinetHighlight != null && index === cabinetHighlight
+            ? '#ffcc00'
+            : '#777777'
+    }, [cabinetHighlight, index]);
+
+    /** ラベルを光らすかどうか */
+    const isHighlightLabel = useCallback((storage: Storage): boolean => {
+        if (selected?.type === 'empty-slot') { return false; }
+
+        return selected?.kind === 'cabinet'
+            && selected?.positionIndex == index
+            && selected?.storage === storage;
+    }, [selected, index]);
+
+
 
     return (
         <group>
             <mesh
                 position={position}
-                onClick={handleClick}
-            >
+                onClick={() =>
+                    dispatchHighlight({
+                        type: 'SLOT_SELECTED',
+                        kind: 'cabinet',
+                        locationId: locationId,
+                        positionIndex: index,
+                        occupied: storages.length > 0
+                    })}>
                 <boxGeometry args={[1.3, drawerHeight, drawerDepth]} />
                 <meshStandardMaterial color={color} />
             </mesh>
+
             {storages.map((storage, idx) => (
                 <LabelOverlay
                     key={storage.id ?? `${index}-${idx}`}
+                    isHighlight={isHighlightLabel(storage)}
                     position={[
                         position[0] + 1.5,
                         position[1] + idx * 0.35,
                         position[2] + 0.6,
                     ]}
                     padding="4px 10px"
-                    onClick={() => onClickLabel?.(storage)}
-                >
+                    onClick={() =>
+                        dispatchHighlight({
+                            type: 'LABEL_SELECTED',
+                            kind: 'cabinet',
+                            locationId: locationId,
+                            storage
+                        })}>
                     {storage.name}
                 </LabelOverlay>
             ))}
+
             <mesh
                 rotation={[0, 0, Math.PI / 2]}
                 position={handlePosition}
-                onClick={handleClick}
-            >
+                onClick={() =>
+                    dispatchHighlight({
+                        type: 'SLOT_SELECTED',
+                        kind: 'cabinet',
+                        locationId: locationId,
+                        positionIndex: index,
+                        occupied: storages.length > 0
+                    })}>
                 <cylinderGeometry args={[0.06, 0.06, 0.6, 16]} />
                 <meshStandardMaterial color="#dddddd" />
             </mesh>
