@@ -1,14 +1,20 @@
 import type { Location, Storage } from 'cap-store-api-def'
-import { createContext, useCallback, useContext, useMemo, useReducer, type FC, type ReactNode } from 'react'
-import type { SlotKind, UiStorage } from './types'
+import { createContext, useContext, useEffect, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
+import type { HighlightAction } from './NorthRoomHighlightProvider'
 import { useNorthRoomHighlightContext } from './NorthRoomHighlightProvider'
+import type { Selected, SlotKind, UiStorage } from './types'
 
 const CABINET_SLOTS = 5;
 const DESK_SLOTS = 2;
 
-type StorageState = {
-    cabinetList: UiStorage[];
-    deskList: UiStorage[];
+type SaveRequestPayload = {
+    name: string;
+    kind: SlotKind;
+    positionIndex: number;
+    useableFreeSpace: number;
+    selected: Selected | null;
+    cabinetLocation: Location;
+    deskLocation: Location;
 };
 
 export type NorthRoomStorageContextValue = {
@@ -18,66 +24,128 @@ export type NorthRoomStorageContextValue = {
     deskList: UiStorage[];
     cabinetSlots: number;
     deskSlots: number;
-    handleSaveStorage: (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => void;
+    dispatchStorage: Dispatch<StorageAction>;
 };
 
 const NorthRoomStorageContext = createContext<NorthRoomStorageContextValue | undefined>(undefined);
 
 type StorageAction =
-    | { type: 'MOVE_STORAGE'; storage: UiStorage; toKind: SlotKind; positionIndex: number; cabinetLocationId?: string; deskLocationId?: string }
-    | { type: 'UPSERT_STORAGE'; storage: UiStorage; kind: SlotKind };
+    | { type: 'SAVE_REQUEST'; payload: SaveRequestPayload }
+    | { type: 'APPLY_NEW_ID'; target: UiStorage; storageId: string }
+    | { type: 'CLEAR_PENDING_PERSIST' }
+    | { type: 'CONSUME_PENDING_HIGHLIGHT' };
+
+type PersistState = { mode: 'new' | 'update'; storage: Storage } | null;
+
+type StorageState = {
+    cabinetList: UiStorage[];
+    deskList: UiStorage[];
+    pendingPersist: PersistState;
+    pendingHighlight: HighlightAction | null;
+};
 
 /**
- * storageReducerはNorthRoomのストレージ配列を更新するためのReducer。
- * 移動や新規登録時の整合性を担保する。
+ * storageReducerはNorthRoomのストレージ配列と永続化・ハイライト要求をまとめて扱うReducer。
+ * 保存リクエストを受けて整合の取れたリストを生成し、副作用のトリガーも状態として保持する。
  */
 const storageReducer = (state: StorageState, action: StorageAction): StorageState => {
     switch (action.type) {
-        case 'MOVE_STORAGE': {
-            const { storage, toKind, positionIndex, cabinetLocationId, deskLocationId } = action;
-            const allStorages: Storage[] = [...state.cabinetList, ...state.deskList];
-            const target: Storage | undefined = allStorages.find((s) => s.id === storage.id) ?? allStorages.find((s) => s === storage);
-            if (!target) return state;
+        case 'SAVE_REQUEST': {
+            const { name, kind, positionIndex, useableFreeSpace, selected, cabinetLocation, deskLocation } = action.payload;
 
-            const targetLocationId = toKind === 'cabinet' ? cabinetLocationId : deskLocationId;
-            const updated: UiStorage = {
-                ...target,
-                ...storage,
+            if (!selected) return state;
+
+            const targetLocation = kind === 'cabinet' ? cabinetLocation : deskLocation;
+            const removeFromList = (list: UiStorage[], target: UiStorage) => list.filter((s) => (target.id ? s.id !== target.id : s !== target));
+            const upsertToList = (list: UiStorage[], storage: UiStorage) => {
+                const targetIdx = storage.positionIndex ?? 1;
+                const withoutTarget = list.filter((s) => (storage.id ? s.id !== storage.id : s !== storage) && s.positionIndex !== targetIdx);
+                return [...withoutTarget, storage];
+            };
+
+            // 既存ストレージの更新・移動
+            if (selected.storage) {
+                const updatedStorage: UiStorage = {
+                    ...selected.storage,
+                    name,
+                    positionIndex,
+                    useableFreeSpace,
+                    locationId: targetLocation.id,
+                };
+
+                const nextCabinet = kind === 'cabinet'
+                    ? upsertToList(state.cabinetList, updatedStorage)
+                    : removeFromList(state.cabinetList, updatedStorage);
+
+                const nextDesk = kind === 'desk'
+                    ? upsertToList(state.deskList, updatedStorage)
+                    : removeFromList(state.deskList, updatedStorage);
+
+                return {
+                    ...state,
+                    cabinetList: nextCabinet,
+                    deskList: nextDesk,
+                    pendingPersist: { mode: 'update', storage: updatedStorage },
+                    pendingHighlight: { type: 'LABEL_SELECTED', kind, locationId: targetLocation.id, storage: updatedStorage },
+                };
+            }
+
+            // 既存データがある場合は無視
+            if (selected.hasStorage) {
+                return state;
+            }
+
+            // 新規登録
+            const newStorage: UiStorage = {
+                id: null!,
+                name,
                 positionIndex,
-                locationId: targetLocationId ?? target.locationId,
+                locationId: targetLocation.id,
+                useableFreeSpace,
             };
 
-            const removeFromList = (list: UiStorage[]) => list.filter((s) => s.id !== target.id && s !== target);
-            const nextCabinet = toKind === 'cabinet'
-                ? [...removeFromList(state.cabinetList), updated]
-                : removeFromList(state.cabinetList);
-
-            const nextDesk = toKind === 'desk'
-                ? [...removeFromList(state.deskList), updated]
-                : removeFromList(state.deskList);
-
-            return {
-                ...state,
-                cabinetList: nextCabinet,
-                deskList: nextDesk,
-            };
-        }
-
-        case 'UPSERT_STORAGE': {
-            const targetIndex = action.storage.positionIndex ?? 1;
-            const nextCabinet = action.kind === 'cabinet'
-                ? [...state.cabinetList.filter((s) => s.positionIndex !== targetIndex), action.storage]
+            const nextCabinet = kind === 'cabinet'
+                ? upsertToList(state.cabinetList, newStorage)
                 : state.cabinetList;
 
-            const nextDesk = action.kind === 'desk'
-                ? [...state.deskList.filter((s) => s.positionIndex !== targetIndex), action.storage]
+            const nextDesk = kind === 'desk'
+                ? upsertToList(state.deskList, newStorage)
                 : state.deskList;
 
             return {
                 ...state,
                 cabinetList: nextCabinet,
                 deskList: nextDesk,
+                pendingPersist: { mode: 'new', storage: newStorage },
+                pendingHighlight: { type: 'LABEL_SELECTED', kind, locationId: targetLocation.id, storage: newStorage },
             };
+        }
+
+        case 'APPLY_NEW_ID': {
+            const applyId = (list: UiStorage[]) => list.map((storage) => (storage === action.target ? { ...storage, id: action.storageId } : storage));
+            const updatedStorage = { ...action.target, id: action.storageId };
+            const isCabinetTarget = state.cabinetList.includes(action.target);
+            const fallbackKind: SlotKind = isCabinetTarget ? 'cabinet' : 'desk';
+            const updatedHighlight = state.pendingHighlight?.type === 'LABEL_SELECTED'
+                ? { ...state.pendingHighlight, storage: updatedStorage }
+                : null;
+
+            return {
+                ...state,
+                cabinetList: applyId(state.cabinetList),
+                deskList: applyId(state.deskList),
+                pendingPersist: null,
+                pendingHighlight: updatedHighlight
+                    ?? { type: 'LABEL_SELECTED', kind: fallbackKind, locationId: updatedStorage.locationId ?? '', storage: updatedStorage },
+            };
+        }
+
+        case 'CLEAR_PENDING_PERSIST': {
+            return { ...state, pendingPersist: null };
+        }
+
+        case 'CONSUME_PENDING_HIGHLIGHT': {
+            return { ...state, pendingHighlight: null };
         }
 
         default:
@@ -99,77 +167,43 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
     const [storageState, storageDispatch] = useReducer(storageReducer, {
         cabinetList: cabinetLocation.storages ?? [],
         deskList: deskLocation.storages ?? [],
+        pendingPersist: null,
+        pendingHighlight: null,
     });
 
-    const { dispatchHighlight, selected } = useNorthRoomHighlightContext();
+    const { dispatchHighlight } = useNorthRoomHighlightContext();
 
-    const { cabinetList, deskList } = storageState;
-
-    /**
-     * ストレージを指定ロケーションへ移動する。
-     */
-    const moveStorage = useCallback((storage: UiStorage, toKind: SlotKind, positionIndex: number) => {
-        storageDispatch({
-            type: 'MOVE_STORAGE',
-            storage,
-            toKind,
-            positionIndex,
-            cabinetLocationId: cabinetLocation.id,
-            deskLocationId: deskLocation.id,
-        });
-    }, [cabinetLocation.id, deskLocation.id]);
+    const { cabinetList, deskList, pendingPersist, pendingHighlight } = storageState;
 
     /**
-     * 新規ストレージを指定位置へ追加する。
+     * pendingHighlightをHighlightProviderへ流す副作用ハンドラー。
      */
-    const addStorage = useCallback((kind: SlotKind, index: number, name: string, location?: Location) => {
-        const targetLocation = location ?? (kind === 'cabinet' ? cabinetLocation : deskLocation);
+    useEffect(() => {
+        if (!pendingHighlight) return;
+        dispatchHighlight(pendingHighlight);
+        storageDispatch({ type: 'CONSUME_PENDING_HIGHLIGHT' });
+    }, [dispatchHighlight, pendingHighlight, storageDispatch]);
 
-        const newStorage: UiStorage = {
-            id: null!,
-            name,
-            positionIndex: index,
-            locationId: targetLocation?.id,
+    /**
+     * pendingPersistがある場合にAPI保存を実行し、ID更新や待ち状態の解消を行う副作用ハンドラー。
+     */
+    useEffect(() => {
+        if (!pendingPersist) return;
+
+        const persist = async () => {
+            const { mode, storage } = pendingPersist;
+            if (mode === 'new') {
+                const newId = await onSave('new', storage);
+                storageDispatch({ type: 'APPLY_NEW_ID', target: storage as UiStorage, storageId: newId });
+                return;
+            }
+
+            await onSave('update', storage);
+            storageDispatch({ type: 'CLEAR_PENDING_PERSIST' });
         };
 
-        storageDispatch({
-            type: 'UPSERT_STORAGE',
-            storage: newStorage,
-            kind,
-        });
-    }, [cabinetLocation, deskLocation]);
-
-    /**
-     * パネルからの保存で新規登録・更新・移動を処理する。
-     */
-    const handleSaveStorage = useCallback(async (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => {
-        if (!selected) return;
-
-        // 更新
-        if (selected.storage) {
-            const nextStorage = { ...selected.storage, name, positionIndex: positionIndex, useableFreeSpace: useableFreeSpace };
-            moveStorage(nextStorage, kind, positionIndex);
-            dispatchHighlight({ type: 'LABEL_SELECTED', kind, locationId, storage: nextStorage });
-
-            await onSave('update', nextStorage);
-            return;
-        }
-
-        if (selected.hasStorage) { return; }
-
-        // 新規
-        const location: Location = kind === 'cabinet'
-            ? cabinetLocation
-            : deskLocation;
-
-        const newStorage: Storage = { id: null!, name, positionIndex, locationId: location.id, useableFreeSpace: useableFreeSpace };
-
-        const newStorageId: string = await onSave('new', newStorage);
-        const savedStorage: UiStorage = { ...newStorage, id: newStorageId };
-
-        addStorage(kind, positionIndex, name, location);
-        dispatchHighlight({ type: 'LABEL_SELECTED', kind, locationId, storage: savedStorage });
-    }, [addStorage, cabinetLocation, deskLocation, dispatchHighlight, moveStorage, onSave, selected]);
+        void persist();
+    }, [onSave, pendingPersist, storageDispatch]);
 
     const storageContextValue = useMemo(() => ({
         cabinetLocation,
@@ -178,8 +212,8 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
         deskList,
         cabinetSlots: CABINET_SLOTS,
         deskSlots: DESK_SLOTS,
-        handleSaveStorage,
-    }), [cabinetList, cabinetLocation, deskList, deskLocation, handleSaveStorage]);
+        dispatchStorage: storageDispatch,
+    }), [cabinetList, cabinetLocation, deskList, deskLocation, storageDispatch]);
 
     return (
         <NorthRoomStorageContext.Provider value={storageContextValue}>

@@ -26,7 +26,7 @@ export const StorageControlPanel: FC = () => {
         deskSlots,
         cabinetLocation,
         deskLocation,
-        handleSaveStorage,
+        dispatchStorage,
     } = useNorthRoomStorageContext();
     const [name, setName] = useState<string>('');
     const [kind, setKind] = useState<SlotKind>('cabinet');
@@ -52,13 +52,24 @@ export const StorageControlPanel: FC = () => {
         return Array.from({ length }, (_, idx) => idx + 1).sort((a, b) => b - a);
     }, [cabinetSlots, deskSlots, kind]);
 
-    // 保存ボタンで編集結果を親へ通知
+    // 保存ボタンで編集結果をReducerへ通知
     const handleSave = useCallback(() => {
         const trimmed = name.trim();
         if (!selected || !trimmed) return;
 
-        handleSaveStorage(selected.locationId, trimmed, kind, position, useableFreeSpace);
-    }, [name, kind, position, useableFreeSpace, selected, handleSaveStorage]);
+        dispatchStorage({
+            type: 'SAVE_REQUEST',
+            payload: {
+                name: trimmed,
+                kind,
+                positionIndex: position,
+                useableFreeSpace,
+                selected,
+                cabinetLocation,
+                deskLocation,
+            },
+        });
+    }, [cabinetLocation, deskLocation, dispatchStorage, kind, name, position, selected, useableFreeSpace]);
 
     /**
      * 選択状態をクリアするハンドラー。ハイライトと選択をリセットする。
