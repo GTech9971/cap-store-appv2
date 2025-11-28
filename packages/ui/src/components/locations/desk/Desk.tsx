@@ -1,7 +1,6 @@
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import { ShelfSlot } from './ShelfSlot'
-import { useNorthRoomHighlightContext } from '../NorthRoomHighlightProvider'
 import { useNorthRoomStorageContext } from '../NorthRoomStorageProvider'
 
 
@@ -13,7 +12,7 @@ const FD_LEFT = 2.8
 const FT = 0.12
 const LEFT_Z_SHIFT = FD_RIGHT / 2 - FD_LEFT / 2
 
-type Props = Record<string, never>;
+type Props = Record<string, unknown>
 
 type FrameSegment = {
     position: [number, number, number]
@@ -47,10 +46,7 @@ const Frame: FC = () => {
 
 // デスクの棚とラベルを描画するコンポーネント
 export const Desk: FC<Props> = () => {
-    const {
-        deskHighlight,
-        dispatchHighlight,
-    } = useNorthRoomHighlightContext();
+
     const {
         deskLocation,
         deskList,
@@ -68,7 +64,6 @@ export const Desk: FC<Props> = () => {
             {shelfPositions.map((position, idx) => {
                 const index = idx + 1
                 const slotStorages = (deskList ?? []).filter((s) => s.positionIndex === index)
-                const isHighlighted = deskHighlight != null && index === deskHighlight
                 return (
                     <ShelfSlot
                         key={index}
@@ -76,10 +71,8 @@ export const Desk: FC<Props> = () => {
                         position={[LEFT_X, position, LEFT_Z_SHIFT]}
                         size={[1.9, 0.15, FD_LEFT - 0.1]}
                         labelPosition={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
+                        locationId={deskLocation.id}
                         storages={slotStorages}
-                        isHighlighted={isHighlighted}
-                        onClickLabel={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'desk', locationId: deskLocation.id, storage })}
-                        onClick={(idx, slot) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'desk', locationId: deskLocation.id, positionIndex: idx, occupied: slot.length > 0 })}
                     />
                 )
             })}
