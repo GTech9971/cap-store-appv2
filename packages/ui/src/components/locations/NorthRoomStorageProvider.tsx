@@ -29,15 +29,39 @@ export type NorthRoomStorageContextValue = {
 
 const NorthRoomStorageContext = createContext<NorthRoomStorageContextValue | undefined>(undefined);
 
-type StorageAction =
-    | { type: 'SAVE_REQUEST'; payload: SaveRequestPayload }
-    | { type: 'APPLY_NEW_ID'; target: UiStorage; storageId: string }
-    | { type: 'CLEAR_PENDING_PERSIST' }
-    | { type: 'CONSUME_PENDING_HIGHLIGHT' };
+////////////Action////////////
+
+export type StorageActionSaveRequest = {
+    type: 'SAVE_REQUEST',
+    payload: SaveRequestPayload
+};
+
+export type StorageActionApplyNewId = {
+    type: 'APPLY_NEW_ID',
+    target: UiStorage,
+    storageId: string
+}
+
+export type StorageActionClearPendingPersist = {
+    type: 'CLEAR_PENDING_PERSIST'
+}
+
+export type StorageActionConsumePendingHighlight = {
+    type: 'CONSUME_PENDING_HIGHLIGHT'
+}
+
+export type StorageAction =
+    | StorageActionSaveRequest
+    | StorageActionApplyNewId
+    | StorageActionClearPendingPersist
+    | StorageActionConsumePendingHighlight
+
+
+////////////////////////////////
 
 type PersistState = { mode: 'new' | 'update'; storage: Storage } | null;
 
-type StorageState = {
+export type StorageState = {
     cabinetList: UiStorage[];
     deskList: UiStorage[];
     pendingPersist: PersistState;
@@ -48,7 +72,7 @@ type StorageState = {
  * storageReducerはNorthRoomのストレージ配列と永続化・ハイライト要求をまとめて扱うReducer。
  * 保存リクエストを受けて整合の取れたリストを生成し、副作用のトリガーも状態として保持する。
  */
-const storageReducer = (state: StorageState, action: StorageAction): StorageState => {
+export const storageReducer = (state: StorageState, action: StorageAction): StorageState => {
     switch (action.type) {
         case 'SAVE_REQUEST': {
             const { name, kind, positionIndex, useableFreeSpace, selected, cabinetLocation, deskLocation } = action.payload;
