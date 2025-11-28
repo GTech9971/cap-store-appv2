@@ -11,7 +11,7 @@ type Props = {
     drawerDepth: number
     storages: UiStorage[]
     isHighlighted: boolean
-    onEdit?: (storage: UiStorage) => void
+    onClickLabel?: (storage: UiStorage) => void
     onClick: (index: number, storages: UiStorage[]) => void
 }
 
@@ -23,7 +23,7 @@ export const DrawerSlot: FC<Props> = ({
     drawerDepth,
     storages,
     isHighlighted,
-    onEdit,
+    onClickLabel,
     onClick,
 }) => {
     const color = isHighlighted ? '#ffcc00' : '#777777'
@@ -52,7 +52,7 @@ export const DrawerSlot: FC<Props> = ({
                         position[2] + 0.6,
                     ]}
                     padding="4px 10px"
-                    onClick={() => onEdit?.(storage)}
+                    onClick={() => onClickLabel?.(storage)}
                 >
                     {storage.name}
                 </LabelOverlay>

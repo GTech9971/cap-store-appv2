@@ -11,11 +11,46 @@ export type HighlightSelection =
     | { type: 'empty-slot'; kind: SlotKind; locationId: string; positionIndex: number; occupied: boolean }
     | { type: 'storage'; kind: SlotKind; locationId: string; positionIndex: number; storage: Storage };
 
+
+/////////アクション定義/////////
+
+/**
+ * スロット選択時
+ */
+type HighlightActionSlotSelected = {
+    type: 'SLOT_SELECTED',
+    kind: SlotKind,
+    locationId: string,
+    positionIndex: number,
+    /** 既存ストレージの有無 */
+    occupied: boolean
+}
+
+/**
+ * ラベル選択時
+ */
+type HighlightActionLabelSelected = {
+    type: 'LABEL_SELECTED',
+    kind: SlotKind,
+    locationId: string,
+    /** ラベルに表示されているストレージの内容 */
+    storage: Storage
+};
+
+
+/** 選択状態をクリアするハンドラー。ハイライトと選択をリセットする。 */
+type HighlightClearAllAction = { type: 'CLEAR_ALL', }
+
+
+/**
+ * CLEAR_ALL: 選択状態をクリアするハンドラー。ハイライトと選択をリセットする。
+ */
 export type HighlightAction =
-    | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; occupied: boolean }
-    | { type: 'LABEL_SELECTED'; kind: SlotKind; locationId: string; storage: Storage }
-    | { type: 'APPLY_SELECTION'; selected: HighlightSelection | null }
-    | { type: 'CLEAR_ALL' };
+    | HighlightActionSlotSelected
+    | HighlightActionLabelSelected
+    | HighlightClearAllAction;
+
+/////////アクション定義/////////
 
 export type NorthRoomHighlightContextValue = {
     cabinetHighlight: number | null;
@@ -88,20 +123,6 @@ const highlightReducer = (state: HighlightState, action: HighlightAction): Highl
             };
         }
 
-        case 'APPLY_SELECTION': {
-            if (!action.selected) {
-                return { cabinetHighlight: null, deskHighlight: null, selected: null };
-            }
-
-            const isCabinet = action.selected.kind === 'cabinet';
-            const index = action.selected.positionIndex ?? (action.selected.type === 'storage' ? action.selected.storage.positionIndex : null);
-
-            return {
-                cabinetHighlight: isCabinet ? index : null,
-                deskHighlight: !isCabinet ? index : null,
-                selected: action.selected,
-            };
-        }
 
         case 'CLEAR_ALL': {
             return { cabinetHighlight: null, deskHighlight: null, selected: null };

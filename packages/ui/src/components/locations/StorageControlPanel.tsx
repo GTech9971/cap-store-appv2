@@ -28,6 +28,7 @@ export const StorageControlPanel: FC = () => {
         deskLocation,
         dispatchStorage,
     } = useNorthRoomStorageContext();
+
     const [name, setName] = useState<string>('');
     const [kind, setKind] = useState<SlotKind>('cabinet');
     const [position, setPosition] = useState<number>(1);
@@ -82,9 +83,6 @@ export const StorageControlPanel: FC = () => {
     /**
      * 選択状態をクリアするハンドラー。ハイライトと選択をリセットする。
      */
-    const handleClearSelection = useCallback(() => {
-        dispatchHighlight({ type: 'CLEAR_ALL' });
-    }, [dispatchHighlight]);
 
     // ロケーション変更時に段をリセット
     const handleKindChange = useCallback((nextKind: SlotKind) => {
@@ -126,7 +124,7 @@ export const StorageControlPanel: FC = () => {
                         <div>
                             <IonNote>
                                 ロケーション: {selected.kind === 'cabinet' ? cabinetLocation.name : deskLocation.name} /{' '}
-                                {selected.positionIndex ?? (selected.type === 'storage' ? selected.storage.positionIndex : '-') }段
+                                {selected.positionIndex ?? (selected.type === 'storage' ? selected.storage.positionIndex : '-')}段
                             </IonNote>
                         </div>
 
@@ -207,7 +205,7 @@ export const StorageControlPanel: FC = () => {
                         <IonButton
                             color='medium'
                             size='small'
-                            onClick={handleClearSelection}>
+                            onClick={() => dispatchHighlight({ type: 'CLEAR_ALL' })}>
                             クリア
                         </IonButton>
 

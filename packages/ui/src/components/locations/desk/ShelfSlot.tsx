@@ -10,7 +10,7 @@ type Props = {
     labelPosition: [number, number, number]
     storages: UiStorage[]
     isHighlighted: boolean
-    onEdit?: (storage: UiStorage) => void
+    onClickLabel?: (storage: UiStorage) => void
     onClick: (index: number, storages: UiStorage[]) => void
 }
 
@@ -21,7 +21,7 @@ export const ShelfSlot: FC<Props> = ({
     labelPosition,
     storages,
     isHighlighted,
-    onEdit,
+    onClickLabel,
     onClick,
 }) => {
     const color = isHighlighted ? '#ffcc00' : '#bbbbbb'
@@ -46,7 +46,7 @@ export const ShelfSlot: FC<Props> = ({
                     key={storage.id ?? `${index}-${idx}`}
                     position={[labelPosition[0], labelPosition[1] + idx * 0.35, labelPosition[2]]}
                     padding="4px 10px"
-                    onClick={() => onEdit?.(storage)}
+                    onClick={() => onClickLabel?.(storage)}
                 >
                     {storage.name}
                 </LabelOverlay>

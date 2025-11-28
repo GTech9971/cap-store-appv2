@@ -90,7 +90,7 @@ export const Cabinet: FC<Props> = () => {
                     drawerDepth={FD_RIGHT - 0.08}
                     storages={drawer.storages}
                     isHighlighted={drawer.isHighlighted}
-                    onEdit={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, storage })}
+                    onClickLabel={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, storage })}
                     onClick={(idx, slotStorages) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, positionIndex: idx, occupied: slotStorages.length > 0 })}
                 />
             ))}
