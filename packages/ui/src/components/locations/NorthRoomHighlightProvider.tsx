@@ -4,15 +4,15 @@ import type { SlotKind } from './types'
 
 /**
  * HighlightSelectionはNorthRoom内で選択している対象を明示的に表すための型。
- * - empty-slot: 空き枠（既存ストレージがあるかどうかはexistingStoragesで判定）
+ * - empty-slot: 空き枠（occupiedで既存ストレージの有無を判定）
  * - storage: 既存ストレージを直接指定
  */
 export type HighlightSelection =
-    | { type: 'empty-slot'; kind: SlotKind; locationId: string; positionIndex: number; existingStorages: Storage[] }
+    | { type: 'empty-slot'; kind: SlotKind; locationId: string; positionIndex: number; occupied: boolean }
     | { type: 'storage'; kind: SlotKind; locationId: string; positionIndex: number; storage: Storage };
 
 export type HighlightAction =
-    | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; slotStorages: Storage[] }
+    | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; occupied: boolean }
     | { type: 'LABEL_SELECTED'; kind: SlotKind; locationId: string; storage: Storage }
     | { type: 'APPLY_SELECTION'; selected: HighlightSelection | null }
     | { type: 'CLEAR_ALL' };
@@ -54,7 +54,7 @@ const highlightReducer = (state: HighlightState, action: HighlightAction): Highl
                     kind: action.kind,
                     locationId: action.locationId,
                     positionIndex: action.positionIndex,
-                    existingStorages: action.slotStorages,
+                    occupied: action.occupied,
                 },
             };
         }

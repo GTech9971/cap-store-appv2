@@ -188,7 +188,7 @@ export const StorageControlPanel: FC = () => {
 
                     </IonList>
 
-                    {(selected.type === 'empty-slot' && selected.existingStorages.length > 0) &&
+                    {(selected.type === 'empty-slot' && selected.occupied) &&
                         <IonText color='warning' style={{ fontSize: '10px' }}>
                             既存データがあります。編集はラベルクリックで行ってください。
                         </IonText>
@@ -200,7 +200,7 @@ export const StorageControlPanel: FC = () => {
                             onClick={handleSave}
                             disabled={
                                 !name.trim() ||
-                                (selected?.type === 'empty-slot' && selected.existingStorages.length > 0)}>
+                                (selected?.type === 'empty-slot' && selected.occupied)}>
                             保存
                         </IonButton>
 

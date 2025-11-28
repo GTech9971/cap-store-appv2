@@ -91,7 +91,7 @@ const storageReducer = (state: StorageState, action: StorageAction): StorageStat
             }
 
             // 既存データがある場合は無視
-            if (selected.existingStorages.length > 0) {
+            if (selected.occupied) {
                 return state;
             }
 

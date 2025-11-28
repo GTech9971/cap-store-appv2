@@ -79,7 +79,7 @@ export const Desk: FC<Props> = () => {
                         storages={slotStorages}
                         isHighlighted={isHighlighted}
                         onEdit={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'desk', locationId: deskLocation.id, storage })}
-                        onClick={(idx, slot) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'desk', locationId: deskLocation.id, positionIndex: idx, slotStorages: slot })}
+                        onClick={(idx, slot) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'desk', locationId: deskLocation.id, positionIndex: idx, occupied: slot.length > 0 })}
                     />
                 )
             })}

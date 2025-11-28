@@ -91,7 +91,7 @@ export const Cabinet: FC<Props> = () => {
                     storages={drawer.storages}
                     isHighlighted={drawer.isHighlighted}
                     onEdit={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, storage })}
-                    onClick={(idx, slotStorages) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, positionIndex: idx, slotStorages })}
+                    onClick={(idx, slotStorages) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'cabinet', locationId: cabinetLocation.id, positionIndex: idx, occupied: slotStorages.length > 0 })}
                 />
             ))}
         </group>
