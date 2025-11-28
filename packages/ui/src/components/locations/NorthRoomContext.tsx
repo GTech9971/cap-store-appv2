@@ -10,6 +10,7 @@ export type NorthRoomHighlightContextValue = {
     handleSelectStorage: (kind: SlotKind, locationId: string, storage: Storage) => void;
     handleClearSelection: () => void;
     applyHighlight: (kind: SlotKind, index: number | null) => void;
+    setSelected: (selected: Selected | null) => void;
 };
 
 export type NorthRoomStorageContextValue = {
