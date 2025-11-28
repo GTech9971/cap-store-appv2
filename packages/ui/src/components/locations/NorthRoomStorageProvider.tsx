@@ -89,7 +89,7 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
         deskList: deskLocation.storages ?? [],
     });
 
-    const { applyHighlight, selected, setSelected } = useNorthRoomHighlightContext();
+    const { dispatchHighlight, selected } = useNorthRoomHighlightContext();
 
     const { cabinetList, deskList } = storageState;
 
@@ -137,8 +137,8 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
         if (selected.storage) {
             const nextStorage = { ...selected.storage, name, positionIndex: positionIndex, useableFreeSpace: useableFreeSpace };
             moveStorage(nextStorage, kind, positionIndex);
-            setSelected({ kind, locationId, positionIndex, storage: nextStorage, hasStorage: true });
-            applyHighlight(kind, positionIndex);
+            dispatchHighlight({ type: 'SET_SELECTED', selected: { kind, locationId, positionIndex, storage: nextStorage, hasStorage: true } });
+            dispatchHighlight({ type: 'HIGHLIGHT_SLOT', kind, index: positionIndex });
 
             await onSave('update', nextStorage);
             return;
@@ -157,9 +157,9 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
         const savedStorage: UiStorage = { ...newStorage, id: newStorageId };
 
         addStorage(kind, positionIndex, name, location);
-        setSelected({ kind, locationId, positionIndex, storage: savedStorage, hasStorage: true });
-        applyHighlight(kind, positionIndex);
-    }, [addStorage, applyHighlight, cabinetLocation, deskLocation, moveStorage, onSave, selected, setSelected]);
+        dispatchHighlight({ type: 'SET_SELECTED', selected: { kind, locationId, positionIndex, storage: savedStorage, hasStorage: true } });
+        dispatchHighlight({ type: 'HIGHLIGHT_SLOT', kind, index: positionIndex });
+    }, [addStorage, cabinetLocation, deskLocation, dispatchHighlight, moveStorage, onSave, selected]);
 
     const storageContextValue = useMemo(() => ({
         cabinetLocation,

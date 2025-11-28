@@ -1,6 +1,12 @@
 import type { Location, Storage } from 'cap-store-api-def'
-import { createContext, useContext } from 'react'
+import { createContext, useContext, type Dispatch } from 'react'
 import type { Selected, SlotKind, UiStorage } from './types'
+
+export type HighlightAction =
+    | { type: 'HIGHLIGHT_SLOT'; kind: SlotKind; index: number | null }
+    | { type: 'CLEAR_HIGHLIGHT' }
+    | { type: 'SET_SELECTED'; selected: Selected | null }
+    | { type: 'CLEAR_ALL' };
 
 export type NorthRoomHighlightContextValue = {
     cabinetHighlight: number | null;
@@ -8,9 +14,7 @@ export type NorthRoomHighlightContextValue = {
     selected: Selected | null;
     handleSlotAction: (kind: SlotKind, locationId: string, index: number, slotStorages: Storage[]) => void;
     handleSelectStorage: (kind: SlotKind, locationId: string, storage: Storage) => void;
-    handleClearSelection: () => void;
-    applyHighlight: (kind: SlotKind, index: number | null) => void;
-    setSelected: (selected: Selected | null) => void;
+    dispatchHighlight: Dispatch<HighlightAction>;
 };
 
 export type NorthRoomStorageContextValue = {

@@ -18,7 +18,7 @@ import './StorageControlPanel.css';
 export const StorageControlPanel: FC = () => {
     const {
         selected,
-        handleClearSelection,
+        dispatchHighlight,
     } = useNorthRoomHighlightContext();
     const {
         cabinetSlots,
@@ -58,6 +58,13 @@ export const StorageControlPanel: FC = () => {
 
         handleSaveStorage(selected.locationId, trimmed, kind, position, useableFreeSpace);
     }, [name, kind, position, useableFreeSpace, selected, handleSaveStorage]);
+
+    /**
+     * 選択状態をクリアするハンドラー。ハイライトと選択をリセットする。
+     */
+    const handleClearSelection = useCallback(() => {
+        dispatchHighlight({ type: 'CLEAR_ALL' });
+    }, [dispatchHighlight]);
 
     // ロケーション変更時に段をリセット
     const handleKindChange = useCallback((nextKind: SlotKind) => {

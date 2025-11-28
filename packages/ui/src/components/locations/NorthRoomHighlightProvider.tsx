@@ -1,19 +1,13 @@
 import { useCallback, useMemo, useReducer, type FC, type ReactNode } from 'react'
 import type { Storage } from 'cap-store-api-def'
 import type { Selected, SlotKind } from './types'
-import { NorthRoomHighlightContextProvider } from './NorthRoomContext'
+import { NorthRoomHighlightContextProvider, type HighlightAction } from './NorthRoomContext'
 
 type HighlightState = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
     selected: Selected | null;
 };
-
-type HighlightAction =
-    | { type: 'HIGHLIGHT_SLOT'; kind: SlotKind; index: number | null }
-    | { type: 'CLEAR_HIGHLIGHT' }
-    | { type: 'SET_SELECTED'; selected: Selected | null }
-    | { type: 'CLEAR_ALL' };
 
 /**
  * highlightReducerは選択状態とハイライトを一元管理するためのReducer。
@@ -62,27 +56,6 @@ export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
     const { cabinetHighlight, deskHighlight, selected } = highlightState;
 
     /**
-     * 指定したスロットのハイライト状態を変更する。ハイライトだけを外部から更新したいケース用。
-     */
-    const applyHighlight = useCallback((kind: SlotKind, index: number | null) => {
-        highlightDispatch({ type: 'HIGHLIGHT_SLOT', kind, index });
-    }, []);
-
-    /**
-     * 選択情報をクリアし、ハイライトも初期化する。
-     */
-    const handleClearSelection = useCallback(() => {
-        highlightDispatch({ type: 'CLEAR_ALL' });
-    }, []);
-
-    /**
-     * Provider外から任意の選択状態を設定するためのAPI。
-     */
-    const setSelected = useCallback((nextSelected: Selected | null) => {
-        highlightDispatch({ type: 'SET_SELECTED', selected: nextSelected });
-    }, []);
-
-    /**
      * スロット選択時の処理。空きスロットはトグル、選択状態を更新する。
      */
     const handleSlotAction = useCallback((kind: SlotKind, locationId: string, index: number, slotStorages: Storage[]) => {
@@ -93,13 +66,13 @@ export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
             selected.positionIndex === index;
 
         if (isSameEmpty) {
-            handleClearSelection();
+            highlightDispatch({ type: 'CLEAR_ALL' });
             return;
         }
 
-        applyHighlight(kind, index);
+        highlightDispatch({ type: 'HIGHLIGHT_SLOT', kind, index });
         highlightDispatch({ type: 'SET_SELECTED', selected: { kind, locationId, positionIndex: index, storage: null, hasStorage: slotStorages.length > 0 } });
-    }, [applyHighlight, handleClearSelection, selected]);
+    }, [selected]);
 
     /**
      * ラベルクリック時に既存ストレージを選択状態として設定する。
@@ -115,13 +88,13 @@ export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
                     selected.storage.name === storage.name));
 
         if (isSame) {
-            handleClearSelection();
+            highlightDispatch({ type: 'CLEAR_ALL' });
             return;
         }
 
         highlightDispatch({ type: 'SET_SELECTED', selected: { kind, locationId: locationId, storage, positionIndex: storage.positionIndex ?? 1, hasStorage: true } });
-        applyHighlight(kind, storage.positionIndex ?? 1);
-    }, [applyHighlight, handleClearSelection, selected]);
+        highlightDispatch({ type: 'HIGHLIGHT_SLOT', kind, index: storage.positionIndex ?? 1 });
+    }, [selected]);
 
     const highlightContextValue = useMemo(() => ({
         cabinetHighlight,
@@ -129,10 +102,8 @@ export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
         selected,
         handleSlotAction,
         handleSelectStorage,
-        handleClearSelection,
-        applyHighlight,
-        setSelected,
-    }), [applyHighlight, cabinetHighlight, deskHighlight, handleClearSelection, handleSelectStorage, handleSlotAction, selected, setSelected]);
+        dispatchHighlight: highlightDispatch,
+    }), [cabinetHighlight, deskHighlight, handleSelectStorage, handleSlotAction, highlightDispatch, selected]);
 
     return (
         <NorthRoomHighlightContextProvider value={highlightContextValue}>
