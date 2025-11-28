@@ -1,8 +1,8 @@
 import type { Location, Storage } from 'cap-store-api-def'
 import { createContext, useContext, useEffect, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
-import type { HighlightAction } from './NorthRoomHighlightProvider'
+import type { HighlightAction, SelectedSlot } from './NorthRoomHighlightProvider'
 import { useNorthRoomHighlightContext } from './NorthRoomHighlightProvider'
-import type { Selected, SlotKind, UiStorage } from './types'
+import type { SlotKind, UiStorage } from './types'
 
 const CABINET_SLOTS = 5;
 const DESK_SLOTS = 2;
@@ -12,7 +12,7 @@ type SaveRequestPayload = {
     kind: SlotKind;
     positionIndex: number;
     useableFreeSpace: number;
-    selected: Selected | null;
+    selected: SelectedSlot | null;
     cabinetLocation: Location;
     deskLocation: Location;
 };

@@ -1,17 +1,25 @@
 import { createContext, useContext, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
 import type { Storage } from 'cap-store-api-def'
-import type { Selected, SlotKind } from './types'
+import type { SlotKind } from './types'
+
+export type SelectedSlot = {
+    kind: SlotKind;
+    locationId: string;
+    positionIndex: number;
+    storage: Storage | null;
+    hasStorage: boolean;
+};
 
 export type HighlightAction =
     | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; slotStorages: Storage[] }
     | { type: 'LABEL_SELECTED'; kind: SlotKind; locationId: string; storage: Storage }
-    | { type: 'APPLY_SELECTION'; selected: Selected | null }
+    | { type: 'APPLY_SELECTION'; selected: SelectedSlot | null }
     | { type: 'CLEAR_ALL' };
 
 export type NorthRoomHighlightContextValue = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
-    selected: Selected | null;
+    selected: SelectedSlot | null;
     dispatchHighlight: Dispatch<HighlightAction>;
 };
 
@@ -20,7 +28,7 @@ const NorthRoomHighlightContext = createContext<NorthRoomHighlightContextValue |
 type HighlightState = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
-    selected: Selected | null;
+    selected: SelectedSlot | null;
 };
 
 /**
