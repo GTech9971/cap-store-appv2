@@ -1,7 +1,21 @@
-import { useMemo, useReducer, type FC, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
 import type { Storage } from 'cap-store-api-def'
 import type { Selected, SlotKind } from './types'
-import { NorthRoomHighlightContextProvider, type HighlightAction } from './NorthRoomContext'
+
+export type HighlightAction =
+    | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; slotStorages: Storage[] }
+    | { type: 'LABEL_SELECTED'; kind: SlotKind; locationId: string; storage: Storage }
+    | { type: 'APPLY_SELECTION'; selected: Selected | null }
+    | { type: 'CLEAR_ALL' };
+
+export type NorthRoomHighlightContextValue = {
+    cabinetHighlight: number | null;
+    deskHighlight: number | null;
+    selected: Selected | null;
+    dispatchHighlight: Dispatch<HighlightAction>;
+};
+
+const NorthRoomHighlightContext = createContext<NorthRoomHighlightContextValue | undefined>(undefined);
 
 type HighlightState = {
     cabinetHighlight: number | null;
@@ -103,8 +117,21 @@ export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
     }), [cabinetHighlight, deskHighlight, highlightDispatch, selected]);
 
     return (
-        <NorthRoomHighlightContextProvider value={highlightContextValue}>
+        <NorthRoomHighlightContext.Provider value={highlightContextValue}>
             {children}
-        </NorthRoomHighlightContextProvider>
+        </NorthRoomHighlightContext.Provider>
     );
+};
+
+/**
+ * useNorthRoomHighlightContextはNorthRoom配下でハイライト・選択状態を扱うカスタムフック。
+ * Provider外で呼び出した場合は例外を投げる。
+ */
+export const useNorthRoomHighlightContext = (): NorthRoomHighlightContextValue => {
+    const context = useContext(NorthRoomHighlightContext);
+    if (!context) {
+        throw new Error('useNorthRoomHighlightContext must be used within NorthRoom highlight provider');
+    }
+
+    return context;
 };

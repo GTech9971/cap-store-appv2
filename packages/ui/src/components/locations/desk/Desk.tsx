@@ -1,7 +1,8 @@
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import { ShelfSlot } from './ShelfSlot'
-import { useNorthRoomHighlightContext, useNorthRoomStorageContext } from '../NorthRoomContext'
+import { useNorthRoomHighlightContext } from '../NorthRoomHighlightProvider'
+import { useNorthRoomStorageContext } from '../NorthRoomStorageProvider'
 
 
 const LEFT_X = -1.6

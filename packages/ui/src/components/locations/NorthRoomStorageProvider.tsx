@@ -1,7 +1,7 @@
 import type { Location, Storage } from 'cap-store-api-def'
-import { useCallback, useMemo, useReducer, type FC, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useReducer, type FC, type ReactNode } from 'react'
 import type { SlotKind, UiStorage } from './types'
-import { NorthRoomStorageContextProvider, useNorthRoomHighlightContext } from './NorthRoomContext'
+import { useNorthRoomHighlightContext } from './NorthRoomHighlightProvider'
 
 const CABINET_SLOTS = 5;
 const DESK_SLOTS = 2;
@@ -10,6 +10,18 @@ type StorageState = {
     cabinetList: UiStorage[];
     deskList: UiStorage[];
 };
+
+export type NorthRoomStorageContextValue = {
+    cabinetLocation: Location;
+    deskLocation: Location;
+    cabinetList: UiStorage[];
+    deskList: UiStorage[];
+    cabinetSlots: number;
+    deskSlots: number;
+    handleSaveStorage: (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => void;
+};
+
+const NorthRoomStorageContext = createContext<NorthRoomStorageContextValue | undefined>(undefined);
 
 type StorageAction =
     | { type: 'MOVE_STORAGE'; storage: UiStorage; toKind: SlotKind; positionIndex: number; cabinetLocationId?: string; deskLocationId?: string }
@@ -170,8 +182,21 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
     }), [cabinetList, cabinetLocation, deskList, deskLocation, handleSaveStorage]);
 
     return (
-        <NorthRoomStorageContextProvider value={storageContextValue}>
+        <NorthRoomStorageContext.Provider value={storageContextValue}>
             {children}
-        </NorthRoomStorageContextProvider>
+        </NorthRoomStorageContext.Provider>
     );
+};
+
+/**
+ * useNorthRoomStorageContextはNorthRoom配下でストレージデータと保存操作を扱うカスタムフック。
+ * Provider外で呼び出した場合は例外を投げる。
+ */
+export const useNorthRoomStorageContext = (): NorthRoomStorageContextValue => {
+    const context = useContext(NorthRoomStorageContext);
+    if (!context) {
+        throw new Error('useNorthRoomStorageContext must be used within NorthRoom storage provider');
+    }
+
+    return context;
 };

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react'
-import { useNorthRoomHighlightContext, useNorthRoomStorageContext } from './NorthRoomContext'
+import { useNorthRoomHighlightContext } from './NorthRoomHighlightProvider'
+import { useNorthRoomStorageContext } from './NorthRoomStorageProvider'
 import type { SlotKind } from './types'
 import {
     IonButton,

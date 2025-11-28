@@ -1,7 +1,8 @@
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import { DrawerSlot } from './DrawerSlot'
-import { useNorthRoomHighlightContext, useNorthRoomStorageContext } from '../NorthRoomContext'
+import { useNorthRoomHighlightContext } from '../NorthRoomHighlightProvider'
+import { useNorthRoomStorageContext } from '../NorthRoomStorageProvider'
 
 const DRAWER_COUNT = 5;
 
