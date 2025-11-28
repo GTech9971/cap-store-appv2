@@ -2,24 +2,25 @@ import { createContext, useContext, useMemo, useReducer, type Dispatch, type FC,
 import type { Storage } from 'cap-store-api-def'
 import type { SlotKind } from './types'
 
-export type SelectedSlot = {
-    kind: SlotKind;
-    locationId: string;
-    positionIndex: number;
-    storage: Storage | null;
-    hasStorage: boolean;
-};
+/**
+ * HighlightSelectionはNorthRoom内で選択している対象を明示的に表すための型。
+ * - empty-slot: 空き枠（既存ストレージがあるかどうかはexistingStoragesで判定）
+ * - storage: 既存ストレージを直接指定
+ */
+export type HighlightSelection =
+    | { type: 'empty-slot'; kind: SlotKind; locationId: string; positionIndex: number; existingStorages: Storage[] }
+    | { type: 'storage'; kind: SlotKind; locationId: string; positionIndex: number; storage: Storage };
 
 export type HighlightAction =
     | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; slotStorages: Storage[] }
     | { type: 'LABEL_SELECTED'; kind: SlotKind; locationId: string; storage: Storage }
-    | { type: 'APPLY_SELECTION'; selected: SelectedSlot | null }
+    | { type: 'APPLY_SELECTION'; selected: HighlightSelection | null }
     | { type: 'CLEAR_ALL' };
 
 export type NorthRoomHighlightContextValue = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
-    selected: SelectedSlot | null;
+    selected: HighlightSelection | null;
     dispatchHighlight: Dispatch<HighlightAction>;
 };
 
@@ -28,7 +29,7 @@ const NorthRoomHighlightContext = createContext<NorthRoomHighlightContextValue |
 type HighlightState = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
-    selected: SelectedSlot | null;
+    selected: HighlightSelection | null;
 };
 
 /**
@@ -37,25 +38,29 @@ type HighlightState = {
 const highlightReducer = (state: HighlightState, action: HighlightAction): HighlightState => {
     switch (action.type) {
         case 'SLOT_SELECTED': {
-            const isSameEmpty = state.selected?.kind === action.kind
-                && state.selected.storage == null
+            const isSameEmpty = state.selected?.type === 'empty-slot'
+                && state.selected.kind === action.kind
                 && state.selected.positionIndex === action.positionIndex;
 
             if (isSameEmpty) {
                 return { cabinetHighlight: null, deskHighlight: null, selected: null };
             }
 
-            const hasStorage = action.slotStorages.length > 0;
-
             return {
                 cabinetHighlight: action.kind === 'cabinet' ? action.positionIndex : null,
                 deskHighlight: action.kind === 'desk' ? action.positionIndex : null,
-                selected: { kind: action.kind, locationId: action.locationId, positionIndex: action.positionIndex, storage: null, hasStorage },
+                selected: {
+                    type: 'empty-slot',
+                    kind: action.kind,
+                    locationId: action.locationId,
+                    positionIndex: action.positionIndex,
+                    existingStorages: action.slotStorages,
+                },
             };
         }
 
         case 'LABEL_SELECTED': {
-            const currentStorage = state.selected?.storage;
+            const currentStorage = state.selected?.type === 'storage' ? state.selected.storage : null;
             const isSame = currentStorage != null
                 && state.selected?.kind === action.kind
                 && ((currentStorage.id && currentStorage.id === action.storage.id)
@@ -73,7 +78,13 @@ const highlightReducer = (state: HighlightState, action: HighlightAction): Highl
             return {
                 cabinetHighlight: action.kind === 'cabinet' ? index : null,
                 deskHighlight: action.kind === 'desk' ? index : null,
-                selected: { kind: action.kind, locationId: action.locationId, positionIndex: index, storage: action.storage, hasStorage: true },
+                selected: {
+                    type: 'storage',
+                    kind: action.kind,
+                    locationId: action.locationId,
+                    positionIndex: index,
+                    storage: action.storage,
+                },
             };
         }
 
@@ -83,7 +94,7 @@ const highlightReducer = (state: HighlightState, action: HighlightAction): Highl
             }
 
             const isCabinet = action.selected.kind === 'cabinet';
-            const index = action.selected.positionIndex ?? action.selected.storage?.positionIndex ?? null;
+            const index = action.selected.positionIndex ?? (action.selected.type === 'storage' ? action.selected.storage.positionIndex : null);
 
             return {
                 cabinetHighlight: isCabinet ? index : null,

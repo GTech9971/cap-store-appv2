@@ -1,6 +1,6 @@
 import type { Location, Storage } from 'cap-store-api-def'
 import { createContext, useContext, useEffect, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
-import type { HighlightAction, SelectedSlot } from './NorthRoomHighlightProvider'
+import type { HighlightAction, HighlightSelection } from './NorthRoomHighlightProvider'
 import { useNorthRoomHighlightContext } from './NorthRoomHighlightProvider'
 import type { SlotKind, UiStorage } from './types'
 
@@ -12,7 +12,7 @@ type SaveRequestPayload = {
     kind: SlotKind;
     positionIndex: number;
     useableFreeSpace: number;
-    selected: SelectedSlot | null;
+    selected: HighlightSelection | null;
     cabinetLocation: Location;
     deskLocation: Location;
 };
@@ -64,7 +64,7 @@ const storageReducer = (state: StorageState, action: StorageAction): StorageStat
             };
 
             // 既存ストレージの更新・移動
-            if (selected.storage) {
+            if (selected.type === 'storage') {
                 const updatedStorage: UiStorage = {
                     ...selected.storage,
                     name,
@@ -91,7 +91,7 @@ const storageReducer = (state: StorageState, action: StorageAction): StorageStat
             }
 
             // 既存データがある場合は無視
-            if (selected.hasStorage) {
+            if (selected.existingStorages.length > 0) {
                 return state;
             }
 

@@ -37,10 +37,18 @@ export const StorageControlPanel: FC = () => {
     useEffect(() => {
         if (!selected) return;
 
-        setName(selected.storage?.name ?? '');
+        if (selected.type === 'storage') {
+            setName(selected.storage.name ?? '');
+            setKind(selected.kind);
+            setPosition(selected.positionIndex ?? selected.storage.positionIndex ?? 1);
+            setUseableFreeSpace(selected.storage.useableFreeSpace ?? 100);
+            return;
+        }
+
+        setName('');
         setKind(selected.kind);
-        setPosition(selected.positionIndex ?? selected.storage?.positionIndex ?? 1);
-        setUseableFreeSpace(selected.storage?.useableFreeSpace ?? 100);
+        setPosition(selected.positionIndex);
+        setUseableFreeSpace(100);
     }, [selected]);
 
     // ロケーションごとの段数を計算
@@ -104,12 +112,12 @@ export const StorageControlPanel: FC = () => {
                         <div>
                             <>
                                 <IonLabel color='light'>
-                                    現在: {selected.storage?.name || '(名称未登録)'}
+                                    現在: {selected?.type === 'storage' ? selected.storage.name || '(名称未登録)' : '(名称未登録)'}
                                 </IonLabel>
 
-                                {selected.storage?.id &&
+                                {selected?.type === 'storage' && selected.storage.id &&
                                     <IonNote>
-                                        [{selected.storage?.id}]
+                                        [{selected.storage.id}]
                                     </IonNote>
                                 }
                             </>
@@ -118,7 +126,7 @@ export const StorageControlPanel: FC = () => {
                         <div>
                             <IonNote>
                                 ロケーション: {selected.kind === 'cabinet' ? cabinetLocation.name : deskLocation.name} /{' '}
-                                {selected.positionIndex ?? selected.storage?.positionIndex ?? '-'}段
+                                {selected.positionIndex ?? (selected.type === 'storage' ? selected.storage.positionIndex : '-') }段
                             </IonNote>
                         </div>
 
@@ -180,7 +188,7 @@ export const StorageControlPanel: FC = () => {
 
                     </IonList>
 
-                    {(selected.hasStorage && !selected.storage) &&
+                    {(selected.type === 'empty-slot' && selected.existingStorages.length > 0) &&
                         <IonText color='warning' style={{ fontSize: '10px' }}>
                             既存データがあります。編集はラベルクリックで行ってください。
                         </IonText>
@@ -192,7 +200,7 @@ export const StorageControlPanel: FC = () => {
                             onClick={handleSave}
                             disabled={
                                 !name.trim() ||
-                                (selected?.storage == null && selected?.hasStorage)}>
+                                (selected?.type === 'empty-slot' && selected.existingStorages.length > 0)}>
                             保存
                         </IonButton>
 
