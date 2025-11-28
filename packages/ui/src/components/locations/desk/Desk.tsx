@@ -48,8 +48,7 @@ const Frame: FC = () => {
 export const Desk: FC<Props> = () => {
     const {
         deskHighlight,
-        handleSlotAction,
-        handleSelectStorage,
+        dispatchHighlight,
     } = useNorthRoomHighlightContext();
     const {
         deskLocation,
@@ -78,8 +77,8 @@ export const Desk: FC<Props> = () => {
                         labelPosition={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
                         storages={slotStorages}
                         isHighlighted={isHighlighted}
-                        onEdit={(storage) => handleSelectStorage('desk', deskLocation.id, storage)}
-                        onClick={(idx, slot) => handleSlotAction('desk', deskLocation.id, idx, slot)}
+                        onEdit={(storage) => dispatchHighlight({ type: 'LABEL_SELECTED', kind: 'desk', locationId: deskLocation.id, storage })}
+                        onClick={(idx, slot) => dispatchHighlight({ type: 'SLOT_SELECTED', kind: 'desk', locationId: deskLocation.id, positionIndex: idx, slotStorages: slot })}
                     />
                 )
             })}

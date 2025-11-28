@@ -137,8 +137,7 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
         if (selected.storage) {
             const nextStorage = { ...selected.storage, name, positionIndex: positionIndex, useableFreeSpace: useableFreeSpace };
             moveStorage(nextStorage, kind, positionIndex);
-            dispatchHighlight({ type: 'SET_SELECTED', selected: { kind, locationId, positionIndex, storage: nextStorage, hasStorage: true } });
-            dispatchHighlight({ type: 'HIGHLIGHT_SLOT', kind, index: positionIndex });
+            dispatchHighlight({ type: 'LABEL_SELECTED', kind, locationId, storage: nextStorage });
 
             await onSave('update', nextStorage);
             return;
@@ -157,8 +156,7 @@ export const NorthRoomStorageProvider: FC<Props> = ({ cabinetLocation, deskLocat
         const savedStorage: UiStorage = { ...newStorage, id: newStorageId };
 
         addStorage(kind, positionIndex, name, location);
-        dispatchHighlight({ type: 'SET_SELECTED', selected: { kind, locationId, positionIndex, storage: savedStorage, hasStorage: true } });
-        dispatchHighlight({ type: 'HIGHLIGHT_SLOT', kind, index: positionIndex });
+        dispatchHighlight({ type: 'LABEL_SELECTED', kind, locationId, storage: savedStorage });
     }, [addStorage, cabinetLocation, deskLocation, dispatchHighlight, moveStorage, onSave, selected]);
 
     const storageContextValue = useMemo(() => ({

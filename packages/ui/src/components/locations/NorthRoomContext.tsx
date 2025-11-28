@@ -3,17 +3,15 @@ import { createContext, useContext, type Dispatch } from 'react'
 import type { Selected, SlotKind, UiStorage } from './types'
 
 export type HighlightAction =
-    | { type: 'HIGHLIGHT_SLOT'; kind: SlotKind; index: number | null }
-    | { type: 'CLEAR_HIGHLIGHT' }
-    | { type: 'SET_SELECTED'; selected: Selected | null }
+    | { type: 'SLOT_SELECTED'; kind: SlotKind; locationId: string; positionIndex: number; slotStorages: Storage[] }
+    | { type: 'LABEL_SELECTED'; kind: SlotKind; locationId: string; storage: Storage }
+    | { type: 'APPLY_SELECTION'; selected: Selected | null }
     | { type: 'CLEAR_ALL' };
 
 export type NorthRoomHighlightContextValue = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
     selected: Selected | null;
-    handleSlotAction: (kind: SlotKind, locationId: string, index: number, slotStorages: Storage[]) => void;
-    handleSelectStorage: (kind: SlotKind, locationId: string, storage: Storage) => void;
     dispatchHighlight: Dispatch<HighlightAction>;
 };
 
