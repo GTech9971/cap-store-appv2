@@ -27,6 +27,7 @@ const cabinetStorages: Storage[] = [
 
 const deskStorages: Storage[] = [
     { id: 's3', name: 'Desk 上段', locationId: 'loc-2', positionIndex: 2 },
+    { id: 'sIII', name: 'Desk箱', locationId: 'loc-2', positionIndex: 2 },
 ]
 
 const cabinetLocation: Location = { id: 'loc-1', name: 'キャビネット', storages: cabinetStorages };
