@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { LabelOverlay } from '../LabelOverlay'
 import { ShelfSlot } from './ShelfSlot'
-import type { UiStorage } from '../types'
+import { useNorthRoomStorageContext } from '../NorthRoomStorageProvider'
 
 
 const LEFT_X = -1.6
@@ -12,20 +12,14 @@ const FD_LEFT = 2.8
 const FT = 0.12
 const LEFT_Z_SHIFT = FD_RIGHT / 2 - FD_LEFT / 2
 
-type Props = {
-    highlight: number | null
-    onSelectShelf: (index: number, storages: UiStorage[]) => void
-    onEditStorage?: (storage: UiStorage) => void
-    locationName: string
-    storages?: UiStorage[],
-    selectedStorages?: UiStorage[],
-}
+type Props = Record<string, unknown>
 
 type FrameSegment = {
     position: [number, number, number]
     size: [number, number, number]
 }
 
+// デスクの枠組みメッシュを描画するヘルパーコンポーネント
 const Frame: FC = () => {
     const segments: FrameSegment[] = [
         { position: [0, FH / 2, 0], size: [FW_LEFT, FT, FD_LEFT] },
@@ -50,14 +44,13 @@ const Frame: FC = () => {
     )
 }
 
-export const Desk: FC<Props> = ({
-    highlight,
-    onSelectShelf,
-    onEditStorage,
-    locationName,
-    storages,
-    selectedStorages,
-}) => {
+// デスクの棚とラベルを描画するコンポーネント
+export const Desk: FC<Props> = () => {
+
+    const {
+        deskLocation,
+        deskList,
+    } = useNorthRoomStorageContext();
 
     const shelfPositions = [-1.0, 1.0]
 
@@ -65,13 +58,12 @@ export const Desk: FC<Props> = ({
         <group>
             <Frame />
             <LabelOverlay position={[LEFT_X, FH / 2 + 0.6, LEFT_Z_SHIFT]}>
-                {locationName}
+                {deskLocation.name}
             </LabelOverlay>
 
             {shelfPositions.map((position, idx) => {
                 const index = idx + 1
-                const slotStorages = (storages ?? []).filter((s) => s.positionIndex === index)
-                const isHighlighted = highlight != null && index === highlight
+                const slotStorages = (deskList ?? []).filter((s) => s.positionIndex === index)
                 return (
                     <ShelfSlot
                         key={index}
@@ -79,10 +71,8 @@ export const Desk: FC<Props> = ({
                         position={[LEFT_X, position, LEFT_Z_SHIFT]}
                         size={[1.9, 0.15, FD_LEFT - 0.1]}
                         labelPosition={[LEFT_X, position + 0.35, LEFT_Z_SHIFT + 0.8]}
+                        locationId={deskLocation.id}
                         storages={slotStorages}
-                        isHighlighted={isHighlighted}
-                        onEdit={onEditStorage}
-                        onClick={(idx, slot) => onSelectShelf(idx, slot)}
                     />
                 )
             })}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react'
-import type { Location } from 'cap-store-api-def'
-import type { Selected, SlotKind } from './types'
+import { useNorthRoomHighlightContext } from './NorthRoomHighlightProvider'
+import { useNorthRoomStorageContext } from './NorthRoomStorageProvider'
+import type { SlotKind } from './types'
 import {
     IonButton,
     IonInput,
@@ -14,26 +15,20 @@ import {
 } from '@ionic/react'
 import './StorageControlPanel.css';
 
-type Props = {
-    selected: Selected | null,
-    cabinetSlots: number,
-    deskSlots: number,
-    cabinet: Location,
-    desk: Location,
-    onSave: (locationId: string, name: string, kind: SlotKind, positionIndex: number, useableFreeSpace: number) => void,
-    onClear: () => void,
-}
-
 // 選択中ストレージを表示し、名前と配置を編集する右上パネル
-export const StorageControlPanel: FC<Props> = ({
-    selected,
-    cabinetSlots,
-    deskSlots,
-    cabinet,
-    desk,
-    onSave,
-    onClear,
-}) => {
+export const StorageControlPanel: FC = () => {
+    const {
+        selected,
+        dispatchHighlight,
+    } = useNorthRoomHighlightContext();
+    const {
+        cabinetSlots,
+        deskSlots,
+        cabinetLocation,
+        deskLocation,
+        dispatchStorage,
+    } = useNorthRoomStorageContext();
+
     const [name, setName] = useState<string>('');
     const [kind, setKind] = useState<SlotKind>('cabinet');
     const [position, setPosition] = useState<number>(1);
@@ -43,10 +38,18 @@ export const StorageControlPanel: FC<Props> = ({
     useEffect(() => {
         if (!selected) return;
 
-        setName(selected.storage?.name ?? '');
+        if (selected.type === 'storage') {
+            setName(selected.storage.name ?? '');
+            setKind(selected.kind);
+            setPosition(selected.positionIndex ?? selected.storage.positionIndex ?? 1);
+            setUseableFreeSpace(selected.storage.useableFreeSpace ?? 100);
+            return;
+        }
+
+        setName('');
         setKind(selected.kind);
-        setPosition(selected.positionIndex ?? selected.storage?.positionIndex ?? 1);
-        setUseableFreeSpace(selected.storage?.useableFreeSpace ?? 100);
+        setPosition(selected.positionIndex);
+        setUseableFreeSpace(100);
     }, [selected]);
 
     // ロケーションごとの段数を計算
@@ -58,13 +61,28 @@ export const StorageControlPanel: FC<Props> = ({
         return Array.from({ length }, (_, idx) => idx + 1).sort((a, b) => b - a);
     }, [cabinetSlots, deskSlots, kind]);
 
-    // 保存ボタンで編集結果を親へ通知
+    // 保存ボタンで編集結果をReducerへ通知
     const handleSave = useCallback(() => {
         const trimmed = name.trim();
         if (!selected || !trimmed) return;
 
-        onSave(selected.locationId, trimmed, kind, position, useableFreeSpace);
-    }, [name, kind, position, useableFreeSpace, selected, onSave]);
+        dispatchStorage({
+            type: 'SAVE_REQUEST',
+            payload: {
+                name: trimmed,
+                kind,
+                positionIndex: position,
+                useableFreeSpace,
+                selected,
+                cabinetLocation,
+                deskLocation,
+            },
+        });
+    }, [cabinetLocation, deskLocation, dispatchStorage, kind, name, position, selected, useableFreeSpace]);
+
+    /**
+     * 選択状態をクリアするハンドラー。ハイライトと選択をリセットする。
+     */
 
     // ロケーション変更時に段をリセット
     const handleKindChange = useCallback((nextKind: SlotKind) => {
@@ -92,12 +110,12 @@ export const StorageControlPanel: FC<Props> = ({
                         <div>
                             <>
                                 <IonLabel color='light'>
-                                    現在: {selected.storage?.name || '(名称未登録)'}
+                                    現在: {selected?.type === 'storage' ? selected.storage.name || '(名称未登録)' : '(名称未登録)'}
                                 </IonLabel>
 
-                                {selected.storage?.id &&
+                                {selected?.type === 'storage' && selected.storage.id &&
                                     <IonNote>
-                                        [{selected.storage?.id}]
+                                        [{selected.storage.id}]
                                     </IonNote>
                                 }
                             </>
@@ -105,8 +123,8 @@ export const StorageControlPanel: FC<Props> = ({
                         </div>
                         <div>
                             <IonNote>
-                                ロケーション: {selected.kind === 'cabinet' ? cabinet.name : desk.name} /{' '}
-                                {selected.positionIndex ?? selected.storage?.positionIndex ?? '-'}段
+                                ロケーション: {selected.kind === 'cabinet' ? cabinetLocation.name : deskLocation.name} /{' '}
+                                {selected.positionIndex ?? (selected.type === 'storage' ? selected.storage.positionIndex : '-')}段
                             </IonNote>
                         </div>
 
@@ -131,11 +149,11 @@ export const StorageControlPanel: FC<Props> = ({
                                 value={kind}
                                 onIonChange={(e) => handleKindChange(e.target.value as SlotKind)}>
                                 <IonSelectOption value='cabinet'>
-                                    {cabinet.name || 'キャビネット'}
+                                    {cabinetLocation.name || 'キャビネット'}
                                 </IonSelectOption>
 
                                 <IonSelectOption value='desk'>
-                                    {desk.name || 'デスク'}
+                                    {deskLocation.name || 'デスク'}
                                 </IonSelectOption>
                             </IonSelect>
                         </IonItem>
@@ -168,7 +186,7 @@ export const StorageControlPanel: FC<Props> = ({
 
                     </IonList>
 
-                    {(selected.hasStorage && !selected.storage) &&
+                    {(selected.type === 'empty-slot' && selected.occupied) &&
                         <IonText color='warning' style={{ fontSize: '10px' }}>
                             既存データがあります。編集はラベルクリックで行ってください。
                         </IonText>
@@ -180,14 +198,14 @@ export const StorageControlPanel: FC<Props> = ({
                             onClick={handleSave}
                             disabled={
                                 !name.trim() ||
-                                (selected?.storage == null && selected?.hasStorage)}>
+                                (selected?.type === 'empty-slot' && selected.occupied)}>
                             保存
                         </IonButton>
 
                         <IonButton
                             color='medium'
                             size='small'
-                            onClick={onClear}>
+                            onClick={() => dispatchHighlight({ type: 'CLEAR_ALL' })}>
                             クリア
                         </IonButton>
 
