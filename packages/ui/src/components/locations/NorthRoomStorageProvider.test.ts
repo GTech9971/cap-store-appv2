@@ -112,10 +112,10 @@ describe('storageReducer', () => {
 
     expect(nextState.cabinetList).toHaveLength(2);
     expect(nextState.deskList).toHaveLength(0);
-    const moved = nextState.deskList.find((s) => s.id === firstStorage.id);
-    const untouched = nextState.deskList.find((s) => s.id === secondStorage.id);
+    const moved = nextState.cabinetList.find((s) => s.id === firstStorage.id);
+    const untouched = nextState.cabinetList.find((s) => s.id === secondStorage.id);
     expect(moved).toBeDefined();
-    expect(moved?.locationId).toBe(deskLocation.id);
+    expect(moved?.locationId).toBe(cabinetLocation.id);
     expect(moved?.positionIndex).toBe(2);
     expect(moved?.name).toBe('抵抗A-移動済み');
     expect(untouched).toBeDefined();

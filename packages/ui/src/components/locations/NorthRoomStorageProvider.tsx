@@ -79,11 +79,16 @@ export const storageReducer = (state: StorageState, action: StorageAction): Stor
 
             if (!selected) return state;
 
-            const targetLocation = kind === 'cabinet' ? cabinetLocation : deskLocation;
+            const targetLocation: Location = kind === 'cabinet'
+                ? cabinetLocation
+                : deskLocation;
+
+            // 同一ストレージ（ID一致 or 参照一致）をリストから除去するヘルパー。
             const removeFromList = (list: UiStorage[], target: UiStorage) => list.filter((s) => (target.id ? s.id !== target.id : s !== target));
+
+            // 既存ストレージを除去したうえで末尾に追加するヘルパー。positionIndexが重複していても既存データは保持する。
             const upsertToList = (list: UiStorage[], storage: UiStorage) => {
-                const targetIdx = storage.positionIndex ?? 1;
-                const withoutTarget = list.filter((s) => (storage.id ? s.id !== storage.id : s !== storage) && s.positionIndex !== targetIdx);
+                const withoutTarget = removeFromList(list, storage);
                 return [...withoutTarget, storage];
             };
 
