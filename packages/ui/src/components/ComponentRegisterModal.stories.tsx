@@ -26,6 +26,7 @@ export const Default: Story = {
 
   args: {
     isOpen: true,
+    isDisabledRegistry: false,
     categoryApi: categoryApi,
     makerApi: makerApi,
     componentApi: componentApi,

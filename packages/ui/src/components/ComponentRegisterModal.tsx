@@ -52,6 +52,7 @@ export interface Data {
 
 interface Props {
     isOpen: boolean;
+    isDisabledRegistry: boolean;
     categoryApi: CategoriesApi,
     makerApi: MakersApi,
     componentApi: ComponentsApi,
@@ -61,6 +62,7 @@ interface Props {
 
 export const ComponentRegisterModal: React.FC<Props> = ({
     isOpen,
+    isDisabledRegistry,
     categoryApi,
     makerApi,
     componentApi,
@@ -228,7 +230,7 @@ export const ComponentRegisterModal: React.FC<Props> = ({
                         </IonButton>
                     </IonButtons>
                     <IonButtons slot="end">
-                        <IonButton fill="clear" onClick={handleSubmit}>
+                        <IonButton fill="clear" disabled={isDisabledRegistry} onClick={handleSubmit}>
                             登録
                         </IonButton>
                     </IonButtons>

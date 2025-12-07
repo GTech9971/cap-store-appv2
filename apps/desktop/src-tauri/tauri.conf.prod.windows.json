@@ -21,7 +21,7 @@
       "csp": {
         "default-src": "'self' asset: customprotocol:",
         "connect-src": "'self' https://integrator-3843898.okta.com https://nukomabo.work ipc: http://ipc.localhost",
-        "img-src": "'self' https://ionicframework.com https://nukomabo.work https://akizukidenshi.com https://www.etechnophiles.com https://mm.digikey.com https://eleshop.jp",
+        "img-src": "'self' https://ionicframework.com https://nukomabo.work https://akizukidenshi.com https://www.etechnophiles.com https://mm.digikey.com https://eleshop.jp https://www.marutsu.co.jp",
         "script-src": "'self'",
         "style-src": "'unsafe-inline' 'self'",
         "frame-src": "'self' https://integrator-3843898.okta.com"

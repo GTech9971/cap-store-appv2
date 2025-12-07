@@ -7,7 +7,7 @@ import {
     IonImg,
     IonText
 } from "@ionic/react";
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, type CSSProperties } from "react";
 
 export interface ComponentCardProps {
     id: string;
@@ -18,21 +18,14 @@ export interface ComponentCardProps {
     onClick?(): void
 }
 
-export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, img, currentStock, onClick }) => {
-
-    const [showAllName, setShowAllName] = useState<boolean>(false);
-
-    const showPartNameStyle: CSSProperties = useMemo(() => {
-        return {
-            fontSize: '14px',
-            fontWeight: 600,
-            margin: '8px 0 0 0',
-            textOverflow: 'ellipsis',
-            width: "170px",
-            overflow: 'hidden',
-            whiteSpace: 'nowrap'
-        }
-    }, [])
+export const ComponentCard: React.FC<ComponentCardProps> = ({
+    id,
+    name,
+    model,
+    img,
+    currentStock,
+    onClick
+}) => {
 
     const showAllNameStyle: CSSProperties = useMemo(() => {
         return {
@@ -44,16 +37,13 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, i
 
     return (
         <div
-
             style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                maxWidth: '300px',
-                width: 'auto',
+                width: '200px',
                 cursor: 'pointer'
-            }}
-        >
+            }}>
             <IonCard
                 onClick={onClick}
                 style={{
@@ -79,11 +69,12 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, i
 
 
             </IonCard>
-            <IonCardContent onClick={() => setShowAllName(!showAllName)}
+            <IonCardContent
                 style={{ padding: '8px 0 0 0', textAlign: 'center' }}>
-                <IonCardTitle style={showAllName ? showAllNameStyle : showPartNameStyle}>
+                <IonCardTitle style={showAllNameStyle}>
                     {name}
                 </IonCardTitle>
+
                 <IonCardSubtitle style={{ margin: '4px 0 0 0' }}>
 
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -93,9 +84,9 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ id, name, model, i
                         </IonBadge>
                     </div>
 
-                    {showAllName &&
-                        <IonText style={{ fontSize: '10px' }}>ID:{id}</IonText>
-                    }
+                    <IonText style={{ fontSize: '10px' }}>
+                        ID:{id}
+                    </IonText>
 
                 </IonCardSubtitle>
             </IonCardContent>
