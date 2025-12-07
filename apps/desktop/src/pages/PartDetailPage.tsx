@@ -37,6 +37,7 @@ import ImageCarouselSelectModal from "ui/components/image-carousels/ImageCarouse
 import { InventoryModal } from "ui/components/InventoryModal";
 import { useConfirmUtils } from "ui/utils/alertUtils"
 import { parseApiError } from "ui/utils/parseApiError"
+import { NorthRoomModal } from "./locations/NorthRoomModal"
 
 export const PartDetailPage = () => {
     // URL
@@ -58,6 +59,9 @@ export const PartDetailPage = () => {
     const [selectedMakerId, setSelectedMakerId] = useState<unknown>();
     const [imageUrls, setImageUrls] = useState<string[]>([]);
     const [isOpenImageModal, setIsOpenImageModal] = useState<boolean>(false);
+
+    const [isOpenLocationModal, setIsOpenLocationModal] = useState<boolean>(false);
+    // TODO storage
 
     // API
     const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
@@ -291,7 +295,23 @@ export const PartDetailPage = () => {
                                     </IonSelect>
                                 </IonItem>
 
+
+                                <IonItem button onClick={() => setIsOpenLocationModal(true)}>
+                                    <IonLabel>保管場所</IonLabel>
+                                    <IonText>TODO</IonText>
+                                </IonItem>
+
                             </IonList>
+
+
+                            {part &&
+                                <NorthRoomModal
+                                    isOpen={isOpenLocationModal}
+                                    onSelect={(selected) => { console.log(selected); }} // TODO
+                                    storage={!part.storages ? undefined : part.storages[0]} //TODO
+                                    onClose={() => setIsOpenLocationModal(false)} />
+                            }
+
 
                         </IonCol>
                     </IonRow>
