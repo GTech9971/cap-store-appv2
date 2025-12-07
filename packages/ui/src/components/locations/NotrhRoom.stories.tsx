@@ -45,12 +45,18 @@ export const Default: Story = {
     },
 };
 
-export const Select: Story = {
+export const Selected: Story = {
     args: {
         cabinetLocation,
         deskLocation,
-        onSelect: async (storages) => {
-
+        onSave: async (mode, storage) => {
+            console.log(`${mode}`);
+            console.log(storage);
+            return mode === 'new' ? 'NEW-Storage' : storage.id;
+        },
+        defaultSelected: cabinetStorages[0],
+        onSelected: (selected: Storage) => {
+            console.log(`selected:${selected.name}`);
         }
     },
 };

@@ -42,13 +42,12 @@ export type StorageActionApplyNewId = {
     storageId: string
 }
 
-export type StorageActionClearPendingPersist = {
-    type: 'CLEAR_PENDING_PERSIST'
-}
+/**
+ * 保留している保存待ちデータをクリア
+ */
+export type StorageActionClearPendingPersist = { type: 'CLEAR_PENDING_PERSIST' }
 
-export type StorageActionConsumePendingHighlight = {
-    type: 'CONSUME_PENDING_HIGHLIGHT'
-}
+export type StorageActionConsumePendingHighlight = { type: 'CONSUME_PENDING_HIGHLIGHT' }
 
 export type StorageAction =
     | StorageActionSaveRequest
@@ -59,6 +58,9 @@ export type StorageAction =
 
 ////////////////////////////////
 
+/**
+ * 保存対象の状態
+ */
 type PersistState = { mode: 'new' | 'update'; storage: Storage } | null;
 
 export type StorageState = {

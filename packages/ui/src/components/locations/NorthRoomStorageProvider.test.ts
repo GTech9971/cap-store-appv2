@@ -25,7 +25,7 @@ describe('storageReducer', () => {
       useableFreeSpace: 10,
     };
 
-    const initialState = createState({ cabinetList: [cabinetStorage] });
+    const initialState: StorageState = createState({ cabinetList: [cabinetStorage] });
 
     const action: StorageActionSaveRequest = {
       type: 'SAVE_REQUEST',

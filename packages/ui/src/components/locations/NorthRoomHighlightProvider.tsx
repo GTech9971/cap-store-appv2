@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
-import type { Storage } from 'cap-store-api-def'
+import { createContext, useContext, useEffect, useMemo, useReducer, type Dispatch, type FC, type ReactNode } from 'react'
+import type { Storage, Location } from 'cap-store-api-def'
 import type { SlotKind } from './types'
 
 /**
@@ -134,17 +134,63 @@ const highlightReducer = (state: HighlightState, action: HighlightAction): Highl
 };
 
 type Props = {
+    cabinetLocation: Location;
+    deskLocation: Location;
+    defaultSelected?: Storage;
+    onSelected?: (selected: Storage) => void,
     children: ReactNode;
 };
 
 /**
  * NorthRoomHighlightProviderはハイライトと選択状態を保持して子ツリーへ配布するProvider。
  */
-export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
+export const NorthRoomHighlightProvider: FC<Props> = ({
+    cabinetLocation,
+    deskLocation,
+    defaultSelected,
+    onSelected,
+    children,
+}) => {
+
+    /** 初期選択に表示可能なStorageが指定された場合、表示用のオブジェクトを返す */
+    const initSelected: HighlightSelection | null = useMemo(() => {
+        if (!defaultSelected) { return null; }
+        if (!defaultSelected.locationId) { return null; }
+        if (!defaultSelected.positionIndex) { return null; }
+
+        return {
+            type: 'storage',
+            kind: defaultSelected.locationId === cabinetLocation.id ? 'cabinet' : 'desk',
+            locationId: defaultSelected.locationId,
+            positionIndex: defaultSelected.positionIndex,
+            storage: defaultSelected
+        } as HighlightSelection
+    }, [defaultSelected, cabinetLocation.id]);
+
+    /** 初期選択にハイライト可能なキャビネットのStorageが指定された場合、表示位置を返す */
+    const initCabinetHighlight: number | null = useMemo(() => {
+        if (!defaultSelected) { return null; }
+        if (!defaultSelected.locationId) { return null; }
+        if (!defaultSelected.positionIndex) { return null; }
+        if (defaultSelected.locationId !== cabinetLocation.id) { return null; }
+
+        return defaultSelected.positionIndex;
+    }, [defaultSelected, cabinetLocation.id]);
+
+    /** 初期選択にハイライト可能なデスクのStorageが指定された場合、表示位置を返す */
+    const initDeskHighlight: number | null = useMemo(() => {
+        if (!defaultSelected) { return null; }
+        if (!defaultSelected.locationId) { return null; }
+        if (!defaultSelected.positionIndex) { return null; }
+        if (defaultSelected.locationId !== deskLocation.id) { return null; }
+
+        return defaultSelected.positionIndex;
+    }, [defaultSelected, deskLocation.id]);
+
     const [highlightState, highlightDispatch] = useReducer(highlightReducer, {
-        cabinetHighlight: null,
-        deskHighlight: null,
-        selected: null,
+        cabinetHighlight: initCabinetHighlight,
+        deskHighlight: initDeskHighlight,
+        selected: initSelected
     });
 
     const { cabinetHighlight, deskHighlight, selected } = highlightState;
@@ -155,6 +201,15 @@ export const NorthRoomHighlightProvider: FC<Props> = ({ children }) => {
         selected,
         dispatchHighlight: highlightDispatch,
     }), [cabinetHighlight, deskHighlight, highlightDispatch, selected]);
+
+    /** ストレージを選択時に親イベントに渡す */
+    useEffect(() => {
+        if (!selected) { return; }
+        if (!onSelected) { return; }
+        if (selected.type === 'empty-slot') { return; }
+
+        onSelected(selected.storage);
+    }, [selected, onSelected]);
 
     return (
         <NorthRoomHighlightContext.Provider value={highlightContextValue}>

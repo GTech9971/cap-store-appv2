@@ -18,40 +18,57 @@ import './NorthRoom.css'
 type Props = {
     cabinetLocation: Location,
     deskLocation: Location,
+    defaultSelected?: Storage,
     /**
-     *
+     * ストレージ新規登録・更新時の処理
      * @param mode
      * @param storage
      * @returns storageId
      */
     onSave: (mode: 'new' | 'update', storage: Storage) => Promise<string>;
+
+    /**
+     * ストレージ選択時の処理
+     * @param selected 
+     * @returns 
+     */
+    onSelected?: (selected: Storage) => void,
 }
 
 export const NorthRoom: FC<Props> = ({
     cabinetLocation,
     deskLocation,
-    onSave
+    defaultSelected,
+    onSave,
+    onSelected,
 }) => {
     return (
-        <NorthRoomHighlightProvider>
+        <NorthRoomHighlightProvider
+            cabinetLocation={cabinetLocation}
+            deskLocation={deskLocation}
+            defaultSelected={defaultSelected}
+            onSelected={onSelected}>
+
             <NorthRoomStorageProvider
                 cabinetLocation={cabinetLocation}
                 deskLocation={deskLocation}
-                onSave={onSave}
-            >
+                onSave={onSave}>
                 <div className="app">
                     <StorageControlPanel />
                     <Canvas
                         className="canvas-container"
                         camera={{ fov: 60, position: [6, 4, 12] }}
-                        dpr={[1, 2]}
-                    >
+                        dpr={[1, 2]}>
+
                         <color attach="background" args={['#111111']} />
+
                         <ambientLight intensity={0.2} />
                         <directionalLight position={[5, 10, 7]} intensity={1} />
                         <OrbitControls makeDefault enableDamping target={[0, 0, 0]} />
+
                         <Desk />
                         <Cabinet />
+
                     </Canvas>
                 </div>
             </NorthRoomStorageProvider>
