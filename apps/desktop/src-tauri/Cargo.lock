@@ -19,8 +19,8 @@ dependencies = [
 
 [[package]]
 name = "akizuki_invoice_parser"
-version = "0.1.0"
-source = "git+https://github.com/GTech9971/akizuki-invoice-parser.git?tag=0.0.3#b060d96ea6a5e43079be8820bb2fbcd54eaa3c98"
+version = "0.1.1"
+source = "git+https://github.com/GTech9971/akizuki-invoice-parser.git?tag=0.0.4#e0848f32e1e41bdf15bbb5e50cf343f7c1a037af"
 dependencies = [
  "chrono",
  "scraper",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "cap-store-app"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "akizuki_invoice_parser",
  "serde",
