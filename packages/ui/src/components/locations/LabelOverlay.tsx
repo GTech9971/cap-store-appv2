@@ -1,6 +1,7 @@
 import { IonText } from '@ionic/react'
 import { Html } from '@react-three/drei'
 import type { FC, ReactNode } from 'react'
+import './LabelOverlay.css';
 
 type Props = {
     position: [number, number, number]
@@ -23,17 +24,15 @@ export const LabelOverlay: FC<Props> = ({
         <Html position={position} center>
             <div
                 onClick={onClick}
+                className='label'
                 style={{
-                    width: 'max-content',
-                    background: 'rgba(0,0,0,0.65)',
                     padding,
-                    borderRadius: 8,
                     border: isHighlight ? 'solid 1px #2dd55b' : 'none',
                     pointerEvents: onClick ? 'auto' : 'none',
                     cursor: onClick ? 'pointer' : 'default',
                 }}>
                 <IonText color='light'>{children}</IonText>
             </div>
-        </Html>
+        </Html >
     )
 }
