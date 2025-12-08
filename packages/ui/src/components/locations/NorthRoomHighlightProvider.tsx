@@ -61,7 +61,7 @@ export type NorthRoomHighlightContextValue = {
 
 const NorthRoomHighlightContext = createContext<NorthRoomHighlightContextValue | undefined>(undefined);
 
-type HighlightState = {
+export type HighlightState = {
     cabinetHighlight: number | null;
     deskHighlight: number | null;
     selected: HighlightSelection | null;
@@ -70,7 +70,7 @@ type HighlightState = {
 /**
  * highlightReducerは選択状態とハイライトを一元管理するためのReducer。
  */
-const highlightReducer = (state: HighlightState, action: HighlightAction): HighlightState => {
+export const highlightReducer = (state: HighlightState, action: HighlightAction): HighlightState => {
     switch (action.type) {
         case 'SLOT_SELECTED': {
             const isSameEmpty = state.selected?.type === 'empty-slot'
@@ -133,6 +133,52 @@ const highlightReducer = (state: HighlightState, action: HighlightAction): Highl
     }
 };
 
+/**
+ * defaultSelectedが指定された場合の初期ハイライト状態を構築するヘルパー。
+ */
+export const createInitialHighlightState = (
+    defaultSelected: Storage | undefined,
+    cabinetLocationId: string,
+    deskLocationId: string
+): HighlightState => {
+    if (!defaultSelected) {
+        return { cabinetHighlight: null, deskHighlight: null, selected: null };
+    }
+
+    if (!defaultSelected.locationId) {
+        return { cabinetHighlight: null, deskHighlight: null, selected: null };
+    }
+
+    if (!defaultSelected.positionIndex) {
+        return { cabinetHighlight: null, deskHighlight: null, selected: null };
+    }
+
+    const kind: SlotKind | null = defaultSelected.locationId === cabinetLocationId
+        ? 'cabinet'
+        : defaultSelected.locationId === deskLocationId
+            ? 'desk'
+            : null;
+
+    if (!kind) {
+        return { cabinetHighlight: null, deskHighlight: null, selected: null };
+    }
+
+    const cabinetHighlight = kind === 'cabinet' ? defaultSelected.positionIndex : null;
+    const deskHighlight = kind === 'desk' ? defaultSelected.positionIndex : null;
+
+    return {
+        cabinetHighlight,
+        deskHighlight,
+        selected: {
+            type: 'storage',
+            kind,
+            locationId: defaultSelected.locationId,
+            positionIndex: defaultSelected.positionIndex,
+            storage: defaultSelected
+        }
+    };
+};
+
 type Props = {
     cabinetLocation: Location;
     deskLocation: Location;
@@ -152,46 +198,12 @@ export const NorthRoomHighlightProvider: FC<Props> = ({
     children,
 }) => {
 
-    /** 初期選択に表示可能なStorageが指定された場合、表示用のオブジェクトを返す */
-    const initSelected: HighlightSelection | null = useMemo(() => {
-        if (!defaultSelected) { return null; }
-        if (!defaultSelected.locationId) { return null; }
-        if (!defaultSelected.positionIndex) { return null; }
+    /** defaultSelectedから初期ハイライト状態を導出する */
+    const initialHighlightState: HighlightState = useMemo(() =>
+        createInitialHighlightState(defaultSelected, cabinetLocation.id, deskLocation.id),
+        [defaultSelected, cabinetLocation.id, deskLocation.id]);
 
-        return {
-            type: 'storage',
-            kind: defaultSelected.locationId === cabinetLocation.id ? 'cabinet' : 'desk',
-            locationId: defaultSelected.locationId,
-            positionIndex: defaultSelected.positionIndex,
-            storage: defaultSelected
-        } as HighlightSelection
-    }, [defaultSelected, cabinetLocation.id]);
-
-    /** 初期選択にハイライト可能なキャビネットのStorageが指定された場合、表示位置を返す */
-    const initCabinetHighlight: number | null = useMemo(() => {
-        if (!defaultSelected) { return null; }
-        if (!defaultSelected.locationId) { return null; }
-        if (!defaultSelected.positionIndex) { return null; }
-        if (defaultSelected.locationId !== cabinetLocation.id) { return null; }
-
-        return defaultSelected.positionIndex;
-    }, [defaultSelected, cabinetLocation.id]);
-
-    /** 初期選択にハイライト可能なデスクのStorageが指定された場合、表示位置を返す */
-    const initDeskHighlight: number | null = useMemo(() => {
-        if (!defaultSelected) { return null; }
-        if (!defaultSelected.locationId) { return null; }
-        if (!defaultSelected.positionIndex) { return null; }
-        if (defaultSelected.locationId !== deskLocation.id) { return null; }
-
-        return defaultSelected.positionIndex;
-    }, [defaultSelected, deskLocation.id]);
-
-    const [highlightState, highlightDispatch] = useReducer(highlightReducer, {
-        cabinetHighlight: initCabinetHighlight,
-        deskHighlight: initDeskHighlight,
-        selected: initSelected
-    });
+    const [highlightState, highlightDispatch] = useReducer(highlightReducer, initialHighlightState);
 
     const { cabinetHighlight, deskHighlight, selected } = highlightState;
 
