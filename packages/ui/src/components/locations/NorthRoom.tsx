@@ -32,7 +32,7 @@ type Props = {
      * @param selected 
      * @returns 
      */
-    onSelected?: (selected: Storage) => void,
+    onSelected?: (selected: Storage, selectedLocation: Location) => void,
 }
 
 export const NorthRoom: FC<Props> = ({

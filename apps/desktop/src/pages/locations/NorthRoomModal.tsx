@@ -1,5 +1,3 @@
-import { useApiClint } from "@/api/useApiClient";
-import { env } from "@/config/env";
 import {
     IonButton,
     IonButtons,
@@ -8,20 +6,19 @@ import {
     IonModal,
     IonTitle,
     IonToolbar,
-    useIonAlert
 } from "@ionic/react"
-import { Location, FetchLocationRequest, Storage } from "cap-store-api-def";
-import { useCallback, useEffect, useState } from "react";
+import { Storage, Location } from "cap-store-api-def";
+import { useCallback, useState } from "react";
 import { NorthRoom } from "ui/components/locations/NorthRoom"
-import { SlotKind } from "ui/components/locations/types";
-import { parseApiError } from "ui/utils/parseApiError";
 import './NorthRoomModal.css';
+import { useDefaultStorage } from "@/api/useDefaultStorage";
 
 
 interface Props {
     isOpen: boolean,
+    /** 初期ストレージ */
     storage?: Storage,
-    onSelect: (selected: Storage) => void,
+    onSelect: (selected?: Storage, selectedLocation?: Location) => void,
     onClose: () => void
 }
 
@@ -31,47 +28,20 @@ export const NorthRoomModal: React.FC<Props> = ({
     onSelect,
     onClose
 }) => {
-    const [present] = useIonAlert();
+    // 選択した保管庫
+    const [selected, setSelected] = useState<Storage | undefined>(storage);
+    const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
 
-    const [cabinet, setCabinet] = useState<Location | undefined>(undefined);
-    const [desk, setDesk] = useState<Location | undefined>(undefined);
+    // Api
+    const { cabinet, desk, handleSaveStorage } = useDefaultStorage();
 
-    // API
-    const { locationApi, storageApi, updateStorageApi, } = useApiClint();
-
-    // location情報取得
-    const fetchLocation = useCallback(async (kind: SlotKind) => {
-        const request: FetchLocationRequest = {
-            locationId: kind === 'cabinet'
-                ? env.LOCATIONS_CABINET_ID
-                : env.LOCATIONS_DESK_ID
-        };
-
-        try {
-            const response = await locationApi.fetchLocation(request);
-            if (!response.data) { return; }
-
-            if (kind === 'cabinet') {
-                setCabinet(response.data);
-            } else {
-                setDesk(response.data);
-            }
-
-        } catch (error) {
-            const { message, status } = await parseApiError(error);
-            await present({ header: 'エラー', subHeader: status?.toString(), message: message });
-        }
-    }, [locationApi, present]);
-
-    useEffect(() => {
-        fetchLocation('cabinet');
-        fetchLocation('desk')
-    }, [fetchLocation]);
-
-    const handleSelectStorage = useCallback((selected: Storage) => {
-        onSelect(selected);
+    /**
+     * 選択完了処理
+     */
+    const handleSelectStorage = useCallback(() => {
+        onSelect(selected, selectedLocation);
         onClose();
-    }, [onSelect, onClose]);
+    }, [onSelect, onClose, selected, selectedLocation]);
 
 
     return (
@@ -87,7 +57,7 @@ export const NorthRoomModal: React.FC<Props> = ({
                     <IonTitle>北の部屋</IonTitle>
 
                     <IonButtons slot="end">
-                        <IonButton onClick={() => handleSelectStorage(null!)}>
+                        <IonButton onClick={handleSelectStorage}>
                             選択
                         </IonButton>
                     </IonButtons>
@@ -100,9 +70,12 @@ export const NorthRoomModal: React.FC<Props> = ({
                     <NorthRoom
                         deskLocation={desk}
                         cabinetLocation={cabinet}
-                        onSave={() => { return null! }}
+                        onSave={handleSaveStorage}
                         defaultSelected={storage}
-                        onSelected={handleSelectStorage} />
+                        onSelected={(selected, selectedLocation) => {
+                            setSelected(selected);
+                            setSelectedLocation(selectedLocation);
+                        }} />
                 }
 
             </IonContent>

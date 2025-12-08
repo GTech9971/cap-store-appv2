@@ -27,7 +27,7 @@ import {
     IonToolbar,
     useIonAlert
 } from "@ionic/react"
-import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
+import { Category, Location, Maker, PartsComponent, Storage, UpdateComponentRequest } from "cap-store-api-def"
 import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
@@ -59,12 +59,15 @@ export const PartDetailPage = () => {
     const [selectedMakerId, setSelectedMakerId] = useState<unknown>();
     const [imageUrls, setImageUrls] = useState<string[]>([]);
     const [isOpenImageModal, setIsOpenImageModal] = useState<boolean>(false);
+    const [storage, setStorage] = useState<Storage | undefined>(undefined);
 
     const [isOpenLocationModal, setIsOpenLocationModal] = useState<boolean>(false);
-    // TODO storage
 
     // API
     const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
+
+    // 保管庫
+    const [location, setLocation] = useState<Location | undefined>(undefined);
 
     // Markdown
     const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
@@ -86,7 +89,7 @@ export const PartDetailPage = () => {
         if (!part?.description) return [];
         const matches = [...part.description.matchAll(/https?:\/\/[^\s)]+\.pdf/g)];
         return matches.map((m) => m[0]);
-    }, [part?.description]);
+    }, [part]);
 
     // 初期データ取得
     useEffect(() => {
@@ -100,6 +103,10 @@ export const PartDetailPage = () => {
                 setSelectedCategoryId(response.data?.category.id ?? "");
                 setSelectedMakerId(response.data?.maker.id ?? "");
                 setImageUrls(response.data?.images ?? []);
+
+                if (response.data?.storages && response.data.storages.length > 0) {
+                    setStorage(response.data?.storages[0]);
+                }
 
                 const [catRes, makRes] = await Promise.all([
                     categoryApi.fetchCategories(),
@@ -156,6 +163,15 @@ export const PartDetailPage = () => {
             updateReq.images = imageUrls;
             maskFields.push("images");
         }
+        const init: Storage | undefined = part.storages
+            ? part.storages[0]
+            : undefined;
+        if (storage !== init) {
+            updateReq.storageIds = storage
+                ? [storage.id]
+                : [];
+            maskFields.push('storages');
+        }
 
         if (maskFields.length === 0) return;
         // 確認ダイアログ：更新する項目を全て表示
@@ -177,6 +193,8 @@ export const PartDetailPage = () => {
                 setSelectedCategoryId(updated.category.id);
                 setSelectedMakerId(updated.maker.id);
                 setImageUrls(updated.images ?? []);
+                setStorage(updated.storages?.pop());
+
                 // 成功メッセージ
                 await presentAlert('更新が完了しました。')
             }
@@ -184,7 +202,8 @@ export const PartDetailPage = () => {
             const { message, status } = await parseApiError(err);
             setError(`部品情報の更新に失敗しました。${message}:${status}`);
         }
-    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, updateComponentApi, handleConfirm, presentAlert]);
+    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, storage,
+        updateComponentApi, handleConfirm, presentAlert]);
 
 
     // 認証系
@@ -298,7 +317,7 @@ export const PartDetailPage = () => {
 
                                 <IonItem button onClick={() => setIsOpenLocationModal(true)}>
                                     <IonLabel>保管場所</IonLabel>
-                                    <IonText>TODO</IonText>
+                                    <IonText>{location?.name} : {storage?.name}</IonText>
                                 </IonItem>
 
                             </IonList>
@@ -307,8 +326,11 @@ export const PartDetailPage = () => {
                             {part &&
                                 <NorthRoomModal
                                     isOpen={isOpenLocationModal}
-                                    onSelect={(selected) => { console.log(selected); }} // TODO
-                                    storage={!part.storages ? undefined : part.storages[0]} //TODO
+                                    onSelect={(selected, selectedLocation) => {
+                                        setStorage(selected);
+                                        setLocation(selectedLocation);
+                                    }}
+                                    storage={storage}
                                     onClose={() => setIsOpenLocationModal(false)} />
                             }
 

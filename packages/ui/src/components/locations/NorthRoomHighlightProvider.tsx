@@ -183,7 +183,7 @@ type Props = {
     cabinetLocation: Location;
     deskLocation: Location;
     defaultSelected?: Storage;
-    onSelected?: (selected: Storage) => void,
+    onSelected?: (selected: Storage, selectedLocation: Location) => void,
     children: ReactNode;
 };
 
@@ -220,8 +220,11 @@ export const NorthRoomHighlightProvider: FC<Props> = ({
         if (!onSelected) { return; }
         if (selected.type === 'empty-slot') { return; }
 
-        onSelected(selected.storage);
-    }, [selected, onSelected]);
+        onSelected(selected.storage,
+            selected.storage.locationId === deskLocation.id
+                ? deskLocation
+                : cabinetLocation);
+    }, [selected, onSelected, cabinetLocation, deskLocation]);
 
     return (
         <NorthRoomHighlightContext.Provider value={highlightContextValue}>
