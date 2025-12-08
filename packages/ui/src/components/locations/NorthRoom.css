@@ -5,12 +5,6 @@
     background: #111;
 }
 
-/* ダークモードだとラベル文字が見えづらくなるのでデフォルトのままに上書き */
-@media (prefers-color-scheme: dark) {
-    .app {
-        --ion-color-light: #f6f8fc !important;
-    }
-}
 
 .canvas-container {
     width: 100%;

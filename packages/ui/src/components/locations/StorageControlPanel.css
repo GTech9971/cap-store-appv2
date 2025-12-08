@@ -12,6 +12,13 @@
     z-index: 10;
 }
 
+/* ダークモードだとラベル文字が見えづらくなるのでデフォルトのままに上書き */
+@media (prefers-color-scheme: dark) {
+    .control-panel {
+        --ion-color-light: #f6f8fc !important;
+    }
+}
+
 .control-panel__actions {
     display: flex;
     gap: 8px;

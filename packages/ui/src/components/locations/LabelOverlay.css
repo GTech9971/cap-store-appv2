@@ -3,3 +3,11 @@
     background: var(--ion-color-dark, 0.65);
     border-radius: 8;
 }
+
+/* ダークモードだとラベル文字が見えづらくなるのでデフォルトのままに上書き */
+@media (prefers-color-scheme: dark) {
+    .label {
+        --ion-color-light: #f6f8fc !important;
+        --ion-color-dark: #2f2f2f !important;
+    }
+}
