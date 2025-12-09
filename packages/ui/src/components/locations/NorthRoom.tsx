@@ -29,10 +29,21 @@ type Props = {
 
     /**
      * ストレージ選択時の処理
-     * @param selected 
-     * @returns 
+     * @param selected      
      */
     onSelected?: (selected: Storage, selectedLocation: Location) => void,
+
+    /**
+     * ハイライト時の処理
+     * @param location ハイライトさせた場所
+     * @param positionIndex ハイライト位置     
+     */
+    onHighlight?: (location: Location, positionIndex: number) => void,
+
+    /**
+     * ハイライトオフ時の処理
+     */
+    onHighlightOff?: () => void,
 }
 
 export const NorthRoom: FC<Props> = ({
@@ -41,13 +52,17 @@ export const NorthRoom: FC<Props> = ({
     defaultSelected,
     onSave,
     onSelected,
+    onHighlight,
+    onHighlightOff,
 }) => {
     return (
         <NorthRoomHighlightProvider
             cabinetLocation={cabinetLocation}
             deskLocation={deskLocation}
             defaultSelected={defaultSelected}
-            onSelected={onSelected}>
+            onSelected={onSelected}
+            onHighlight={onHighlight}
+            onHighlightOff={onHighlightOff}>
 
             <NorthRoomStorageProvider
                 cabinetLocation={cabinetLocation}

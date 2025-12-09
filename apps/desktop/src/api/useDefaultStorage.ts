@@ -11,6 +11,7 @@ import { SlotKind } from "ui/components/locations/types";
 import { useApiClint } from "./useApiClient";
 import { useIonAlert, useIonToast } from "@ionic/react";
 import { parseApiError } from "ui/utils/parseApiError";
+import { invoke } from "@tauri-apps/api/core";
 
 /**
  * デフォルトストレージの取得処理
@@ -124,5 +125,14 @@ export const useDefaultStorage = () => {
     }, [saveNewStorage, updateStorage, presentToast, present]);
 
 
-    return { cabinet, desk, fetchLocation, handleSaveStorage };
+    /**
+     * tauriを使用してledを光らす
+     */
+    const highlight = useCallback(async (location: Location, positionIndex: number) => {
+        const result = await invoke('highlight_location_led', { location_id: location.id, position_index: positionIndex });
+        console.debug(result);
+    }, []);
+
+
+    return { cabinet, desk, fetchLocation, handleSaveStorage, highlight, };
 }

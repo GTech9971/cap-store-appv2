@@ -184,6 +184,8 @@ type Props = {
     deskLocation: Location;
     defaultSelected?: Storage;
     onSelected?: (selected: Storage, selectedLocation: Location) => void,
+    onHighlight?: (location: Location, positionIndex: number) => void,
+    onHighlightOff?: () => void,
     children: ReactNode;
 };
 
@@ -195,6 +197,8 @@ export const NorthRoomHighlightProvider: FC<Props> = ({
     deskLocation,
     defaultSelected,
     onSelected,
+    onHighlight,
+    onHighlightOff,
     children,
 }) => {
 
@@ -225,6 +229,19 @@ export const NorthRoomHighlightProvider: FC<Props> = ({
                 ? deskLocation
                 : cabinetLocation);
     }, [selected, onSelected, cabinetLocation, deskLocation]);
+
+    // ハイライトオン・オフイベントを親に渡す
+    useEffect(() => {
+        // 両方ともオフ
+        if (!cabinetHighlight && !deskHighlight) { onHighlightOff?.(); }
+
+        // キャビネット
+        if (cabinetHighlight) { onHighlight?.(cabinetLocation, cabinetHighlight); }
+
+        // デスク
+        if (deskHighlight) { onHighlight?.(deskLocation, deskHighlight); }
+
+    }, [cabinetHighlight, deskHighlight, onHighlightOff, onHighlight, deskLocation, cabinetLocation]);
 
     return (
         <NorthRoomHighlightContext.Provider value={highlightContextValue}>
