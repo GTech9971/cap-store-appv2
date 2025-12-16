@@ -12,6 +12,9 @@ export default defineConfig(async () => ({
       // ui のソースを直接参照
       'ui': path.resolve(__dirname, '../../packages/ui/src/'),
       '@': path.resolve(__dirname, "./src"),
+      //ui が内部で import した React も必ず desktop 側の React を使う
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom')
     }
   },
 
