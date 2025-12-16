@@ -4,18 +4,20 @@ import { useCallback, useState } from "react"
 import { UseFetchCategoryApiClient } from "../../api/categories/useFetchCategoryApi";
 
 export interface Prop {
+    initCategoryId: string | undefined,
     categoryApi: CategoriesApi,
     onClick: (categoryId: string) => void
 }
 
 export const CategoryList: React.FC<Prop> = ({
+    initCategoryId,
     categoryApi,
     onClick
 }) => {
 
     const { categories, fetchCategoryError, isLoadingFetchCategory, } = UseFetchCategoryApiClient(categoryApi);
 
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string>();
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(initCategoryId);
 
     const handleOnClick = useCallback((categoryId: string) => {
         setSelectedCategoryId(categoryId);

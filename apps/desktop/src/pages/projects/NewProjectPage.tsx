@@ -1,5 +1,4 @@
 import {
-    IonBackButton,
     IonBadge,
     IonButton,
     IonButtons,
@@ -20,7 +19,7 @@ import {
     IonToolbar,
     useIonAlert
 } from "@ionic/react"
-import { pricetagOutline } from "ionicons/icons"
+import { pricetagOutline, chevronBack } from "ionicons/icons"
 import { Editable } from "ui/components/editable/Editable"
 import ImageLinkCarousel from "ui/components/image-carousels/ImageLinkCarousel";
 import ImageLinkCarouselSelectModal from "ui/components/image-carousels/ImageLinkCarouselSelectModal";
@@ -217,7 +216,10 @@ export const NewProjectPage = () => {
             <IonHeader>
                 <IonToolbar>
                     <IonButtons slot="start">
-                        <IonBackButton defaultHref="/"></IonBackButton>
+                        <IonButton fill="clear" onClick={() => navigate(-1)}>
+                            <IonIcon icon={chevronBack} />
+                            戻る
+                        </IonButton>
                     </IonButtons>
 
                     <IonTitle>プロジェクト新規登録</IonTitle>

@@ -1,7 +1,6 @@
 import { useApiClint } from "@/api/useApiClient"
 import { useAuthState } from "@/hooks/useAuthState"
 import {
-    IonBackButton,
     IonButton,
     IonButtons,
     IonCol,
@@ -28,10 +27,10 @@ import {
     useIonAlert
 } from "@ionic/react"
 import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
-import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
+import { documentOutline, cubeOutline, createOutline, chevronBack } from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import ImageCarousel from "ui/components/image-carousels/ImageCarousel"
 import ImageCarouselSelectModal from "ui/components/image-carousels/ImageCarouselSelectModal"
 import { InventoryModal } from "ui/components/InventoryModal";
@@ -41,6 +40,7 @@ import { parseApiError } from "ui/utils/parseApiError"
 export const PartDetailPage = () => {
     // URL
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
 
     // 電子部品
     const [part, setPart] = useState<PartsComponent | null>(null);
@@ -191,7 +191,10 @@ export const PartDetailPage = () => {
             <IonHeader>
                 <IonToolbar>
                     <IonButtons slot="start">
-                        <IonBackButton defaultHref="/"></IonBackButton>
+                        <IonButton fill="clear" onClick={() => navigate(-1)}>
+                            <IonIcon icon={chevronBack} />
+                            戻る
+                        </IonButton>
                     </IonButtons>
                     <IonTitle>{name} - {part?.currentStock}個</IonTitle>
                     <IonButtons slot="end">

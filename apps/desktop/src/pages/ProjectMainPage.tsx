@@ -1,5 +1,4 @@
 import {
-    IonBackButton,
     IonButton,
     IonButtons,
     IonCol,
@@ -41,7 +40,7 @@ import {
     UndeleteProjectRequest,
     UpdateProjectRequest
 } from "cap-store-api-def";
-import { gitBranchOutline, downloadOutline } from "ionicons/icons";
+import { gitBranchOutline, downloadOutline, chevronBack } from "ionicons/icons";
 
 import ProjectBomList from "./projects/ProjectBomList";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -490,7 +489,10 @@ export const ProjectMainPage = () => {
                 <IonHeader>
                     <IonToolbar>
                         <IonButtons slot="start">
-                            <IonBackButton defaultHref="/"></IonBackButton>
+                            <IonButton fill="clear" onClick={() => navigate(-1)}>
+                                <IonIcon icon={chevronBack} />
+                                戻る
+                            </IonButton>
                         </IonButtons>
                     </IonToolbar>
                 </IonHeader>
@@ -519,7 +521,12 @@ export const ProjectMainPage = () => {
 
                             {hiddenMenu
                                 &&
-                                <IonBackButton defaultHref="/"></IonBackButton>
+                                <IonButtons slot="start">
+                                    <IonButton fill="clear" onClick={() => navigate(-1)}>
+                                        <IonIcon icon={chevronBack} />
+                                        戻る
+                                    </IonButton>
+                                </IonButtons>
                             }
 
                             <IonButton slot="icon" onClick={() => setHiddenMenu(!hiddenMenu)}>

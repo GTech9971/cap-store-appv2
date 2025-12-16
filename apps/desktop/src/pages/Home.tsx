@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   IonBadge,
   IonButton,
@@ -32,7 +32,7 @@ import { CategoryList } from "ui/components/categories/CategoryList"
 import { menuOutline, addOutline, documentOutline } from "ionicons/icons"
 import { ComponentRegisterModal } from 'ui/components/ComponentRegisterModal';
 import { useFetchComponentsApi } from 'ui/api/components/useFetchComponentsApi';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // tauri
 import { DragDropEvent, useTauriDragDrop } from "@/hooks/useTauriDragDrop";
@@ -63,7 +63,12 @@ function Home() {
   const [invoice, setInvoice] = useState<Invoice>();
   const [isOpenIModal, setIsIModal] = useState<boolean>(false);
 
-  const [categoryId, setCategoryId] = useState<string | undefined>();
+
+  // 検索クエリー
+  const [searchParams, setSearchParams] = useSearchParams();
+  // urlクエリーからカテゴリーIDを復元
+  const categoryId: string | undefined = useMemo(() => searchParams.get('categoryId') ?? undefined, [searchParams]);
+
   const { components, isLoadingFetchComponents, fetchComponentsError, refreshComponents } = useFetchComponentsApi(categoryApi, categoryId);
 
 
@@ -86,10 +91,14 @@ function Home() {
    * カテゴリー選択
    * @param categoryId 
    */
-  const handleCategorySelect = useCallback(async (categoryId: string) => {
-    setCategoryId(categoryId);
-    await refreshComponents();
-  }, [refreshComponents]);
+  const handleCategorySelect = useCallback(async (categoryId: string | undefined) => {
+    setSearchParams(categoryId ? { categoryId: categoryId } : "");
+  }, [setSearchParams]);
+
+  // カテゴリーId変更時に再取得
+  useEffect(() => {
+    refreshComponents();
+  }, [searchParams, refreshComponents]);
 
 
   /**
@@ -155,6 +164,7 @@ function Home() {
         <IonContent className="ion-padding" color="light">
 
           <CategoryList
+            initCategoryId={categoryId}
             onClick={handleCategorySelect}
             categoryApi={categoryApi} />
 

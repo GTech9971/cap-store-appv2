@@ -10,7 +10,7 @@ import { parseApiError, type ParsedError } from "../../utils/parseApiError";
  * @param categoryId
  * @returns 
  */
-export const useFetchComponentsApi = (categoryApi: CategoriesApi, categoryId?: string) => {
+export const useFetchComponentsApi = (categoryApi: CategoriesApi, categoryId: string | undefined | null) => {
 
     const fetcher = useCallback(async (categoryId: string): Promise<PartsComponent[]> => {
         try {
