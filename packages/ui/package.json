@@ -14,35 +14,35 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@ionic/core": "^8.7.13",
-    "@ionic/react": "^8.7.13",
+    "@ionic/core": "^8.7.14",
+    "@ionic/react": "^8.7.14",
     "axios": "^1.13.2",
     "cap-store-api-def": "^1.0.29",
     "ionicons": "^8.0.13",
-    "react-router-dom": "^7.10.1",
+    "react-router-dom": "^7.11.0",
     "swr": "^2.3.8",
     "zod": "^4.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@storybook/react-vite": "^10.1.9",
+    "@storybook/react-vite": "^10.1.10",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.25",
-    "eslint-plugin-storybook": "^10.1.9",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "eslint-plugin-storybook": "^10.1.10",
     "globals": "^16.5.0",
     "msw": "^2.12.4",
     "msw-storybook-addon": "^2.0.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "storybook": "^10.1.9",
+    "storybook": "^10.1.10",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.50.0",
     "vite": "^7.3.0",
-    "vitest": "^4.0.15"
+    "vitest": "^4.0.16"
   },
   "peerDependencies": {
     "react": "^19.2.3",

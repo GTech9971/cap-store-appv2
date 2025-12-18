@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   IonBadge,
   IonButton,
@@ -69,7 +69,7 @@ function Home() {
   // urlクエリーからカテゴリーIDを復元
   const categoryId: string | undefined = useMemo(() => searchParams.get('categoryId') ?? undefined, [searchParams]);
 
-  const { components, isLoadingFetchComponents, fetchComponentsError, refreshComponents } = useFetchComponentsApi(categoryApi, categoryId);
+  const { components, isLoadingFetchComponents, fetchComponentsError } = useFetchComponentsApi(categoryApi, categoryId);
 
 
   // 検索フィルタリングされたコンポーネント
@@ -95,10 +95,6 @@ function Home() {
     setSearchParams(categoryId ? { categoryId: categoryId } : "");
   }, [setSearchParams]);
 
-  // カテゴリーId変更時に再取得
-  useEffect(() => {
-    refreshComponents();
-  }, [searchParams, refreshComponents]);
 
 
   /**
