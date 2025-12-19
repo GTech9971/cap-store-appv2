@@ -46,12 +46,12 @@ import ProjectBomList from "./projects/ProjectBomList";
 import { useAuthState } from "@/hooks/useAuthState";
 import { AuthFooter } from "@/components/AuthFooter";
 import { ProjectMetaDataPanel } from "./projects/ProjectMetaDataPanel";
-import { EmptyExternalLink } from "ui/types/EmptyExternalLink";
 import { EmptyBom } from 'ui/types/EmptyBom'
 import { useProjectMainPageUtils } from "./useProjectMainPageUtils";
 import './ProjectMainPage.css';
 import { ExternalLinkList } from "ui/components/external-link/ExternalLinkList";
 import { parseApiError } from "ui/utils/parseApiError";
+import { EmptyExternalLink } from "./projects/CreateProjectProvider";
 
 
 type ProjectFormState = {
