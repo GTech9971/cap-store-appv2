@@ -12,6 +12,7 @@ import { useApiClint } from "./useApiClient";
 import { useIonAlert, useIonToast } from "@ionic/react";
 import { parseApiError } from "ui/utils/parseApiError";
 import { invoke } from "@tauri-apps/api/core";
+import { cabinetPositionIndex2BitMask } from "@/pages/locations/utils/positionIndexBitMask";
 
 /**
  * デフォルトストレージの取得処理
@@ -124,15 +125,37 @@ export const useDefaultStorage = () => {
         }
     }, [saveNewStorage, updateStorage, presentToast, present]);
 
-
     /**
      * tauriを使用してledを光らす
      */
     const highlight = useCallback(async (location: Location, positionIndex: number) => {
-        const result = await invoke('highlight_location_led', { location_id: location.id, position_index: positionIndex });
-        console.debug(result);
+        if (location.id === env.LOCATIONS_DESK_ID) { throw new Error("デスク用のデバイスは準備されていません"); }
+
+        const serialNumber: string | undefined = location.id === env.LOCATIONS_CABINET_ID
+            ? env.LOCATIONS_CABINET_SERIAL_NUMBER
+            : env.LOCATIONS_DESK_SERIAL_NUMBER;
+
+        if (!serialNumber) { throw new Error("設定ファイルからシリアル番号の取得に失敗"); }
+
+        const ledMask = cabinetPositionIndex2BitMask(positionIndex);
+        await invoke('highlight_location_led', { serialNumber: serialNumber, ledMask: ledMask });
+    }, []);
+
+    /**
+     * tauriを使用してledを消灯する
+     */
+    const highlighOff = useCallback(async (location: Location) => {
+        if (location.id === env.LOCATIONS_DESK_ID) { throw new Error("デスク用のデバイスは準備されていません"); }
+
+        const serialNumber: string | undefined = location.id === env.LOCATIONS_CABINET_ID
+            ? env.LOCATIONS_CABINET_SERIAL_NUMBER
+            : env.LOCATIONS_DESK_SERIAL_NUMBER;
+
+        if (!serialNumber) { throw new Error("設定ファイルからシリアル番号の取得に失敗"); }
+
+        await invoke('highlight_off_location_led', { serialNumber: serialNumber });
     }, []);
 
 
-    return { cabinet, desk, fetchLocation, handleSaveStorage, highlight, };
+    return { cabinet, desk, fetchLocation, handleSaveStorage, highlight, highlighOff };
 }

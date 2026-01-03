@@ -28,7 +28,12 @@ import {
     useIonAlert
 } from "@ionic/react"
 import { Category, Location, Maker, PartsComponent, Storage, UpdateComponentRequest } from "cap-store-api-def"
-import { documentOutline, cubeOutline, createOutline } from "ionicons/icons"
+import {
+    documentOutline,
+    cubeOutline,
+    createOutline,
+    bulbOutline
+} from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { useParams } from "react-router-dom"
@@ -38,6 +43,8 @@ import { InventoryModal } from "ui/components/InventoryModal";
 import { useConfirmUtils } from "ui/utils/alertUtils"
 import { parseApiError } from "ui/utils/parseApiError"
 import { NorthRoomModal } from "./locations/NorthRoomModal"
+import { useDefaultStorage } from "@/api/useDefaultStorage"
+import { env } from "@/config/env"
 
 export const PartDetailPage = () => {
     // URL
@@ -65,9 +72,19 @@ export const PartDetailPage = () => {
 
     // API
     const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
+    const { cabinet, highlight, highlighOff } = useDefaultStorage();
 
     // 保管庫
     const [location, setLocation] = useState<Location | undefined>(undefined);
+
+    /**
+     * 保管場所を物理的に光らす
+     */
+    const handleLightOn = useCallback(async () => {
+        if (!location || !storage || !storage.positionIndex || location.id === env.LOCATIONS_DESK_ID) { return; }
+
+        await highlight(location, storage.positionIndex);
+    }, [location, storage, highlight]);
 
     // Markdown
     const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
@@ -120,7 +137,13 @@ export const PartDetailPage = () => {
             }
         };
         if (id) fetchPart();
-    }, [id, componentApi, categoryApi, makerApi, inventoryApi]);
+
+        return () => {
+            if (cabinet) {
+                highlighOff(cabinet);
+            }
+        }
+    }, [id, componentApi, categoryApi, makerApi, inventoryApi, cabinet, highlighOff]);
 
     // 在庫系
     const [isOpenIModal, setIsOpenIModal] = useState<boolean>(false);
@@ -315,10 +338,31 @@ export const PartDetailPage = () => {
                                 </IonItem>
 
 
-                                <IonItem button onClick={() => setIsOpenLocationModal(true)}>
-                                    <IonLabel>保管場所</IonLabel>
-                                    <IonText>{location?.name} : {storage?.name}</IonText>
+                                <IonItem>
+                                    <IonLabel>
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            保管場所
+                                            <IonButton fill="clear" onClick={() => setIsOpenLocationModal(true)}>
+                                                設定
+                                            </IonButton>
+                                        </div>
+                                    </IonLabel>
+                                    <IonText>
+                                        {(!location && !storage)
+                                            ? <>未設定</>
+                                            : <>{location?.name} : {storage?.name}</>
+                                        }
+                                    </IonText>
+
+
+                                    {/* 光らす */}
+                                    <IonButton disabled={(!location && !storage)} slot="end" fill='clear' onClick={handleLightOn}>
+                                        <IonIcon icon={bulbOutline} color='warning' />
+                                    </IonButton>
+
                                 </IonItem>
+
+
 
                             </IonList>
 

@@ -33,7 +33,7 @@ export const NorthRoomModal: React.FC<Props> = ({
     const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
 
     // Api
-    const { cabinet, desk, handleSaveStorage } = useDefaultStorage();
+    const { cabinet, desk, handleSaveStorage, highlight, highlighOff } = useDefaultStorage();
 
     /**
      * 選択完了処理
@@ -75,7 +75,10 @@ export const NorthRoomModal: React.FC<Props> = ({
                         onSelected={(selected, selectedLocation) => {
                             setSelected(selected);
                             setSelectedLocation(selectedLocation);
-                        }} />
+                        }}
+                        onHighlight={highlight}
+                        onHighlightOff={() => highlighOff(cabinet)}
+                    />
                 }
 
             </IonContent>

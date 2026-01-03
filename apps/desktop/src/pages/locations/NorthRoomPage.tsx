@@ -8,12 +8,13 @@ import {
     IonTitle,
     IonToolbar,
 } from "@ionic/react"
+import { Location } from "cap-store-api-def";
 import { NorthRoom } from "ui/components/locations/NorthRoom"
 
 export const NorthRoomPage = () => {
 
     // API
-    const { cabinet, desk, handleSaveStorage } = useDefaultStorage();
+    const { cabinet, desk, handleSaveStorage, highlight, highlighOff } = useDefaultStorage();
 
     return (
         <IonPage>
@@ -34,7 +35,9 @@ export const NorthRoomPage = () => {
                     <NorthRoom
                         cabinetLocation={cabinet}
                         deskLocation={desk}
-                        onSave={handleSaveStorage} />
+                        onSave={handleSaveStorage}
+                        onHighlight={(location: Location, positionIndex: number) => highlight(location, positionIndex)}
+                        onHighlightOff={() => highlighOff(cabinet)} />
                 }
 
             </IonContent>
