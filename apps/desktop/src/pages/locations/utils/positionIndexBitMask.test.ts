@@ -10,11 +10,11 @@ describe("positionIndexが正確にビットマスクに変換できているこ
 
     it.each([
         [
-            1, 0b00001, "00001",
-            2, 0b00010, "00010",
+            1, 0b10000, "10000",
+            2, 0b01000, "01000",
             3, 0b00100, "00100",
-            4, 0b01000, "01000",
-            5, 0b10000, "10000",
+            4, 0b00010, "00010",
+            5, 0b00001, "00001",
         ],
     ])("1~5", (value, expected, expectedStr) => {
         const actual: number = cabinetPositionIndex2BitMask(value);

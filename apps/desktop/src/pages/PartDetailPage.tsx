@@ -72,7 +72,8 @@ export const PartDetailPage = () => {
 
     // API
     const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
-    const { cabinet, highlight, highlighOff } = useDefaultStorage();
+    const { cabinet, desk, highlight, highlighOff } = useDefaultStorage();
+    const [isLighting, setIsLighting] = useState<boolean>(false);
 
     // 保管庫
     const [location, setLocation] = useState<Location | undefined>(undefined);
@@ -83,8 +84,14 @@ export const PartDetailPage = () => {
     const handleLightOn = useCallback(async () => {
         if (!location || !storage || !storage.positionIndex || location.id === env.LOCATIONS_DESK_ID) { return; }
 
+        setIsLighting(true);
         await highlight(location, storage.positionIndex);
-    }, [location, storage, highlight]);
+        // 3sで消灯
+        setTimeout(() => {
+            setIsLighting(false);
+            highlighOff(location);
+        }, 3000);
+    }, [location, storage, highlight, highlighOff]);
 
     // Markdown
     const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
@@ -123,11 +130,14 @@ export const PartDetailPage = () => {
 
                 if (response.data?.storages && response.data.storages.length > 0) {
                     setStorage(response.data?.storages[0]);
+                    setLocation(response.data?.storages[0]?.locationId === cabinet?.id
+                        ? cabinet
+                        : desk);
                 }
 
                 const [catRes, makRes] = await Promise.all([
                     categoryApi.fetchCategories(),
-                    makerApi.fetchMakers()
+                    makerApi.fetchMakers(),
                 ]);
                 setCategories(catRes?.data ?? []);
                 setMakers(makRes?.data ?? []);
@@ -138,12 +148,7 @@ export const PartDetailPage = () => {
         };
         if (id) fetchPart();
 
-        return () => {
-            if (cabinet) {
-                highlighOff(cabinet);
-            }
-        }
-    }, [id, componentApi, categoryApi, makerApi, inventoryApi, cabinet, highlighOff]);
+    }, [id, componentApi, categoryApi, makerApi, inventoryApi, cabinet, desk, highlighOff]);
 
     // 在庫系
     const [isOpenIModal, setIsOpenIModal] = useState<boolean>(false);
@@ -193,7 +198,7 @@ export const PartDetailPage = () => {
             updateReq.storageIds = storage
                 ? [storage.id]
                 : [];
-            maskFields.push('storages');
+            maskFields.push('storageIds');
         }
 
         if (maskFields.length === 0) return;
@@ -357,7 +362,7 @@ export const PartDetailPage = () => {
 
                                     {/* 光らす */}
                                     <IonButton disabled={(!location && !storage)} slot="end" fill='clear' onClick={handleLightOn}>
-                                        <IonIcon icon={bulbOutline} color='warning' />
+                                        <IonIcon icon={bulbOutline} color={isLighting ? 'warning' : undefined} />
                                     </IonButton>
 
                                 </IonItem>
