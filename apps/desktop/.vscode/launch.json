@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "localhost Chrome",
             "type": "chrome",
             "request": "launch",
-            "name": "localhost Chrome",
             "url": "http://localhost:1420",
             "webRoot": "${workspaceFolder}",
             "preLaunchTask": "ui:dev:start",
             "postDebugTask": "ui:dev:stop"
         },
         {
+            "name": "Tauri Development Debug",
             "type": "lldb",
             "request": "launch",
-            "name": "Tauri Development Debug",
             "cargo": {
                 "args": [
                     "build",
@@ -27,11 +27,14 @@
             // `beforeDevCommand` のタスクを使用する場合は、`.vscode/tasks.json` で設定する必要があります。
             "preLaunchTask": "ui:dev:start",
             "postDebugTask": "ui:dev:stop",
+            "env": {
+                "VSCODE_DEBUG": "1"
+            }
         },
         {
+            "name": "Tauri Staging Debug",
             "type": "lldb",
             "request": "launch",
-            "name": "Tauri Staging Debug",
             "cargo": {
                 "args": [
                     "build",
@@ -40,7 +43,8 @@
                 ]
             },
             "env": {
-                "TAURI_CONFIG": "src-tauri/tauri.conf.stg-debug.json"
+                "TAURI_CONFIG": "src-tauri/tauri.conf.stg-debug.json",
+                "VSCODE_DEBUG": "1"
             },
             "envFile": "${workspaceFolder}/.env.staging-debug",
             "preLaunchTask": "ui:stg-debug:start",

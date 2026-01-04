@@ -1,7 +1,7 @@
 {
   "name": "cap-store-app",
   "private": true,
-  "version": "0.3.10",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,11 +14,12 @@
     "bundle:prod:windows": "tauri build --debug --config ./src-tauri/tauri.conf.prod.windows.json && tauri bundle",
     "preview": "vite preview",
     "tauri": "tauri",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest"
   },
   "dependencies": {
-    "@ionic/core": "^8.7.14",
-    "@ionic/react": "^8.7.14",
+    "@ionic/core": "^8.7.16",
+    "@ionic/react": "^8.7.16",
     "@okta/okta-react": "^6.10.0",
     "@tauri-apps/api": "^2.9.1",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
@@ -32,7 +33,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.11.0",
     "swr": "^2.3.8",
-    "zod": "^4.2.1"
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -44,11 +45,13 @@
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.26",
-    "globals": "^16.5.0",
-    "msw": "^2.12.4",
+    "globals": "^17.0.0",
+    "msw": "^2.12.7",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.50.0",
-    "vite": "^7.3.0"
+    "typescript-eslint": "^8.51.0",
+    "vite": "^7.3.0",
+    "vite-tsconfig-paths": "^6.0.3",
+    "vitest": "^4.0.16"
   },
   "msw": {
     "workerDirectory": [

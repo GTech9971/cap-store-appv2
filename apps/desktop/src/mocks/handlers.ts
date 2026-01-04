@@ -5,6 +5,8 @@ import { componentHandlers } from './handlers/componentHandlers';
 import { inventoryHandlers } from './handlers/inventoryHandlers';
 import { projectHandlers } from './handlers/projectHandlers';
 import { projectHistoryHandlers } from './handlers/projectHistoryHandler';
+import { locationHandler } from './handlers/locationHandlers';
+import { storageHandlers } from './handlers/storageHandlers';
 
 export const handlers = [
     ...akizukiHandlers,
@@ -13,5 +15,7 @@ export const handlers = [
     ...componentHandlers,
     ...inventoryHandlers,
     ...projectHandlers,
-    ...projectHistoryHandlers
+    ...projectHistoryHandlers,
+    ...locationHandler,
+    ...storageHandlers,
 ];

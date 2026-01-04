@@ -1,0 +1,26 @@
+.control-panel {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    min-width: 240px;
+    max-width: 240px;
+    background: rgba(var(--ion-color-dark), 0.9);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    z-index: 10;
+}
+
+/* ダークモードだとラベル文字が見えづらくなるのでデフォルトのままに上書き */
+@media (prefers-color-scheme: dark) {
+    .control-panel {
+        --ion-color-light: #f6f8fc !important;
+    }
+}
+
+.control-panel__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}

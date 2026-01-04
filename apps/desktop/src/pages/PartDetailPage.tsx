@@ -26,8 +26,14 @@ import {
     IonToolbar,
     useIonAlert
 } from "@ionic/react"
-import { Category, Maker, PartsComponent, UpdateComponentRequest } from "cap-store-api-def"
-import { documentOutline, cubeOutline, createOutline, chevronBack } from "ionicons/icons"
+import { Category, Location, Maker, PartsComponent, Storage, UpdateComponentRequest } from "cap-store-api-def"
+import {
+    documentOutline,
+    cubeOutline,
+    createOutline,
+    chevronBack,
+    bulbOutline
+} from "ionicons/icons"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { useNavigate, useParams } from "react-router-dom"
@@ -36,6 +42,9 @@ import ImageCarouselSelectModal from "ui/components/image-carousels/ImageCarouse
 import { InventoryModal } from "ui/components/InventoryModal";
 import { useConfirmUtils } from "ui/utils/alertUtils"
 import { parseApiError } from "ui/utils/parseApiError"
+import { NorthRoomModal } from "./locations/NorthRoomModal"
+import { useDefaultStorage } from "@/api/useDefaultStorage"
+import { env } from "@/config/env"
 
 export const PartDetailPage = () => {
     // URL
@@ -58,9 +67,32 @@ export const PartDetailPage = () => {
     const [selectedMakerId, setSelectedMakerId] = useState<unknown>();
     const [imageUrls, setImageUrls] = useState<string[]>([]);
     const [isOpenImageModal, setIsOpenImageModal] = useState<boolean>(false);
+    const [storage, setStorage] = useState<Storage | undefined>(undefined);
+
+    const [isOpenLocationModal, setIsOpenLocationModal] = useState<boolean>(false);
 
     // API
     const { componentApi, categoryApi, makerApi, inventoryApi, updateComponentApi } = useApiClint();
+    const { cabinet, desk, highlight, highlighOff } = useDefaultStorage();
+    const [isLighting, setIsLighting] = useState<boolean>(false);
+
+    // 保管庫
+    const [location, setLocation] = useState<Location | undefined>(undefined);
+
+    /**
+     * 保管場所を物理的に光らす
+     */
+    const handleLightOn = useCallback(async () => {
+        if (!location || !storage || !storage.positionIndex || location.id === env.LOCATIONS_DESK_ID) { return; }
+
+        setIsLighting(true);
+        await highlight(location, storage.positionIndex);
+        // 3sで消灯
+        setTimeout(() => {
+            setIsLighting(false);
+            highlighOff(location);
+        }, 3000);
+    }, [location, storage, highlight, highlighOff]);
 
     // Markdown
     const [isPreviewMD, setIsPreviewMd] = useState<boolean>(true);
@@ -82,7 +114,7 @@ export const PartDetailPage = () => {
         if (!part?.description) return [];
         const matches = [...part.description.matchAll(/https?:\/\/[^\s)]+\.pdf/g)];
         return matches.map((m) => m[0]);
-    }, [part?.description]);
+    }, [part]);
 
     // 初期データ取得
     useEffect(() => {
@@ -97,9 +129,16 @@ export const PartDetailPage = () => {
                 setSelectedMakerId(response.data?.maker.id ?? "");
                 setImageUrls(response.data?.images ?? []);
 
+                if (response.data?.storages && response.data.storages.length > 0) {
+                    setStorage(response.data?.storages[0]);
+                    setLocation(response.data?.storages[0]?.locationId === cabinet?.id
+                        ? cabinet
+                        : desk);
+                }
+
                 const [catRes, makRes] = await Promise.all([
                     categoryApi.fetchCategories(),
-                    makerApi.fetchMakers()
+                    makerApi.fetchMakers(),
                 ]);
                 setCategories(catRes?.data ?? []);
                 setMakers(makRes?.data ?? []);
@@ -109,7 +148,8 @@ export const PartDetailPage = () => {
             }
         };
         if (id) fetchPart();
-    }, [id, componentApi, categoryApi, makerApi, inventoryApi]);
+
+    }, [id, componentApi, categoryApi, makerApi, inventoryApi, cabinet, desk, highlighOff]);
 
     // 在庫系
     const [isOpenIModal, setIsOpenIModal] = useState<boolean>(false);
@@ -152,6 +192,15 @@ export const PartDetailPage = () => {
             updateReq.images = imageUrls;
             maskFields.push("images");
         }
+        const init: Storage | undefined = part.storages
+            ? part.storages[0]
+            : undefined;
+        if (storage !== init) {
+            updateReq.storageIds = storage
+                ? [storage.id]
+                : [];
+            maskFields.push('storageIds');
+        }
 
         if (maskFields.length === 0) return;
         // 確認ダイアログ：更新する項目を全て表示
@@ -173,6 +222,8 @@ export const PartDetailPage = () => {
                 setSelectedCategoryId(updated.category.id);
                 setSelectedMakerId(updated.maker.id);
                 setImageUrls(updated.images ?? []);
+                setStorage(updated.storages?.pop());
+
                 // 成功メッセージ
                 await presentAlert('更新が完了しました。')
             }
@@ -180,7 +231,8 @@ export const PartDetailPage = () => {
             const { message, status } = await parseApiError(err);
             setError(`部品情報の更新に失敗しました。${message}:${status}`);
         }
-    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, updateComponentApi, handleConfirm, presentAlert]);
+    }, [part, id, name, modelName, description, selectedCategoryId, selectedMakerId, imageUrls, storage,
+        updateComponentApi, handleConfirm, presentAlert]);
 
 
     // 認証系
@@ -294,7 +346,47 @@ export const PartDetailPage = () => {
                                     </IonSelect>
                                 </IonItem>
 
+
+                                <IonItem>
+                                    <IonLabel>
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            保管場所
+                                            <IonButton fill="clear" onClick={() => setIsOpenLocationModal(true)}>
+                                                設定
+                                            </IonButton>
+                                        </div>
+                                    </IonLabel>
+                                    <IonText>
+                                        {(!location && !storage)
+                                            ? <>未設定</>
+                                            : <>{location?.name} : {storage?.name}</>
+                                        }
+                                    </IonText>
+
+
+                                    {/* 光らす */}
+                                    <IonButton disabled={(!location && !storage)} slot="end" fill='clear' onClick={handleLightOn}>
+                                        <IonIcon icon={bulbOutline} color={isLighting ? 'warning' : undefined} />
+                                    </IonButton>
+
+                                </IonItem>
+
+
+
                             </IonList>
+
+
+                            {part &&
+                                <NorthRoomModal
+                                    isOpen={isOpenLocationModal}
+                                    onSelect={(selected, selectedLocation) => {
+                                        setStorage(selected);
+                                        setLocation(selectedLocation);
+                                    }}
+                                    storage={storage}
+                                    onClose={() => setIsOpenLocationModal(false)} />
+                            }
+
 
                         </IonCol>
                     </IonRow>

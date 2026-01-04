@@ -6,6 +6,7 @@ import { OktaAuth, toRelativeUrl } from '@okta/okta-auth-js';
 import { oktaConfig } from "./OktaConfig";
 import { ProjectMainPage } from "./pages/ProjectMainPage";
 import { NewProjectPage } from "./pages/projects/NewProjectPage";
+import { NorthRoomPage } from "./pages/locations/NorthRoomPage";
 
 const oktaAuth = new OktaAuth(oktaConfig);
 
@@ -29,6 +30,9 @@ export const App = () => {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/parts/:id" element={<PartDetailPage />} />
+
+                <Route path="/locations/north-room" element={<NorthRoomPage />} />
+
                 <Route path="/projects/new" element={<NewProjectPage />} />
                 <Route path="/projects/:projectId" element={<ProjectMainPage />} />
 

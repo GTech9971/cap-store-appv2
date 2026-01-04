@@ -10,6 +10,14 @@ const createEnv = () => {
             .optional(),
         AKIZUKI_URL: z.string(),
 
+        LOCATIONS_DESK_ID: z.string(),
+        LOCATIONS_DESK_SERIAL_NUMBER: z.string()
+            .optional(),
+
+        LOCATIONS_CABINET_ID: z.string(),
+        LOCATIONS_CABINET_SERIAL_NUMBER: z.string()
+            .optional(),
+
         OKTA_ISSUER: z.string(),
         OKTA_CLIENTID: z.string(),
         OKTA_REDIRECTURI: z.string(),
