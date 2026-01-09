@@ -164,7 +164,8 @@ export const PartDetailPage = () => {
         // 更新フィールドをリスト化し、確認ダイアログを表示
 
         const updateReq: UpdateComponentRequest = {
-            images: imageUrls
+            images: imageUrls,
+            storageIds: []
         };
         const maskFields: string[] = [];
 
