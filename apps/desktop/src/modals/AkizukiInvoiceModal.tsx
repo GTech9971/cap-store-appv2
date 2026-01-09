@@ -163,7 +163,9 @@ export const AkizukiInvoiceModal: React.FC<Props> = ({
             modelName: item.data.modelName,
             images: item.data.images,
             description: item.data.description,
-            currentStock: 0
+            currentStock: 0,
+            storages: [],
+            storageIds: []
         }
 
         try {
