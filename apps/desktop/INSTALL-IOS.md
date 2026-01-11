@@ -2,16 +2,14 @@
 
 ## 初期処理
 
-初回時
+以下を実行してiosコード署名設定を行う.ここでやらなくてもXCodeから設定可能
 idであってメアドではない
 
 ```bash
-export TAURI_APPLE_DEVELOPMENT_TEAM=""
+export APPLE_DEVELOPMENT_TEAM="XXXXX"
 ```
 
-```bash
-npx tauri ios init -c ./src-tauri/tauri.conf.prod.json 
-```
+vscodeのタスク`ios-init`を実行
 
 ### OS固有クレートがある場合
 
@@ -23,55 +21,41 @@ Cargo.tomlを修正
 + hidapi = { version = "2.6", optional = true }
 ```
 
-以下の行追加
+- 以下の行追加
+- defaultに"desktop"を設定するとiosビルド時にhidapiが含まれて失敗するので指定しないように
 
 ```toml
 [features]
-default = ["hid"]
+default = []
+desktop = ["hid"]
+mobile = []
 hid = ["hidapi"]
 ```
 
 ### アイコン設定
 
 ```bash
-npm run tauri icon public/32x32.png -- --ios-color #fff
+npm run tauri icon src-tauri/icons/画像.png -- --ios-color #fff
 ```
 
 ## build
 
-```bash
-tauri ios build --debug --config ./src-tauri/tauri.conf.prod.json
-```
+- vscodeのタスク`ios-build`実行
 
-xcodeを開きプロジェクトの`TARGETS>BuildPhase>Build Rust Code`のShellを以下に書き換える
+### 　内部処理
 
-```bash
-exit 0
-```
+1. replace-script:build
+xcodeを開きプロジェクトの`project.yml`のShellScriptをインストール時とBuild時で書き換える
 
-本来デバックでXCodeを使用するため以下のようなデバック用のコマンドがあるが、これがあるとios完結型としてインストールできないので消す
+2. xcodegen
+ 1でやった内容を反映する
 
-```bash
-npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths "${FRAMEWORK_SEARCH_PATHS:?}" --header-search-paths "${HEADER_SEARCH_PATHS:?}" --gcc-preprocessor-definitions "${GCC_PREPROCESSOR_DEFINITIONS:-}" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}
-```
+署名ができていないとエラーになるので設定をする
 
 ## install
 
 xcodeデバイスを選んで実行
-署名ができていないとエラーになるので設定をする
 
+1. tasksの`ios-install`実行
 1. デバイス側の設定として`セキュリティとプライバシー`から開発者モードをON
-2. `一般>VPNとデバイス管理`から`デベロッパアプリ`のメールアドレスを選択し`信頼`を選択する必要あり
-
-修正したjsコードが反映されない場合は
-XCode BuildPhasesの Build Rust Codeを元に戻して、`tauri ios build --debug --config ./src-tauri/tauri.conf.prod.json`をもう一回やる必要あり
-
-物理的な場所としては``src-tauri/gen/apple/cap-stotr-app.xcodeproj/project.pbxproj`の236行めあたりのとこ
-
-```
-shellScript = "exit 0\n";
-```
-
-```
-shellScript = "npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}\n";
-```
+1. `一般>VPNとデバイス管理`から`デベロッパアプリ`のメールアドレスを選択し`信頼`を選択する必要あり

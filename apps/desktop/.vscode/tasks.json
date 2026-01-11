@@ -97,6 +97,93 @@
                 "reveal": "always"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "replace-script:build",
+            "type": "shell",
+            "command": "node",
+            "args": [
+                "./scripts/replace-proj.mjs",
+                "B"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "replace-script:install",
+            "type": "shell",
+            "command": "node",
+            "args": [
+                "./scripts/replace-proj.mjs",
+                "I"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "xcodegen",
+            "type": "shell",
+            "command": "xcodegen",
+            "options": {
+                "cwd": "src-tauri/gen/apple"
+            }
+        },
+        {
+            "label": "ios-init",
+            "detail": "iosのプロジェクト作成",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tauri",
+                "ios",
+                "init",
+                "--config",
+                "./src-tauri/tauri.conf.prod.json",
+            ]
+        },
+        {
+            "label": "ios-build",
+            "detail": "ios用にビルド",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tauri",
+                "ios",
+                "build",
+                "--features",
+                "mobile",
+                "--debug",
+                "--config",
+                "./src-tauri/tauri.conf.prod.json",
+            ],
+            "dependsOn": [
+                "replace-script:build",
+                "xcodegen"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "ios-install",
+            "detail": "XCodeから端末にインストールする用の設定変更",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "tauri",
+                "ios",
+                "build",
+                "--features",
+                "mobile",
+                "--debug",
+                "--config",
+                "./src-tauri/tauri.conf.prod.json",
+            ],
+            "dependsOn": [
+                "replace-script:install",
+                "xcodegen"
+            ],
+            "dependsOrder": "sequence"
         }
     ],
     "inputs": [

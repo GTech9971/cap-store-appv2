@@ -45,6 +45,7 @@ import { ErrorNote } from "ui/components/ErrorNote";
 import { AuthFooter } from "@/components/AuthFooter";
 import { useAuthState } from "@/hooks/useAuthState";
 import { LocationList } from "ui/components/locations/LocationList";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 
 function Home() {
   const [hiddenMenu, setHiddenMenu] = useState<boolean>(false);
@@ -139,7 +140,8 @@ function Home() {
     if (!path) { return; }
 
     try {
-      const result = await parseInvoice(path);
+      const context: string = await readTextFile(path);
+      const result = await parseInvoice(context);
       console.debug(result);
       if (result) {
         setInvoice(result);
